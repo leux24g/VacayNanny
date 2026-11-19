@@ -56,18 +56,7 @@ function LoginForm() {
     <>
       <Nav />
       <main className="login-stage" id="main-content">
-        <AuthVisual>
-          <div className="login-visual-copy">
-            <p className="login-visual-kicker">Holiday childcare</p>
-            <h2>One login for the <em>whole trip.</em></h2>
-            <p>Families, nannies, and the VacayNanny team sign in here.</p>
-            <ul className="login-points">
-              <li>Your bookings</li>
-              <li>Messages</li>
-              <li>Nanny applications</li>
-            </ul>
-          </div>
-        </AuthVisual>
+        <AuthVisual />
         <div className="login-panel">
           <form className="auth-card" onSubmit={submit} autoComplete="on">
             <div className="login-heading">

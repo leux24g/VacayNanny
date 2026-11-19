@@ -39,18 +39,7 @@ function ForgotPasswordForm() {
     <>
       <Nav />
       <main className="login-stage" id="main-content">
-        <AuthVisual>
-          <div className="login-visual-copy">
-            <p className="login-visual-kicker">Holiday childcare</p>
-            <h2>A link to the <em>email</em> on your account.</h2>
-            <p>We send the reset there. The link expires after a short time, then you choose a new password.</p>
-            <ul className="login-points">
-              <li>Email link</li>
-              <li>New password</li>
-              <li>Back to your bookings</li>
-            </ul>
-          </div>
-        </AuthVisual>
+        <AuthVisual />
         <div className="login-panel">
           {done ? (
             <div className="auth-card">

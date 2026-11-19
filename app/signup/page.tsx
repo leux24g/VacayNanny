@@ -78,18 +78,7 @@ export default function SignupPage() {
     <>
       <Nav />
       <main className="login-stage" id="main-content">
-        <AuthVisual>
-          <div className="login-visual-copy">
-            <p className="login-visual-kicker">Holiday childcare</p>
-            <h2>An account for the <em>family</em>, or the nanny.</h2>
-            <p>Use the email already on a booking or an application. Confirm it, and those records stay with you.</p>
-            <ul className="login-points">
-              <li>Family bookings</li>
-              <li>Nanny applications</li>
-              <li>One confirmed email</li>
-            </ul>
-          </div>
-        </AuthVisual>
+        <AuthVisual />
         <div className="login-panel">
           {done ? (
             <div className="auth-card">

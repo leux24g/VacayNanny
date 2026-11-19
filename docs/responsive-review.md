@@ -1,10 +1,10 @@
 # Responsive review — 19 November 2026
 
-The local preview and review branch include a shared sign-in image panel and fixes for narrow-screen workspaces. Production has not been redeployed.
+The local preview and review branch include a shared full-page coastal background for account access and fixes for narrow-screen workspaces. Production has not been redeployed.
 
 ## Changes
 
-- Sign-in, signup and password recovery share a coastal image on the left and a contained form on desktop. Smaller screens stack the image and form, with readable controls and enough room to scroll.
+- Sign-in, signup and password recovery share a generated coastal-veranda background across the page. The form sits on a cream panel to the right on desktop and centres over the backdrop on phones, with readable controls and enough room to scroll.
 - Shared content boundaries keep the nanny portal, application review and informational pages aligned on wide screens.
 - Application review and admin inbox cards wrap long email addresses and values. Flexible grid tracks no longer force these cards outside the viewport.
 - The application tier comparison stacks in the narrower desktop form column so the Professional tier heading stays readable.
@@ -22,7 +22,7 @@ All **31 Playwright browser tests passed**. The suite checks descendants as well
 | Operations | All 11 panels and a populated application review at the same six widths |
 | Signed-in portals | Family bookings, payment controls, nanny profile/placements and safeguarding quiz at phone, tablet and desktop widths |
 | Nanny application | All eight steps at 320, 768, 1024 and 1440 pixels; desktop independent scrolling and mobile normal scrolling |
-| Authentication | Side-by-side desktop image/form, stacked touch layout, password visibility, and reachable submit button with a shorter viewport |
+| Authentication | Full-page image coverage, a right-aligned desktop form, a contained touch layout, password visibility, and reachable submit button with a shorter viewport |
 | Overlays | Booking, navigation and support at 844 × 390 landscape size; keyboard focus and Escape behavior |
 
 ESLint, TypeScript and the production build passed. Browser checks use desktop Chrome and Chromium touch emulation. Physical iOS/Android devices and Safari/Firefox have not been tested in this pass.

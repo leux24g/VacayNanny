@@ -80,18 +80,7 @@ export default function ResetPasswordPage() {
     <>
       <Nav />
       <main className="login-stage" id="main-content">
-        <AuthVisual>
-          <div className="login-visual-copy">
-            <p className="login-visual-kicker">Holiday childcare</p>
-            <h2>Choose a password you&apos;ll <em>remember</em>.</h2>
-            <p>This replaces the password on the account that requested the reset.</p>
-            <ul className="login-points">
-              <li>At least 8 characters</li>
-              <li>Same account</li>
-              <li>Then you&apos;re signed in</li>
-            </ul>
-          </div>
-        </AuthVisual>
+        <AuthVisual />
         <div className="login-panel">
           {!ready ? (
             <div className="auth-card">

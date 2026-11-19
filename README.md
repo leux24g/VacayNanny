@@ -57,7 +57,7 @@ Use Node.js 22 or newer (`.nvmrc` pins the major version), then `npm ci`. The pu
 
 The destination section includes four AI-generated travel scenes, descriptive cards and enquiries for locations that are not active in the catalogue. Configured destination photos take priority. The nanny directory uses a contained filter/results layout, and missing profile photos use initials rather than an unrelated caregiver image. On desktop, the application page keeps its image fixed while its form scrolls; tablet and mobile use normal page scrolling. Asset paths and the full generation prompts are recorded in [docs/image-assets.json](docs/image-assets.json).
 
-The shared sign-in, signup and password recovery pages include a left-hand image on desktop and stack on mobile. The responsive browser suite covers 320–2560px widths, every operations panel, family and nanny portals, all application steps, and short landscape overlays. See [the responsive review](docs/responsive-review.md) for the checked layouts and local sample accounts.
+The shared sign-in, signup and password recovery pages use a generated coastal-veranda scene across the full page, with the form on a soft cream panel. Desktop keeps the form to the right of the scene; mobile centres it over the backdrop. The responsive browser suite covers 320–2560px widths, every operations panel, family and nanny portals, all application steps, and short landscape overlays. See [the responsive review](docs/responsive-review.md) for the checked layouts and local sample accounts.
 
 ### Database preparation and activation
 
