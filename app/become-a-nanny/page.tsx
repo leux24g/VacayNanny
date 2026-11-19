@@ -574,6 +574,12 @@ export default function BecomeANanny() {
               <div className={styles.introNote}><CareIcon kind="leaf" /><span>Your details and documents are reviewed before your profile can be approved.</span></div>
             </header>
             <nav className={styles.progress} aria-label="Application progress">
+              <label className={styles.mobileProgress}>
+                <span>Your application</span>
+                <select aria-label="Application step" value={step} onChange={event => goStep(Number(event.target.value))}>
+                  {STEPS.map((label, index) => <option key={label} value={index} disabled={index > step}>{index + 1} of {STEPS.length} · {label}</option>)}
+                </select>
+              </label>
               <ol>
                 {STEPS.map((label, index) => <li key={label}><button type="button" disabled={index > step} aria-current={index === step ? 'step' : undefined} onClick={() => index < step && goStep(index)}><span className={index < step ? styles.complete : ''}>{index < step ? '✓' : index + 1}</span><span>{label}</span></button></li>)}
               </ol>

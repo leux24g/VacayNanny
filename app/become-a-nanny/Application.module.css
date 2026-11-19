@@ -20,6 +20,7 @@
 .introNote > svg { width: 25px; height: 25px; flex-shrink: 0; }
 .introNote span { font-size: .71rem; line-height: 1.7; max-width: 370px; }
 .progress { padding: 20px 0 30px; margin-bottom: 20px; border-block: 1px solid var(--card-border); }
+.mobileProgress { display: none; }
 .progress ol { display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 6px; list-style: none; }
 .progress button { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; border: 0; background: transparent; color: #637366; font: inherit; font-size: .56rem; text-align: center; line-height: 1.4; cursor: pointer; }
 .progress button:disabled { cursor: default; color: #637366; }
@@ -52,3 +53,14 @@
 @media (max-width: 900px) { .application { --nav-height: 74px; } }
 @media (max-width: 520px) { .imagePanel { height: 330px; }.imageCopy { padding-top: 25px; }.imageCopy > svg { display: none; }.imageCopy h2 { font-size: 2.65rem; }.imageCopy > p:last-child { max-width: 240px; }.imageCopy h2 br:nth-child(2) { display: block; }.imageEyebrow { max-width: 190px; }.formInner { padding-top: 30px; }.header h1 { font-size: 2.3rem; }.progress ol { gap: 3px; }.progress button { font-size: .47rem; }.progress button > span:first-child { width: 25px; height: 25px; font-size: .65rem; }.form :global(.form-card) { padding: 20px; }.form :global(.field-row) { grid-template-columns: minmax(0,1fr); }.form :global(.btn-row) { flex-wrap: wrap; } }
 @media (max-width: 620px) { .imageCopy { display: none; }.imagePanel { height: 260px; } }
+@media (min-width: 981px) and (max-width: 1200px) {
+  .form :global(.tier-cards) { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 620px) {
+  .progress { padding-block: 18px; }
+  .progress ol { display: none; }
+  .mobileProgress { display: grid; gap: 10px; }
+  .mobileProgress > span { font-size: .72rem; color: #52677a; }
+  .mobileProgress select { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #bdc9bd; border-radius: 6px; padding: 10px; font: inherit; font-size: 1rem; color: var(--deep); background: #fffdf8; }
+  .mobileProgress select:focus-visible { outline: 2px solid #476b54; outline-offset: 3px; }
+}

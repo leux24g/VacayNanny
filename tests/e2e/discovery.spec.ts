@@ -67,5 +67,8 @@ test('application keeps the image fixed while the desktop form scrolls and chang
   await page.setViewportSize({ width: 390, height: 844 })
   await expect.poll(() => panel.evaluate(element => getComputedStyle(element).overflowY)).toBe('visible')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await panel.getByRole('combobox', { name: 'Application step' }).selectOption('0')
+  await expect(panel.getByRole('heading', { name: 'Personal Information', exact: true })).toBeVisible()
+  await expect(panel.getByLabel('First Name')).toHaveValue('Test')
   await page.screenshot({ path: testInfo.outputPath('application-mobile.png'), fullPage: true })
 })

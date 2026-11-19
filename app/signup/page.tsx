@@ -8,6 +8,7 @@ import { hasSupabaseConfig } from '@/lib/supabase'
 import { SITE_URL } from '@/lib/constants'
 import { getFriendlyAuthError } from '@/lib/auth-errors'
 import Nav from '@/components/Nav'
+import AuthVisual from '@/components/AuthVisual'
 
 type SignupRole = 'parent' | 'nanny'
 
@@ -76,8 +77,8 @@ export default function SignupPage() {
   return (
     <>
       <Nav />
-      <div className="login-stage">
-        <aside className="login-visual">
+      <main className="login-stage" id="main-content">
+        <AuthVisual>
           <div className="login-visual-copy">
             <p className="login-visual-kicker">Holiday childcare</p>
             <h2>An account for the <em>family</em>, or the nanny.</h2>
@@ -88,7 +89,7 @@ export default function SignupPage() {
               <li>One confirmed email</li>
             </ul>
           </div>
-        </aside>
+        </AuthVisual>
         <div className="login-panel">
           {done ? (
             <div className="auth-card">
@@ -201,7 +202,7 @@ export default function SignupPage() {
             </form>
           )}
         </div>
-      </div>
+      </main>
     </>
   )
 }

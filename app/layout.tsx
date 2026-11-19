@@ -4,6 +4,8 @@ import { SITE_URL } from '@/lib/constants'
 import { SiteCatalogProvider } from '@/components/SiteCatalogProvider'
 import { getSiteCatalog } from '@/lib/catalog-data'
 import './globals.css'
+import './auth.css'
+import './responsive.css'
 import React from 'react'
 
 const dmSans = localFont({

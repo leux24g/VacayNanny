@@ -6,6 +6,9 @@ import { demoCatalog } from '../lib/catalog-data'
 
 const reviewMode = process.argv.includes('--review')
 const adminId = '33333333-3333-4333-8333-333333333333'
+const parentId = '44444444-4444-4444-8444-444444444444'
+const nannyUserId = '55555555-5555-4555-8555-555555555555'
+const applicationId = '66666666-6666-4666-8666-666666666666'
 const nannyId = '22222222-2222-4222-8222-222222222222'
 const bookingId = '11111111-1111-4111-8111-111111111111'
 const catalog = demoCatalog()
@@ -23,11 +26,15 @@ const user = {
   app_metadata: { provider: 'email' },
   user_metadata: { full_name: 'Test Operator' },
 }
+const users = [user,
+  { ...user, id: parentId, email: 'family@example.test', user_metadata: { full_name: 'Test Family' } },
+  { ...user, id: nannyUserId, email: 'nanny@example.test', user_metadata: { full_name: 'Test Nanny' } },
+]
 const nanny = {
   id: nannyId,
   slug: 'test-nanny',
   display_name: 'Test Nanny',
-  user_id: null,
+  user_id: nannyUserId,
   application_id: null,
   tier: 'bronze',
   daily_rate_kes: 2200,
@@ -51,7 +58,7 @@ const nanny = {
 }
 const booking = {
   id: bookingId,
-  parent_id: null,
+  parent_id: parentId,
   parent_name: 'Test Family',
   email: 'family@example.test',
   phone: '+254700000000',
@@ -76,23 +83,40 @@ const booking = {
   nannies: nanny,
 }
 const tables: Record<string, unknown[]> = {
-  profiles: [
-    {
-      id: adminId,
-      role: 'admin',
-      full_name: 'Test Operator',
-      email: user.email,
-      phone: null,
-      created_at: created,
-    },
-  ],
+  profiles: users.map((identity, index) => ({
+    id: identity.id,
+    role: ['admin', 'parent', 'nanny'][index],
+    full_name: identity.user_metadata.full_name,
+    email: identity.email,
+    phone: null,
+    avatar_url: null,
+    created_at: created,
+  })),
   nannies: [nanny],
   bookings: [booking],
-  nanny_applications: [],
+  nanny_applications: [{
+    id: applicationId, user_id: null, full_name: 'Test Applicant',
+    email: 'applicant.with.a.long.address.for.layout.review@example.test',
+    phone: '+254700000000', country_code: '+254', date_of_birth: '1990-01-01', gender: 'Female',
+    county: 'Kwale', town: 'Diani', national_id_number: null, kra_pin: null,
+    cogc_status: 'yes', cogc_date: null, experience_years: '4',
+    languages: ['English', 'Swahili'], age_groups: ['3–5'], services: ['Daytime care'],
+    bio: 'Synthetic application for local layout review only.', certifications: ['First Aid'],
+    swimming: 'Yes', cooking: 'Yes', tutoring: null, driving: null, special_needs: null,
+    available_days: ['Monday', 'Tuesday'], earliest_start: '08:00', latest_end: '17:00',
+    willing_to_travel: 'kenya', preferred_locations: ['Diani'], comfortable_pets: 'Yes', comfortable_multiple: 'Yes',
+    status: 'reviewing', estimated_tier: 'silver', admin_notes: '', interview_at: null,
+    consent_background: true, consent_terms: true, consent_accuracy: true,
+    agreement_signed_path: null, agreement_reviewed_at: null, agreement_reviewed_by: null,
+    approval_email_sent_at: null, created_at: created,
+  }],
+  nanny_references: [{ id: 'reference-test', application_id: applicationId, full_name: 'Test Reference', relationship: 'Former employer', phone: '+254700000000', email: 'reference@example.test', country_code: '+254', permission_to_contact: 'Yes', sort_order: 1 }],
+  nanny_documents: [],
+  booking_messages: [{ id: 'message-test', booking_id: bookingId, sender_id: parentId, sender_role: 'parent', body: 'Looking forward to our trip. Here are our arrival details for the family booking.', created_at: created }],
   reviews: [],
-  contact_messages: [],
-  waitlist: [],
-  payment_attempts: [],
+  contact_messages: [{ id: 'contact-test', name: 'Test Enquiry', email: 'family.with.a.long.address.for.layout.review@example.test', subject: 'A family trip with additional childcare requirements', message: 'Synthetic enquiry for local layout review only.', created_at: created }],
+  waitlist: [{ id: 'waitlist-test', email: 'waitlist@example.test', region: 'Zanzibar', created_at: created }],
+  payment_attempts: [{ id: 'payment-test', booking_id: bookingId, reference: 'VN-77777777-7777-4777-8777-777777777777', amount_subunit: 440000, currency: 'KES', status: 'pending', channel: null, authorization_url: null, created_at: created }],
   destinations: [
     {
       id: 'diani',
@@ -152,9 +176,9 @@ const tables: Record<string, unknown[]> = {
   })),
   homepage_steps: [],
 }
-function fixtureSession() {
+function fixtureSession(identity = user) {
   const payload = {
-    sub: adminId,
+    sub: identity.id,
     aud: 'authenticated',
     role: 'authenticated',
     exp: Math.floor(Date.now() / 1000) + 3600,
@@ -172,7 +196,7 @@ function fixtureSession() {
     expires_at: payload.exp,
     expires_in: 3600,
     token_type: 'bearer',
-    user,
+    user: identity,
   }
 }
 const server = createServer(async (req, res) => {
@@ -195,10 +219,8 @@ const server = createServer(async (req, res) => {
       res.end('{}')
       return
     }
-    if (
-      credentials.email !== user.email ||
-      credentials.password !== 'local-review'
-    ) {
+    const identity = users.find(candidate => candidate.email === credentials.email)
+    if (!identity || credentials.password !== 'local-review') {
       res.statusCode = 400
       res.end(
         JSON.stringify({
@@ -208,15 +230,24 @@ const server = createServer(async (req, res) => {
       )
       return
     }
-    res.end(JSON.stringify(fixtureSession()))
+    res.end(JSON.stringify(fixtureSession(identity)))
     return
   }
   if (url.pathname === '/auth/v1/user') {
-    res.end(JSON.stringify(user))
+    try {
+      const token = String(req.headers.authorization || '').replace(/^Bearer /, '')
+      const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
+      const identity = users.find(candidate => candidate.id === claims.sub)
+      if (!identity) throw new Error('Unknown local fixture user')
+      res.end(JSON.stringify(identity))
+    } catch {
+      res.statusCode = 401
+      res.end(JSON.stringify({ message: 'No fixture session' }))
+    }
     return
   }
   if (url.pathname === '/auth/v1/admin/users') {
-    res.end(JSON.stringify({ users: [user], aud: 'authenticated' }))
+    res.end(JSON.stringify({ users, aud: 'authenticated' }))
     return
   }
   if (url.pathname === '/rest/v1/rpc/consume_rate_limit') {

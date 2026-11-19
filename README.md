@@ -12,7 +12,7 @@ npm run setup:local
 npm run dev:review
 ```
 
-Open `http://localhost:3101`. For the sample operations workspace, sign in at `/login?next=/admin` with `operator@example.test` / `local-review`. This server uses a local fixture, disables database writes, email and payment calls, and never connects to the real Supabase project. The account exists only in the fixture server, which binds to loopback. Stop it with Ctrl+C.
+Open `http://localhost:3101`. Sign in with `operator@example.test`, `family@example.test` or `nanny@example.test`, using `local-review`, to explore the sample operations, family and nanny workspaces. This server uses a local fixture, disables database writes, email and payment calls, and never connects to the real Supabase project. The accounts exist only in the fixture server, which binds to loopback. Stop it with Ctrl+C.
 
 `setup:local` preserves existing `.env.local` values and adds missing local defaults: a localhost site URL, disabled email delivery and a random cron secret. It does not overwrite credentials in `.env`. Use `npm run setup:check` to inspect configuration without contacting any external service. `npm run email:preview` saves the supplied application email templates to `artifacts/email-previews/index.html` without sending them.
 
@@ -56,6 +56,8 @@ The existing cron schedule, `30 21 * * *` UTC, runs at **00:30 Africa/Nairobi da
 Use Node.js 22 or newer (`.nvmrc` pins the major version), then `npm ci`. The public website and operations workspace share the cream, navy, coral and sage palette. Motion uses the browser's animation API and respects reduced motion. Homepage steps and pricing have no decorative numbered labels. Specialist childcare, adult/elderly care and nursing enquiries link to the contact form with the service selected; they are quoted separately from nanny tiers.
 
 The destination section includes four AI-generated travel scenes, descriptive cards and enquiries for locations that are not active in the catalogue. Configured destination photos take priority. The nanny directory uses a contained filter/results layout, and missing profile photos use initials rather than an unrelated caregiver image. On desktop, the application page keeps its image fixed while its form scrolls; tablet and mobile use normal page scrolling. Asset paths and the full generation prompts are recorded in [docs/image-assets.json](docs/image-assets.json).
+
+The shared sign-in, signup and password recovery pages include a left-hand image on desktop and stack on mobile. The responsive browser suite covers 320–2560px widths, every operations panel, family and nanny portals, all application steps, and short landscape overlays. See [the responsive review](docs/responsive-review.md) for the checked layouts and local sample accounts.
 
 ### Database preparation and activation
 

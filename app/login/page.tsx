@@ -7,6 +7,7 @@ import { createSupabaseBrowser } from '@/lib/supabase/browser'
 import { hasSupabaseConfig } from '@/lib/supabase'
 import { getFriendlyAuthError } from '@/lib/auth-errors'
 import Nav from '@/components/Nav'
+import AuthVisual from '@/components/AuthVisual'
 
 function LoginForm() {
   const router = useRouter()
@@ -54,8 +55,8 @@ function LoginForm() {
   return (
     <>
       <Nav />
-      <div className="login-stage">
-        <aside className="login-visual">
+      <main className="login-stage" id="main-content">
+        <AuthVisual>
           <div className="login-visual-copy">
             <p className="login-visual-kicker">Holiday childcare</p>
             <h2>One login for the <em>whole trip.</em></h2>
@@ -66,7 +67,7 @@ function LoginForm() {
               <li>Nanny applications</li>
             </ul>
           </div>
-        </aside>
+        </AuthVisual>
         <div className="login-panel">
           <form className="auth-card" onSubmit={submit} autoComplete="on">
             <div className="login-heading">
@@ -124,7 +125,7 @@ function LoginForm() {
             <p className="auth-switch">New here? <Link href="/signup">Create an account</Link></p>
           </form>
         </div>
-      </div>
+      </main>
     </>
   )
 }

@@ -237,7 +237,7 @@ export default function BookingModal({
         role="dialog"
         aria-modal="true"
         aria-label="Request a nanny"
-        style={{ maxWidth: 560, maxHeight: '90vh', overflowY: 'auto' }}
+        style={{ maxWidth: 560, maxHeight: '90dvh', overflowY: 'auto' }}
       >
         <button
           className="modal-x"
