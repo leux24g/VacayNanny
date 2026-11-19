@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import MediaImage from './MediaImage'
+import ImageSlideshow from './ImageSlideshow'
+import { familySlides } from '@/lib/marketing-slides'
 import Nav from './Nav'
 import Footer from './Footer'
 import WAFloat from './WAFloat'
@@ -111,10 +112,9 @@ export default function HomePage({
             </div>
           </div>
           <div className={styles.heroImage}>
-            <MediaImage
-              src="/images/holiday-coast.jpg"
-              alt="A family enjoying a carefree afternoon together beside the sea"
-              fill
+            <ImageSlideshow
+              slides={familySlides}
+              label="Family holiday moments"
               sizes="(max-width: 760px) 100vw, 54vw"
               priority
             />

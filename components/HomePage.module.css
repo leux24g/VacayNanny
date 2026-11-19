@@ -96,14 +96,9 @@
   min-width: 0;
   border-radius: 47% 47% 3px 3px;
 }
-.heroImage > img {
-  object-fit: cover;
-  object-position: 52% center;
-  border-radius: inherit;
-}
 .imageCaption {
   position: absolute;
-  bottom: 30px;
+  bottom: 78px;
   left: -28px;
   padding: 18px 25px;
   background: var(--bg);

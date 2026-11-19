@@ -107,6 +107,7 @@ for (const screen of [screens[0], screens[2], screens[4]]) {
 
 test('sign-in background covers the page and keeps the form usable on desktop and touch screens', async ({ page, browser }, testInfo) => {
   await page.goto('/login')
+  await expect(page.getByText('AI-generated coastal scene', { exact: true })).toHaveCount(0)
   const image = page.locator('.auth-background-image')
   await image.evaluate(element => (element as HTMLImageElement).decode())
   const visual = await page.locator('.auth-backdrop').boundingBox()

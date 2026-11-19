@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
-import MediaImage from '@/components/MediaImage'
+import ImageSlideshow from '@/components/ImageSlideshow'
+import { applicationSlides } from '@/lib/marketing-slides'
 import CareIcon from '@/components/CareIcon'
 import styles from './Application.module.css'
 import { APPLICATION_FILE_MAX_BYTES } from '@/lib/application-files'
@@ -555,7 +556,7 @@ export default function BecomeANanny() {
 
       <main className={styles.application} id="main-content">
         <aside className={styles.imagePanel} aria-label="A career built around care">
-          <MediaImage src="/images/nanny-application.webp" alt="AI-generated illustration of a caregiver and a child playing with wooden blocks in a sunlit room" fill sizes="(max-width: 980px) 100vw, 50vw" priority />
+          <ImageSlideshow slides={applicationSlides} label="Everyday childcare moments" sizes="(max-width: 980px) 100vw, 50vw" priority />
           <div className={styles.imageShade} />
           <div className={styles.imageCopy}>
             <CareIcon kind="sun" />

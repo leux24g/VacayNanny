@@ -12,7 +12,6 @@ export default function AuthVisual() {
         priority
       />
       <div className="auth-background-wash" />
-      <span className="auth-image-credit">AI-generated coastal scene</span>
     </div>
   )
 }

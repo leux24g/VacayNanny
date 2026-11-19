@@ -25,17 +25,6 @@
   inset: 0;
   background: linear-gradient(90deg, #fff8ef00 25%, #fff8ef0d 55%, #fff8ef30 100%);
 }
-.auth-image-credit {
-  position: absolute;
-  bottom: 18px;
-  left: clamp(20px, 4vw, 64px);
-  padding: 5px 8px;
-  border-radius: 4px;
-  color: #405645;
-  background: #fff8efdb;
-  font-size: .6rem;
-  letter-spacing: .03em;
-}
 .login-panel {
   position: relative;
   grid-column: 2;
@@ -114,6 +103,5 @@
   .login-heading h1 { font-size: 2.35rem; }
   .auth-card input,
   .auth-card select { font-size: 1rem; }
-  .auth-image-credit { font-size: .53rem; bottom: 13px; }
   .signup-role-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 }

@@ -9,12 +9,13 @@ The local preview and review branch include a shared full-page coastal backgroun
 - Application review and admin inbox cards wrap long email addresses and values. Flexible grid tracks no longer force these cards outside the viewport.
 - The application tier comparison stacks in the narrower desktop form column so the Professional tier heading stays readable.
 - On phones, the application progress control becomes a readable dropdown for returning to previous steps, while desktop keeps the full step navigation.
+- Homepage and application image panels each contain three scenes with automatic crossfades, a pause/resume option, static reduced-motion viewing, and off-screen/tab visibility suspension. Images share one fixed panel size so rotation does not move the surrounding content.
 - Mobile navigation scrolls when the screen is short. Common action buttons have larger touch targets, and the booking dialog uses dynamic viewport height.
 - Local review now includes synthetic family and nanny accounts, an application, an enquiry and a pending payment. No customer data or live writes are used.
 
 ## Verification
 
-All **31 Playwright browser tests passed**. The suite checks descendants as well as document width, so hiding overflow on the body cannot conceal a broken card.
+All **34 Playwright browser tests passed**. The suite checks descendants as well as document width, so hiding overflow on the body cannot conceal a broken card. Slideshow checks also cover complete loops, pausing, reduced motion, off-screen suspension and an unavailable image.
 
 | Area | Coverage |
 | --- | --- |
@@ -24,6 +25,7 @@ All **31 Playwright browser tests passed**. The suite checks descendants as well
 | Nanny application | All eight steps at 320, 768, 1024 and 1440 pixels; desktop independent scrolling and mobile normal scrolling |
 | Authentication | Full-page image coverage, a right-aligned desktop form, a contained touch layout, password visibility, and reachable submit button with a shorter viewport |
 | Overlays | Booking, navigation and support at 844 × 390 landscape size; keyboard focus and Escape behavior |
+| Image panels | Three-photo loops on both marketing panels, pause/resume, reduced motion, off-screen suspension and failed-image fallback |
 
 ESLint, TypeScript and the production build passed. Browser checks use desktop Chrome and Chromium touch emulation. Physical iOS/Android devices and Safari/Firefox have not been tested in this pass.
 
