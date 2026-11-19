@@ -11,6 +11,7 @@ import BookingModal, { type BookingDefaults } from './BookingModal'
 import NannyCard from './NannyCard'
 import Reveal from './Reveal'
 import CareIcon from './CareIcon'
+import DestinationExplorer from './DestinationExplorer'
 import { useSiteCatalog } from './SiteCatalogProvider'
 import {
   applyPolicyTokens,
@@ -425,43 +426,7 @@ export default function HomePage({
             ))}
           </Reveal>
         </section>
-        {destinations.length > 0 && (
-          <section
-            className={`${styles.section} ${styles.destinations}`}
-            id="destinations"
-          >
-            <Reveal>
-              <p className={styles.eyebrow}>Find your somewhere</p>
-              <h2>
-                Good days begin <em>here.</em>
-              </h2>
-            </Reveal>
-            <Reveal className="dest-grid">
-              {destinations
-                .filter((d) => d.is_active)
-                .map((d) => (
-                  <Link
-                    className="dest-card"
-                    key={d.id}
-                    href={`/nannies?destination=${encodeURIComponent(d.name)}`}
-                  >
-                    {d.image_url && (
-                      <MediaImage
-                        src={d.image_url}
-                        alt={d.name}
-                        fill
-                        sizes="(max-width:760px) 100vw, 33vw"
-                      />
-                    )}
-                    <div className="dest-shade" />
-                    <div className="dest-info">
-                      <h3 className="dest-name">{d.name}</h3>
-                    </div>
-                  </Link>
-                ))}
-            </Reveal>
-          </section>
-        )}
+        <DestinationExplorer destinations={destinations} />
         {reviews.length > 0 && (
           <section className={`${styles.section} ${styles.stories}`}>
             <p className={styles.eyebrow}>From one family to another</p>

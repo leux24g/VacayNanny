@@ -4,7 +4,7 @@ import { useState } from 'react'
 import PageShell from '@/components/PageShell'
 import { SUPPORT_EMAIL, WHATSAPP_DISPLAY, waLink } from '@/lib/constants'
 
-export default function ContactPage({ service = '' }: { service?: string }) {
+export default function ContactPage({ service = '', destination = '' }: { service?: string; destination?: string }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>(
     'idle',
   )
@@ -45,7 +45,7 @@ export default function ContactPage({ service = '' }: { service?: string }) {
         <header className="contact-head">
           <p className="eyebrow">Hello</p>
           <h1>
-            {service ? (
+            {service || destination ? (
               'Let’s talk about care.'
             ) : (
               <>
@@ -67,7 +67,7 @@ export default function ContactPage({ service = '' }: { service?: string }) {
           ) : (
             <form className="contact-form" onSubmit={submit}>
               <h2>
-                {service ? 'Request a specialist care quote' : 'Send a message'}
+                {service ? 'Request a specialist care quote' : destination ? `Ask about care in ${destination}` : 'Send a message'}
               </h2>
               <div className="contact-row">
                 <label>
@@ -90,7 +90,7 @@ export default function ContactPage({ service = '' }: { service?: string }) {
                   name="subject"
                   type="text"
                   defaultValue={
-                    service ? `Specialist care quote: ${service}` : ''
+                    service ? `Specialist care quote: ${service}` : destination ? `Childcare enquiry: ${destination}` : ''
                   }
                   placeholder="Booking, partnership, press…"
                 />

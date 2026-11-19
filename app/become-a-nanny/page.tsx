@@ -1,7 +1,10 @@
 'use client'
 
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
+import MediaImage from '@/components/MediaImage'
+import CareIcon from '@/components/CareIcon'
+import styles from './Application.module.css'
 import { APPLICATION_FILE_MAX_BYTES } from '@/lib/application-files'
 import { APPLY_EXTRA_DESTINATIONS, mergeDestinationChoices } from '@/lib/destinations'
 import { useDestinationNames } from '@/lib/useDestinationNames'
@@ -52,13 +55,13 @@ function CheckItem({
   label, checked, onChange,
 }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div
+    <label
       className={`check-item${checked ? ' checked' : ''}`}
-      onClick={() => onChange(!checked)}
     >
-      <div className={`check-box${checked ? ' checked' : ''}`}>{checked ? '✓' : ''}</div>
+      <input className={styles.checkNative} type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} />
+      <span aria-hidden="true" className={`check-box${checked ? ' checked' : ''}`}>{checked ? '✓' : ''}</span>
       <span className="check-label">{label}</span>
-    </div>
+    </label>
   )
 }
 
@@ -76,10 +79,11 @@ function RadioCard({
 
 /* ── Phone input with country code ── */
 function PhoneInput({
-  value, onChange, countryCode, onCodeChange,
+  value, onChange, countryCode, onCodeChange, id,
 }: {
   value: string; onChange: (v: string) => void;
   countryCode: string; onCodeChange: (c: string) => void;
+  id?: string;
 }) {
   const [open, setOpen] = useState(false)
   const current = COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0]
@@ -104,6 +108,7 @@ function PhoneInput({
         ))}
       </div>
       <input
+        id={id}
         type="tel"
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -235,8 +240,10 @@ function useNannyDraft() {
 
 /* ── Main component ── */
 export default function BecomeANanny() {
+  const formPanel = useRef<HTMLDivElement>(null)
   const draft = useNannyDraft()
   const { firstName, lastName, dob, gender, phone, email, county, town, step } = draft
+  const previousStep = useRef(step)
   function patchDraft(partial: Partial<NannyDraft>) {
     writeDraft({ ...parseDraft(readDraftRaw()), ...partial })
   }
@@ -253,6 +260,22 @@ export default function BecomeANanny() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+
+  function scrollToForm() {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (window.matchMedia('(min-width: 981px)').matches) {
+      formPanel.current?.scrollTo({ top: 0, behavior: reduced ? 'instant' : 'smooth' })
+    } else {
+      document.getElementById('application-form')?.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth', block: 'start' })
+    }
+  }
+
+  useEffect(() => {
+    if (previousStep.current === step) return
+    previousStep.current = step
+    scrollToForm()
+    formPanel.current?.querySelector<HTMLElement>('.step-header h2')?.focus({ preventScroll: true })
+  }, [step])
 
   // ── Form state ──
   const [countryCode, setCountryCode] = useState('+254')
@@ -396,11 +419,10 @@ export default function BecomeANanny() {
   function goStep(n: number) {
     if (n > step) {
       const errs = validate()
-      if (errs.length) { setErrors(errs); return }
+      if (errs.length) { setErrors(errs); scrollToForm(); return }
     }
     setErrors([])
     setStep(n)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function submitForm() {
@@ -475,8 +497,6 @@ export default function BecomeANanny() {
     }
   }
 
-  const progressPct = (step / (STEPS.length - 1)) * 100
-
   // ── Tier eligibility ──
   function getTierEligibility() {
     const yrs = parseInt(expYears || '0')
@@ -533,42 +553,34 @@ export default function BecomeANanny() {
         <Link href="/" className="nav-back">← Back to Home</Link>
       </nav>
 
-      {/* HERO */}
-      <div className="page-hero">
-        <div className="eyebrow">Nanny Application</div>
-        <h1>Join the <em>VacayNanny</em> Family</h1>
-        <p>Apply to become a vetted holiday childcare professional. Work at Kenya&apos;s top resorts, earn premium rates, and build a career you love.</p>
-        <div className="tier-badges">
-          <div className="tier-badge bronze"><div className="tier-dot" /> Bronze · Entry Level</div>
-          <div className="tier-badge silver"><div className="tier-dot" /> Silver · Professional</div>
-          <div className="tier-badge gold"><div className="tier-dot" /> Gold · Elite</div>
-        </div>
-      </div>
-
-      {/* PROGRESS */}
-      <div className="progress-wrap">
-        <div className="progress-steps">
-          <div className="progress-fill" style={{ width: `${progressPct}%` }} />
-          {STEPS.map((label, i) => (
-            <div
-              key={i}
-              className={`step-dot-wrap${i === step ? ' active' : ''}`}
-              onClick={() => i < step && goStep(i)}
-              style={{ cursor: i < step ? 'pointer' : 'default' }}
-            >
-              <div className={`step-dot${i === step ? ' active' : i < step ? ' done' : ''}`}>
-                {i < step ? '✓' : i + 1}
-              </div>
-              <span className="step-label">{label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* FORM */}
-      <div className="form-container">
+      <main className={styles.application} id="main-content">
+        <aside className={styles.imagePanel} aria-label="A career built around care">
+          <MediaImage src="/images/nanny-application.webp" alt="AI-generated illustration of a caregiver and a child playing with wooden blocks in a sunlit room" fill sizes="(max-width: 980px) 100vw, 50vw" priority />
+          <div className={styles.imageShade} />
+          <div className={styles.imageCopy}>
+            <CareIcon kind="sun" />
+            <p className={styles.imageEyebrow}>Good care makes room for good days</p>
+            <h2>Your care.<br /><em>Their happy memories.</em></h2>
+            <p>Bring your experience, your patience and the little things that make you, you. There&apos;s a family looking for care like yours.</p>
+          </div>
+          <span className={styles.imageCredit}>AI-generated lifestyle illustration</span>
+        </aside>
+        <div ref={formPanel} className={styles.formPanel} role="region" aria-label="Nanny application form" tabIndex={0}>
+          <div className={styles.formInner}>
+            <header className={styles.header}>
+              <p className={styles.eyebrow}>Become a VacayNanny</p>
+              <h1>Care comes naturally.<br /><em>Start here.</em></h1>
+              <p>Tell us about yourself and the experience you bring. We&apos;ll guide you through the rest, one step at a time.</p>
+              <div className={styles.introNote}><CareIcon kind="leaf" /><span>Your details and documents are reviewed before your profile can be approved.</span></div>
+            </header>
+            <nav className={styles.progress} aria-label="Application progress">
+              <ol>
+                {STEPS.map((label, index) => <li key={label}><button type="button" disabled={index > step} aria-current={index === step ? 'step' : undefined} onClick={() => index < step && goStep(index)}><span className={index < step ? styles.complete : ''}>{index < step ? '✓' : index + 1}</span><span>{label}</span></button></li>)}
+              </ol>
+            </nav>
+      <div className={`form-container ${styles.form}`} id="application-form">
         {errors.length > 0 && (
-          <div className="step-error">
+          <div className="step-error" role="alert">
             <strong>Please fix the following:</strong>
             <ul>{errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
           </div>
@@ -579,30 +591,30 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 1 of 8</div>
-              <h2>Personal Information</h2>
+              <h2 tabIndex={-1}>Personal Information</h2>
               <p>Tell us about yourself. This information helps us match you with the right families.</p>
             </div>
             <div className="form-card">
               <h3>Basic Details</h3>
               <div className="field-row">
                 <div className="field">
-                  <label>First Name <span className="req">*</span></label>
-                  <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Jane" />
+                  <label htmlFor="app-first-name">First Name <span className="req">*</span></label>
+                  <input id="app-first-name" autoComplete="given-name" type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Jane" />
                 </div>
                 <div className="field">
-                  <label>Last Name <span className="req">*</span></label>
-                  <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Doe" />
+                  <label htmlFor="app-last-name">Last Name <span className="req">*</span></label>
+                  <input id="app-last-name" autoComplete="family-name" type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Doe" />
                 </div>
               </div>
               <div className="field-row">
                 <div className="field">
-                  <label>Date of Birth <span className="req">*</span></label>
-                  <input type="date" value={dob} onChange={e => setDob(e.target.value)} />
+                  <label htmlFor="app-dob">Date of Birth <span className="req">*</span></label>
+                  <input id="app-dob" autoComplete="bday" type="date" value={dob} onChange={e => setDob(e.target.value)} />
                   <span className="field-hint">Must be 21 years or older.</span>
                 </div>
                 <div className="field">
-                  <label>Gender <span className="req">*</span></label>
-                  <select value={gender} onChange={e => setGender(e.target.value)}>
+                  <label htmlFor="app-gender">Gender <span className="req">*</span></label>
+                  <select id="app-gender" value={gender} onChange={e => setGender(e.target.value)}>
                     <option value="">Select gender</option>
                     <option>Female</option>
                     <option>Male</option>
@@ -617,8 +629,9 @@ export default function BecomeANanny() {
               <h3>Contact Details</h3>
               <div className="field-row">
                 <div className="field">
-                  <label>Phone Number <span className="req">*</span></label>
+                  <label htmlFor="app-phone">Phone Number <span className="req">*</span></label>
                   <PhoneInput
+                    id="app-phone"
                     value={phone}
                     onChange={setPhone}
                     countryCode={countryCode}
@@ -627,14 +640,14 @@ export default function BecomeANanny() {
                   <span className="field-hint">Kenyan numbers: 07xx or 011x format</span>
                 </div>
                 <div className="field">
-                  <label>Email Address <span className="req">*</span></label>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@email.com" />
+                  <label htmlFor="app-email">Email Address <span className="req">*</span></label>
+                  <input id="app-email" autoComplete="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@email.com" />
                 </div>
               </div>
               <div className="field-row">
                 <div className="field">
-                  <label>County <span className="req">*</span></label>
-                  <select value={county} onChange={e => setCounty(e.target.value)}>
+                  <label htmlFor="app-county">County <span className="req">*</span></label>
+                  <select id="app-county" value={county} onChange={e => setCounty(e.target.value)}>
                     <option value="">Select county</option>
                     {['Nairobi','Mombasa','Kwale','Kilifi','Tana River','Lamu','Taita-Taveta','Garissa','Wajir','Mandera','Marsabit','Isiolo','Meru','Tharaka-Nithi','Embu','Kitui','Machakos','Makueni','Nyandarua','Nyeri','Kirinyaga','Murang\'a','Kiambu','Turkana','West Pokot','Samburu','Trans-Nzoia','Uasin Gishu','Elgeyo-Marakwet','Nandi','Baringo','Laikipia','Nakuru','Narok','Kajiado','Kericho','Bomet','Kakamega','Vihiga','Bungoma','Busia','Siaya','Kisumu','Homa Bay','Migori','Kisii','Nyamira'].map(c => (
                       <option key={c}>{c}</option>
@@ -642,8 +655,8 @@ export default function BecomeANanny() {
                   </select>
                 </div>
                 <div className="field">
-                  <label>Town / City <span className="req">*</span></label>
-                  <input type="text" value={town} onChange={e => setTown(e.target.value)} placeholder="e.g. Diani Beach" />
+                  <label htmlFor="app-town">Town / City <span className="req">*</span></label>
+                  <input id="app-town" type="text" value={town} onChange={e => setTown(e.target.value)} placeholder="e.g. Diani Beach" />
                 </div>
               </div>
             </div>
@@ -686,7 +699,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 2 of 8</div>
-              <h2>Identity Verification</h2>
+              <h2 tabIndex={-1}>Identity Verification</h2>
               <p>We verify all nannies to keep families safe. Your documents are stored securely and never shared without your consent.</p>
             </div>
 
@@ -758,7 +771,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 3 of 8</div>
-              <h2>Background Check</h2>
+              <h2 tabIndex={-1}>Background Check</h2>
               <p>Police clearance is mandatory for all VacayNanny professionals. It protects both you and the families you work with.</p>
             </div>
 
@@ -806,7 +819,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 4 of 8</div>
-              <h2>Experience & Qualifications</h2>
+              <h2 tabIndex={-1}>Experience & Qualifications</h2>
               <p>Your experience shapes which tier you qualify for. Be accurate — we verify with your references.</p>
             </div>
 
@@ -904,7 +917,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 5 of 8</div>
-              <h2>Skills & Abilities</h2>
+              <h2 tabIndex={-1}>Skills & Abilities</h2>
               <p>Help families know exactly what you bring to their holiday.</p>
             </div>
 
@@ -999,7 +1012,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 6 of 8</div>
-              <h2>Professional References</h2>
+              <h2 tabIndex={-1}>Professional References</h2>
               <p>Provide two references who can speak to your childcare experience and character. They must be reachable by phone or email.</p>
             </div>
 
@@ -1091,7 +1104,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 7 of 8</div>
-              <h2>Availability & Preferences</h2>
+              <h2 tabIndex={-1}>Availability & Preferences</h2>
               <p>Tell us when you&apos;re available and what kinds of placements you prefer.</p>
             </div>
 
@@ -1193,7 +1206,7 @@ export default function BecomeANanny() {
           <div className="form-step active">
             <div className="step-header">
               <div className="step-num">Step 8 of 8</div>
-              <h2>Review & Submit</h2>
+              <h2 tabIndex={-1}>Review & Submit</h2>
               <p>Please review your details carefully before submitting. You can go back to any step to make changes.</p>
             </div>
 
@@ -1279,6 +1292,9 @@ export default function BecomeANanny() {
           </div>
         )}
       </div>
+          </div>
+        </div>
+      </main>
     </>
   )
 }

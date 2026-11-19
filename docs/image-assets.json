@@ -1,0 +1,31 @@
+{
+  "mode": "Built-in image_gen tool",
+  "purpose": "AI-generated marketing scenes, not real caregiver profiles or photos of a specific property",
+  "assets": [
+    {
+      "name": "diani",
+      "prompt": "Use case: photorealistic-natural. Asset type: destination image for VacayNanny, a warm editorial family travel website. Create one photorealistic travel landscape in a landscape 3:2 composition, with natural textures, gentle film grain, warm late-afternoon light, muted sage vegetation and soft cream highlights, natural ocean/sky colors. Feels like a thoughtful independent travel magazine, believable and unpolished, not glossy AI advertising. No people, no lettering, no typography, no logo, no watermark, no collage, no frames. This is evocative destination artwork, not a depiction of a specific hotel or service. Scene: the south Kenyan coast around Diani. An inviting broad white-sand beach, turquoise shallows, coconut palms leaning gently from the left edge, small footprints trailing toward the water, soft sea breeze and a calm horizon. Eye-level view from the palm shade; beach and ocean remain visible in a portrait crop. No buildings or boats. Warm, spacious and restful.",
+      "path": "public/images/destinations/diani.webp"
+    },
+    {
+      "name": "watamu",
+      "prompt": "Use case: photorealistic-natural. Asset type: destination image for VacayNanny, a warm editorial family travel website. Create one photorealistic travel landscape in a landscape 3:2 composition, with natural textures, gentle film grain, warm late-afternoon light, muted sage vegetation and soft cream highlights, natural ocean/sky colors. Feels like a thoughtful independent travel magazine, believable and unpolished, not glossy AI advertising. No people, no lettering, no typography, no logo, no watermark, no collage, no frames. This is evocative destination artwork, not a depiction of a specific hotel or service. Scene: a quiet Watamu-inspired Kenyan coastal creek. A small traditional wooden dhow with one cream lateen sail sitting on luminous aqua water, mangroves and pale sand along the shore, restrained warm coral sunset colors with a softly blue sky. View from the sandy shore, dhow sits slightly to the right of center. Intimate, peaceful coastal afternoon, geographically plausible, no cliffs, no mountains. Do not duplicate a Diani coconut-palm beach composition.",
+      "path": "public/images/destinations/watamu.webp"
+    },
+    {
+      "name": "nairobi",
+      "prompt": "Use case: photorealistic-natural. Asset type: destination image for VacayNanny, a warm editorial family travel website. Create one photorealistic travel landscape in a landscape 3:2 composition, with natural textures, gentle film grain, warm late-afternoon light, muted sage vegetation and soft cream highlights, natural ocean/sky colors. Feels like a thoughtful independent travel magazine, believable and unpolished, not glossy AI advertising. No people, no lettering, no typography, no logo, no watermark, no collage, no frames. This is evocative destination artwork, not a depiction of a specific hotel or service. Scene: a leafy Nairobi-inspired city garden in Kenya. A path through a lush sunlit garden with a flowering jacaranda at the edge, textured brick and terracotta garden details, distant subtle modern Nairobi-like skyline barely above the trees. Eye-level garden perspective, leafy canopy and warm sunlight, quiet city escape. No towering dramatic skyscrapers, no wildlife, no coast. The greenery is the subject, buildings are distant and understated.",
+      "path": "public/images/destinations/nairobi.webp"
+    },
+    {
+      "name": "mara",
+      "prompt": "Use case: photorealistic-natural. Asset type: destination image for VacayNanny, a warm editorial family travel website. Create one photorealistic travel landscape in a landscape 3:2 composition, with natural textures, gentle film grain, warm late-afternoon light, muted sage vegetation and soft cream highlights, natural ocean/sky colors. Feels like a thoughtful independent travel magazine, believable and unpolished, not glossy AI advertising. No people, no lettering, no typography, no logo, no watermark, no collage, no frames. This is evocative destination artwork, not a depiction of a specific hotel or service. Scene: the Kenyan Maasai Mara-inspired savannah. One graceful flat-topped acacia tree left of center, warm oat-gold grass gently moving in the breeze, a few small zebras far in the mid-distance, softly rolling plains to the horizon, pale blue sky and late afternoon sun. Wide and grounded eye-level view, airy natural composition. No mountains, no vehicles, no buildings, no dramatic saturated orange sky.",
+      "path": "public/images/destinations/mara.webp"
+    },
+    {
+      "name": "application",
+      "prompt": "Use case: photorealistic-natural. Asset type: portrait editorial recruitment image for the VacayNanny childcare application page, evocative fictional lifestyle scene rather than a real caregiver profile. A Kenyan Black woman in her early thirties with natural braided hair, dressed in a simple unbranded cream linen shirt and olive trousers, sitting on a woven rug and smiling gently while helping a Black child around four years old build a small tower of wooden blocks. The interaction is candid and attentive; they look at their shared activity, not the camera. A calm airy Kenyan coastal sitting room, warm cream plaster, soft sage shutters, leafy plants, woven basket, natural afternoon window light. Photorealistic, true skin texture, relaxed natural hands and posture, understated independent-magazine photography, subtle film grain, no glossy beauty retouching. Portrait 2:3 composition with enough surrounding room to crop across a tall half-screen panel, subjects in the middle and lower half with open light interior above; keep important faces away from edges. No lettering, no logo, no watermark, no uniforms, no company badges, no medical props, no collage. Warm, reassuring, capable and welcoming.",
+      "path": "public/images/nanny-application.webp"
+    }
+  ]
+}

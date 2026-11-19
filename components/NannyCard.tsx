@@ -5,6 +5,7 @@ import { useSiteCatalog } from '@/components/SiteCatalogProvider'
 import { tierLabels, tierRateMap } from '@/lib/catalog'
 import { publicDailyRate, publicTier } from '@/lib/safeguarding'
 import type { Nanny } from '@/lib/types'
+import styles from './NannyCard.module.css'
 
 export default function NannyCard({
   nanny,
@@ -17,19 +18,21 @@ export default function NannyCard({
   const shownTier = publicTier(nanny)
   const rate = publicDailyRate(nanny, tierRateMap(site.tiers))
   const label = tierLabel(shownTier, tierLabels(site.tiers))
+  const initials = nanny.display_name.split(/\s+/).filter(Boolean).slice(0, 2).map(name => name[0]).join('')
+  const locations = [...new Set([nanny.town, ...nanny.destinations.slice(0, 2)].filter(Boolean))].join(' · ')
   return (
     <div className="nanny-card">
       <Link
         href={`/nannies/${nanny.slug}`}
         className="nc-photo"
-        style={{ display: 'block' }}
+        style={{ display: 'block', textDecoration: 'none' }}
       >
-        <MediaImage
-          src={nanny.photo_url || '/images/top-right.png'}
+        {nanny.photo_url ? <MediaImage
+          src={nanny.photo_url}
           alt={nanny.display_name}
           fill
-          sizes="(max-width: 700px) 100vw, 320px"
-        />
+          sizes="(max-width: 580px) 100vw, (max-width: 900px) 50vw, 400px"
+        /> : <div className={styles.placeholder} aria-label="Profile photo not provided" role="img"><span>{initials}</span><p>A little introduction awaits</p></div>}
         <span className={`tier-pill ${tierClass(shownTier)}`}>{label}</span>
       </Link>
       <div className="nc-body">
@@ -41,10 +44,9 @@ export default function NannyCard({
           {nanny.display_name}
         </Link>
         <div className="nc-loc">
-          {[nanny.town, nanny.destinations.slice(0, 2).join(' · ')]
-            .filter(Boolean)
-            .join(' · ')}
+          {locations}
         </div>
+        {nanny.bio && <p className={styles.bio}>{nanny.bio}</p>}
         <div className="nc-stars">
           {nanny.review_count > 0 && nanny.rating_avg > 0 ? (
             <>
@@ -73,7 +75,7 @@ export default function NannyCard({
           </div>
           {onBook ? (
             <button className="book-btn" onClick={() => onBook(nanny)}>
-              Book Now
+              Request care
             </button>
           ) : (
             <Link
