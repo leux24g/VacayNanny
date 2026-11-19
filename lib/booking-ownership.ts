@@ -26,6 +26,7 @@ export function profileOwnsBooking(
   booking: { parent_id: string | null; email: string | null },
 ): boolean {
   if (booking.parent_id && booking.parent_id === profile.id) return true
+  if (booking.parent_id) return false
   if (!profile.emailConfirmed || !profile.email || !booking.email) return false
   return booking.email.toLowerCase() === profile.email.toLowerCase()
 }

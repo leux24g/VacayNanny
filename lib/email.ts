@@ -1,10 +1,5 @@
 import { sendEmail as sendOrSkip } from '@/lib/email-delivery'
-import {
-  SITE_URL,
-  siteUrl,
-  waLink,
-  nannyAssignmentWaHref,
-} from '@/lib/constants'
+import { SITE_URL, siteUrl, waLink, nannyAssignmentWaHref } from '@/lib/constants'
 import {
   applicationReceivedTemplate,
   applicationApprovedTemplate,
@@ -67,10 +62,10 @@ function badge(label: string, color: string): string {
   return `<span style="display:inline-block;background:${color};color:#17324D;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:0.5px;text-transform:uppercase;">${label}</span>`
 }
 
-function row(label: string, value: string): string {
+function row(label: string, value: string, markup = false): string {
   return `<tr>
     <td style="padding:8px 0;border-bottom:1px solid rgba(23,50,77,0.05);font-size:13px;color:rgba(23,50,77,0.45);width:40%;vertical-align:top;">${label}</td>
-    <td style="padding:8px 0 8px 16px;border-bottom:1px solid rgba(23,50,77,0.05);font-size:13px;color:#17324D;vertical-align:top;">${value || '—'}</td>
+    <td style="padding:8px 0 8px 16px;border-bottom:1px solid rgba(23,50,77,0.05);font-size:13px;color:#17324D;vertical-align:top;">${markup ? value : escapeHtml(value || '—')}</td>
   </tr>`
 }
 
@@ -108,7 +103,7 @@ export async function sendBookingEmails(data: {
       Booking Request Received ✓
     </h2>
     <p style="margin:0 0 28px;font-size:15px;color:rgba(23,50,77,0.6);line-height:1.6;">
-      Hi ${data.parentName}, we've received your request. We’ll review your plans and share a proposed nanny for you to accept. Payment follows after the match is accepted, before care starts.
+      Hi ${escapeHtml(data.parentName)}, we've received your request. We’ll review your plans and share a proposed nanny for you to accept. Payment follows after the match is accepted, before care starts.
     </p>
 
     ${section(
@@ -117,7 +112,7 @@ export async function sendBookingEmails(data: {
         row('Check-in', data.checkIn) +
         row('Check-out', data.checkOut) +
         row('Children', data.childrenAges) +
-        row('Tier', `${badge(data.tier, tierColor)}`) +
+        row('Tier', `${badge(escapeHtml(data.tier), tierColor)}`, true) +
         (data.message ? row('Notes', data.message) : ''),
     )}
 
@@ -162,7 +157,7 @@ export async function sendBookingEmails(data: {
         row('Check-in', data.checkIn) +
         row('Check-out', data.checkOut) +
         row('Children', data.childrenAges) +
-        row('Tier', `${badge(data.tier, tierColor)}`) +
+        row('Tier', `${badge(escapeHtml(data.tier), tierColor)}`, true) +
         (data.message ? row('Notes', data.message) : ''),
     )}
   `)
@@ -182,10 +177,8 @@ export async function sendBookingEmails(data: {
     }),
   ])
 
-  if (parentResult.error)
-    console.error('Parent booking email error:', parentResult.error)
-  if (adminResult.error)
-    console.error('Admin booking email error:', adminResult.error)
+  if (parentResult.error) console.error('Parent booking email error:', parentResult.error)
+  if (adminResult.error) console.error('Admin booking email error:', adminResult.error)
 }
 
 // ── NANNY APPLICATION emails ────────────────────────────────────────────────
@@ -208,12 +201,8 @@ export async function sendApplicationEmails(data: {
   const certs = data.certifications?.length
     ? data.certifications.join(', ')
     : 'None listed'
-  const services = data.services?.length
-    ? data.services.join(', ')
-    : 'None listed'
-  const ageGroups = data.ageGroups?.length
-    ? data.ageGroups.join(', ')
-    : 'None listed'
+  const services = data.services?.length ? data.services.join(', ') : 'None listed'
+  const ageGroups = data.ageGroups?.length ? data.ageGroups.join(', ') : 'None listed'
 
   const travelLabels: Record<string, string> = {
     kenya: 'Anywhere in Kenya',
@@ -251,10 +240,7 @@ export async function sendApplicationEmails(data: {
         row('Services', services) +
         row('Certifications', certs) +
         row('Good Conduct', data.cogcStatus) +
-        row(
-          'Travel',
-          travelLabels[data.willingToTravel] ?? data.willingToTravel,
-        ),
+        row('Travel', travelLabels[data.willingToTravel] ?? data.willingToTravel),
     )}
 
     ${section(
@@ -295,6 +281,7 @@ export async function sendApplicationStatusEmail(data: {
   status: 'approved' | 'rejected'
   slug?: string | null
   notes?: string | null
+  applicationId?: string
   needsSafeguarding?: boolean
 }) {
   const approved = data.status === 'approved'
@@ -304,7 +291,7 @@ export async function sendApplicationStatusEmail(data: {
         html: htmlWrapper(
           `<h2>Application update</h2><p>Hi ${escapeHtml(data.fullName)}, we are not able to approve your application at this time.</p><p>Please contact hello@vacaynanny.net if you have questions.</p>`,
         ),
-        text: `Hi ${data.fullName}, we are not able to approve your application at this time. Please contact hello@vacaynanny.net if you have questions.`,
+        text: `Hi ${escapeHtml(data.fullName)}, we are not able to approve your application at this time. Please contact hello@vacaynanny.net if you have questions.`,
       }
   const attachments = approved ? [await loadNannyAgreement()] : undefined
   const result = await sendOrSkip({
@@ -316,6 +303,7 @@ export async function sendApplicationStatusEmail(data: {
       : 'Update on your VacayNanny application',
     ...content,
     attachments,
+    applicationApprovalId: approved ? data.applicationId : undefined,
   })
   if (result.error)
     throw new Error(
@@ -338,9 +326,7 @@ export async function sendProfileActivatedEmail(data: {
     ),
   })
   if (result.error)
-    throw new Error(
-      'Profile activated, but the notification could not be sent.',
-    )
+    throw new Error('Profile activated, but the notification could not be sent.')
 }
 
 export async function sendInterviewInviteEmail(data: {
@@ -352,9 +338,9 @@ export async function sendInterviewInviteEmail(data: {
   const html = htmlWrapper(`
     <h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;font-weight:700;color:#17324D;">Interview scheduled</h2>
     <p style="margin:0 0 28px;font-size:15px;color:rgba(23,50,77,0.6);line-height:1.6;">
-      Hi ${data.fullName}, our vetting team would like to speak with you on <strong style="color:#17324D;">${data.whenLabel} (East Africa Time)</strong>.
+      Hi ${escapeHtml(data.fullName)}, our vetting team would like to speak with you on <strong style="color:#17324D;">${escapeHtml(data.whenLabel)} (East Africa Time)</strong>.
     </p>
-    ${data.notes ? `<p style="margin:0 0 16px;font-size:14px;color:rgba(23,50,77,0.65);line-height:1.6;">${data.notes}</p>` : ''}
+    ${data.notes ? `<p style="margin:0 0 16px;font-size:14px;color:rgba(23,50,77,0.65);line-height:1.6;">${escapeHtml(data.notes)}</p>` : ''}
     <p style="margin:0;font-size:13px;color:rgba(23,50,77,0.45);">
       We'll confirm the video or phone details by WhatsApp. Questions? Message us at
       <a href="${waLink('Hi VacayNanny, I have a question about my interview.')}" style="color:#E8714A;text-decoration:none;">+254 796 930 612</a>.
@@ -386,6 +372,7 @@ export type BookingEmailEvent =
   | 'completed'
 
 export type BookingMailContext = {
+  additionalNannies?: Array<{ name: string; email: string }>
   parentName: string
   parentEmail: string
   nannyName?: string | null
@@ -633,7 +620,19 @@ export async function notifyBookingEvent(
   event: BookingEmailEvent,
   ctx: BookingMailContext,
 ) {
-  const copy = eventCopy(event, ctx)
+  const safeCtx = { ...ctx }
+  for (const key of [
+    'parentName',
+    'nannyName',
+    'extraNannyName',
+    'destination',
+    'careType',
+    'note',
+  ] as const) {
+    const value = ctx[key]
+    if (value) safeCtx[key] = escapeHtml(value)
+  }
+  const copy = eventCopy(event, safeCtx)
   const wrapped = (html: string) => htmlWrapper(html)
   const sends = [
     sendOrSkip({
@@ -682,10 +681,22 @@ export async function notifyBookingEvent(
       }),
     )
   }
+  for (const nanny of ctx.additionalNannies || []) {
+    const individualCopy = eventCopy(event, {
+      ...safeCtx,
+      nannyName: escapeHtml(nanny.name),
+    })
+    sends.push(
+      sendOrSkip({
+        to: nanny.email,
+        subject: individualCopy.nannySubject,
+        html: wrapped(individualCopy.nannyBody),
+      }),
+    )
+  }
   const results = await Promise.all(sends)
   results.forEach((r, i) => {
-    if (r.error)
-      console.error(`Booking lifecycle email ${i} (${event}) failed:`, r.error)
+    if (r.error) console.error(`Booking lifecycle email ${i} (${event}) failed:`, r.error)
   })
 }
 
@@ -698,9 +709,9 @@ export async function sendBookingMessageEmail(data: {
   inboxPath: '/account' | '/nanny' | '/admin'
 }) {
   const html = htmlWrapper(`
-    <h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">New message — ${data.destination}</h2>
-    <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Hi ${data.recipientName}, ${data.senderLabel} wrote in your VacayNanny booking thread:</p>
-    <p style="margin:16px 0;padding:16px;background:rgba(23,50,77,0.05);border-radius:12px;color:#17324D;line-height:1.6;">${data.preview}</p>
+    <h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">New message — ${escapeHtml(data.destination)}</h2>
+    <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Hi ${escapeHtml(data.recipientName)}, ${data.senderLabel} wrote in your VacayNanny booking thread:</p>
+    <p style="margin:16px 0;padding:16px;background:rgba(23,50,77,0.05);border-radius:12px;color:#17324D;line-height:1.6;">${escapeHtml(data.preview)}</p>
     <p><a href="${siteUrl(data.inboxPath)}" style="color:#E8714A;">Open the thread →</a></p>
   `)
   const result = await sendOrSkip({

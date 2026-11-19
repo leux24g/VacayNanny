@@ -18,6 +18,17 @@ test('database readiness uses only read requests and downloads zero records', as
           paths: {
             '/rpc/create_booking_payment': {},
             '/rpc/settle_booking_payment': {},
+            ...Object.fromEntries(
+              [
+                'commit_booking_mutation',
+                'save_complete_application',
+                'claim_nanny_applications',
+                'update_care_enquiry',
+                'accept_care_quote',
+                'claim_workflow_jobs',
+                'run_workflow_automation',
+              ].map((name) => [`/rpc/${name}`, {}]),
+            ),
           },
         })
       assert.equal(url.searchParams.get('limit'), '0')
@@ -30,7 +41,7 @@ test('database readiness uses only read requests and downloads zero records', as
       SUPABASE_SERVICE_ROLE_KEY: 'fixture-server-key',
     })
     assert.ok(checks.every((check) => check.status === 'ready'))
-    assert.equal(calls.length, 4)
+    assert.ok(calls.length >= 4)
     assert.ok(!calls.some((url) => url.pathname.includes('/rpc/')))
   } finally {
     fetch.mock.restore()

@@ -14,11 +14,11 @@ import {
   statusLabel,
 } from '@/lib/booking'
 import { formatKes, nannyAssignmentWaHref } from '@/lib/constants'
-import {
-  matchLabel,
-  matchRequestFromBooking,
-  rankNannyMatches,
-} from '@/lib/match'
+import { matchLabel, matchRequestFromBooking, rankNannyMatches } from '@/lib/match'
+import AdminWorkflowTasks, {
+  type OpsTask,
+  type FailedJob,
+} from '@/components/AdminWorkflowTasks'
 import AdminReviews from '@/components/AdminReviews'
 import AdminInbox from '@/components/AdminInbox'
 import AdminDestinations from '@/components/AdminDestinations'
@@ -62,6 +62,7 @@ const BOOK_STATUSES: BookingStatus[] = [
 ]
 
 type Desk =
+  | 'followups'
   | 'overview'
   | 'applications'
   | 'bookings'
@@ -78,8 +79,7 @@ function slaLabel(requestedAt: string, slaMs: number) {
   const ms = replacementDeadline(requestedAt, slaMs).getTime() - Date.now()
   if (ms <= 0) return 'OVERDUE — refund the booking fee'
   const mins = Math.max(1, Math.ceil(ms / 60_000))
-  if (mins >= 60)
-    return `${Math.floor(mins / 60)}h ${mins % 60}m left on replacement SLA`
+  if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m left on replacement SLA`
   return `${mins}m left on replacement SLA`
 }
 
@@ -110,6 +110,8 @@ export default function AdminClient({
   adminCatalog,
   payments = [],
   dataError = null,
+  tasks = [],
+  failedJobs = [],
 }: {
   applications: NannyApplication[]
   bookings: Booking[]
@@ -123,6 +125,8 @@ export default function AdminClient({
   adminCatalog: SiteCatalog | null
   payments?: PaymentAttempt[]
   dataError?: string | null
+  tasks?: OpsTask[]
+  failedJobs?: FailedJob[]
 }) {
   const router = useRouter()
   const site = useSiteCatalog()
@@ -132,7 +136,6 @@ export default function AdminClient({
   const [tab, setTab] = useState<Desk>('overview')
   const [busy, setBusy] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [force, setForce] = useState<Record<string, boolean>>({})
   const [appQuery, setAppQuery] = useState('')
   const [appStatus, setAppStatus] = useState<ApplicationStatus | 'all'>('all')
   const [bookQuery, setBookQuery] = useState('')
@@ -167,18 +170,13 @@ export default function AdminClient({
   const shownApps = applications.filter(
     (a) =>
       (appStatus === 'all' || a.status === appStatus) &&
-      matchesQuery(appQuery, [
-        a.full_name,
-        a.email,
-        a.town,
-        a.county,
-        a.estimated_tier,
-      ]),
+      matchesQuery(appQuery, [a.full_name, a.email, a.town, a.county, a.estimated_tier]),
   )
   const shownBooks = bookings.filter(
     (b) =>
       (bookStatus === 'all' || b.status === bookStatus) &&
       matchesQuery(bookQuery, [
+        b.id,
         b.parent_name,
         b.email,
         b.phone,
@@ -249,6 +247,12 @@ export default function AdminClient({
 
   const desks: Array<{ id: Desk; label: string; count?: number }> = [
     { id: 'overview', label: 'Overview' },
+    {
+      id: 'followups',
+      label: 'Follow-ups',
+      count:
+        tasks.filter((task) => task.status !== 'resolved').length + failedJobs.length,
+    },
     { id: 'applications', label: 'Applications', count: applications.length },
     { id: 'bookings', label: 'Bookings', count: bookings.length },
     { id: 'nannies', label: 'Nannies', count: liveNannies },
@@ -359,37 +363,32 @@ export default function AdminClient({
                   <h2>Needs attention</h2>
                   <ul className="ops-tasks">
                     <li>
-                      <button
-                        type="button"
-                        onClick={() => setTab('applications')}
-                      >
-                        {pendingApps} application{pendingApps === 1 ? '' : 's'}{' '}
-                        waiting for review
+                      <button type="button" onClick={() => setTab('applications')}>
+                        {pendingApps} application{pendingApps === 1 ? '' : 's'} waiting
+                        for review
                       </button>
                     </li>
                     <li>
                       <button type="button" onClick={() => setTab('bookings')}>
-                        {unmatched} booking{unmatched === 1 ? '' : 's'} still
-                        need a nanny
+                        {unmatched} booking{unmatched === 1 ? '' : 's'} still need a nanny
                       </button>
                     </li>
                     <li>
                       <button type="button" onClick={() => setTab('bookings')}>
-                        {overdue} replacement clock{overdue === 1 ? '' : 's'}{' '}
-                        overdue
+                        {overdue} replacement clock{overdue === 1 ? '' : 's'} overdue
                       </button>
                     </li>
                     <li>
                       <button type="button" onClick={() => setTab('reviews')}>
-                        {pendingReviews} review{pendingReviews === 1 ? '' : 's'}{' '}
-                        waiting to publish
+                        {pendingReviews} review{pendingReviews === 1 ? '' : 's'} waiting
+                        to publish
                       </button>
                     </li>
                     <li>
                       <button type="button" onClick={() => setTab('inbox')}>
                         {contactMessages.length} contact message
-                        {contactMessages.length === 1 ? '' : 's'} and{' '}
-                        {waitlist.length} waitlist signup
+                        {contactMessages.length === 1 ? '' : 's'} and {waitlist.length}{' '}
+                        waitlist signup
                         {waitlist.length === 1 ? '' : 's'}
                       </button>
                     </li>
@@ -406,15 +405,10 @@ export default function AdminClient({
                       </button>
                     </li>
                     <li>
-                      <button
-                        type="button"
-                        onClick={() => setTab('destinations')}
-                      >
+                      <button type="button" onClick={() => setTab('destinations')}>
                         {destinations.filter((d) => d.is_active).length} active
                         destination
-                        {destinations.filter((d) => d.is_active).length === 1
-                          ? ''
-                          : 's'}
+                        {destinations.filter((d) => d.is_active).length === 1 ? '' : 's'}
                       </button>
                     </li>
                     <li>
@@ -426,8 +420,8 @@ export default function AdminClient({
                     </li>
                     <li>
                       <button type="button" onClick={() => setTab('nannies')}>
-                        {liveNannies} live nann{liveNannies === 1 ? 'y' : 'ies'}{' '}
-                        of {nannies.length}
+                        {liveNannies} live nann{liveNannies === 1 ? 'y' : 'ies'} of{' '}
+                        {nannies.length}
                       </button>
                     </li>
                   </ul>
@@ -451,8 +445,7 @@ export default function AdminClient({
                   aria-label="Application status"
                   value={appStatus}
                   onChange={(e) => {
-                    if (isAppStatus(e.target.value))
-                      setAppStatus(e.target.value)
+                    if (isAppStatus(e.target.value)) setAppStatus(e.target.value)
                   }}
                 >
                   <option value="all">All statuses</option>
@@ -467,10 +460,9 @@ export default function AdminClient({
                 <div className="ops-empty">
                   <h3>No applications yet</h3>
                   <p>
-                    When a nanny applies, the file lands here. Open it to check
-                    the ID, certificate of good conduct, and references, then
-                    approve the application. Publication follows review of the
-                    signed agreement.
+                    When a nanny applies, the file lands here. Open it to check the ID,
+                    certificate of good conduct, and references, then approve the
+                    application. Publication follows review of the signed agreement.
                   </p>
                 </div>
               )}
@@ -495,9 +487,7 @@ export default function AdminClient({
                     {a.languages.join(', ') || 'No languages'} · CoGC:{' '}
                     {a.cogc_status || '—'}
                   </p>
-                  {errors[a.id] && (
-                    <p className="field-error-msg">{errors[a.id]}</p>
-                  )}
+                  {errors[a.id] && <p className="field-error-msg">{errors[a.id]}</p>}
                   <div className="ops-card-actions">
                     {a.status !== 'approved' && (
                       <button
@@ -505,15 +495,11 @@ export default function AdminClient({
                         disabled={busy === a.id}
                         onClick={() => saveAppStatus(a.id, 'approved')}
                       >
-                        {busy === a.id
-                          ? 'Approving…'
-                          : 'Approve & send agreement'}
+                        {busy === a.id ? 'Approving…' : 'Approve & send agreement'}
                       </button>
                     )}
                     <Link
-                      className={
-                        a.status === 'approved' ? 'btn-coral' : 'btn-ghost'
-                      }
+                      className={a.status === 'approved' ? 'btn-coral' : 'btn-ghost'}
                       href={`/admin/applications/${a.id}`}
                     >
                       Open file
@@ -559,8 +545,7 @@ export default function AdminClient({
                   aria-label="Booking status"
                   value={bookStatus}
                   onChange={(e) => {
-                    if (isBookStatus(e.target.value))
-                      setBookStatus(e.target.value)
+                    if (isBookStatus(e.target.value)) setBookStatus(e.target.value)
                   }}
                 >
                   <option value="all">All statuses</option>
@@ -575,9 +560,8 @@ export default function AdminClient({
                 <div className="ops-empty">
                   <h3>No bookings yet</h3>
                   <p>
-                    Family requests show up here. Assign a nanny, message the
-                    thread, or start a replacement if the placement falls
-                    through.
+                    Family requests show up here. Assign a nanny, message the thread, or
+                    start a replacement if the placement falls through.
                   </p>
                 </div>
               )}
@@ -586,11 +570,7 @@ export default function AdminClient({
               )}
               {shownBooks.map((b) => {
                 const openReplacement = isReplacementOpen(b)
-                const replacementOverdue = isReplacementOverdue(
-                  b,
-                  new Date(),
-                  slaMs,
-                )
+                const replacementOverdue = isReplacementOverdue(b, new Date(), slaMs)
                 const ranked = rankedByBooking[b.id] || []
                 const best = ranked.find((r) => r.eligible)
                 const assigned = nannies.find((n) => n.id === b.nanny_id)
@@ -602,16 +582,12 @@ export default function AdminClient({
                     )
                   : undefined
                 const nannyWa = assigned
-                  ? nannyAssignmentWaHref(
-                      assignedApp?.phone,
-                      assignedApp?.country_code,
-                      {
-                        nannyName: assigned.display_name,
-                        destination: b.destination,
-                        checkIn: b.check_in,
-                        checkOut: b.check_out,
-                      },
-                    )
+                  ? nannyAssignmentWaHref(assignedApp?.phone, assignedApp?.country_code, {
+                      nannyName: assigned.display_name,
+                      destination: b.destination,
+                      checkIn: b.check_in,
+                      checkOut: b.check_out,
+                    })
                   : null
                 return (
                   <article className="ops-card" key={b.id}>
@@ -627,16 +603,12 @@ export default function AdminClient({
                     </header>
                     <p className="ops-meta">
                       {b.destination} · {b.check_in} → {b.check_out} ·{' '}
-                      {b.children_count || '—'} children ·{' '}
-                      {b.tier || 'any tier'} ·{' '}
+                      {b.children_count || '—'} children · {b.tier || 'any tier'} ·{' '}
                       {careTypeLabel(parseCareType(b.care_type))}
                     </p>
                     <p className="ops-meta">
-                      Family{' '}
-                      {b.parent_confirmed_at
-                        ? 'confirmed'
-                        : 'has not confirmed'}{' '}
-                      · Nanny {b.nanny_response || 'unassigned'}
+                      Family {b.parent_confirmed_at ? 'confirmed' : 'has not confirmed'} ·
+                      Nanny {b.nanny_response || 'unassigned'}
                       {b.total_amount_kes != null
                         ? ` · ${formatKes(b.total_amount_kes)}`
                         : ''}
@@ -648,9 +620,7 @@ export default function AdminClient({
                         {slaLabel(b.replacement_requested_at, slaMs)}
                       </p>
                     )}
-                    {errors[b.id] && (
-                      <p className="field-error-msg">{errors[b.id]}</p>
-                    )}
+                    {errors[b.id] && <p className="field-error-msg">{errors[b.id]}</p>}
                     {best && (
                       <p className="match-hint">
                         Suggested: <strong>{best.nanny.display_name}</strong>
@@ -660,12 +630,10 @@ export default function AdminClient({
                       </p>
                     )}
                     {!best &&
-                      (b.status === 'pending' ||
-                        openReplacement ||
-                        !b.nanny_id) && (
+                      (b.status === 'pending' || openReplacement || !b.nanny_id) && (
                         <p className="match-hint">
-                          No auto-match — nobody is free for these dates,
-                          destination, and care needs.
+                          No auto-match — nobody is free for these dates, destination, and
+                          care needs.
                         </p>
                       )}
                     <label className="ops-status-field">
@@ -677,7 +645,6 @@ export default function AdminClient({
                           patch(b.id, {
                             action: 'assign',
                             nannyId: e.target.value,
-                            force: Boolean(force[b.id]),
                           })
                         }
                       >
@@ -689,16 +656,41 @@ export default function AdminClient({
                         ))}
                       </select>
                     </label>
-                    <label className="force-assign">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(force[b.id])}
-                        onChange={(e) =>
-                          setForce((f) => ({ ...f, [b.id]: e.target.checked }))
-                        }
-                      />
-                      Force assign (skip clash check)
-                    </label>
+                    {Array.from(
+                      { length: Math.max(0, Number(b.nannies_needed) - 1) },
+                      (_, index) => {
+                        const slot = index + 2,
+                          assigned = b.booking_assignments?.find((a) => a.slot === slot)
+                        return (
+                          <label className="ops-status-field" key={slot}>
+                            Additional nanny {slot - 1}
+                            <select
+                              disabled={busy === b.id}
+                              value={assigned?.nanny_id || ''}
+                              onChange={(e) =>
+                                patch(b.id, {
+                                  action: 'assign',
+                                  nannyId: e.target.value,
+                                  slot,
+                                })
+                              }
+                            >
+                              <option value="">Unassigned</option>
+                              {ranked
+                                .filter(
+                                  (r) => r.eligible || r.nanny.id === assigned?.nanny_id,
+                                )
+                                .map((r) => (
+                                  <option value={r.nanny.id} key={r.nanny.id}>
+                                    {r.nanny.display_name}
+                                  </option>
+                                ))}
+                            </select>
+                            <small>{assigned?.response || 'Needs assignment'}</small>
+                          </label>
+                        )
+                      },
+                    )}
                     <div className="ops-card-actions">
                       {best &&
                         (!b.nanny_id ||
@@ -709,9 +701,7 @@ export default function AdminClient({
                           <button
                             className="btn-coral"
                             disabled={busy === b.id}
-                            onClick={() =>
-                              patch(b.id, { action: 'auto_match' })
-                            }
+                            onClick={() => patch(b.id, { action: 'auto_match' })}
                           >
                             Auto-match {best.nanny.display_name.split(' ')[0]}
                           </button>
@@ -744,9 +734,7 @@ export default function AdminClient({
                         <button
                           className="btn-coral"
                           disabled={busy === b.id}
-                          onClick={() =>
-                            patch(b.id, { action: 'refund_replacement' })
-                          }
+                          onClick={() => patch(b.id, { action: 'refund_replacement' })}
                         >
                           Request refund review
                         </button>
@@ -778,9 +766,7 @@ export default function AdminClient({
                       <BookingThread
                         bookingId={b.id}
                         viewerRole="admin"
-                        counterpartName={
-                          assigned?.display_name || b.parent_name
-                        }
+                        counterpartName={assigned?.display_name || b.parent_name}
                       />
                     )}
                   </article>
@@ -792,21 +778,29 @@ export default function AdminClient({
           {tab === 'payments' && (
             <AdminPayments payments={payments} bookings={bookings} />
           )}
-          {tab === 'nannies' && (
-            <AdminNannies nannies={nannies} accounts={accounts} />
-          )}
+          {tab === 'nannies' && <AdminNannies nannies={nannies} accounts={accounts} />}
           {tab === 'reviews' && <AdminReviews reviews={reviews} />}
           {tab === 'inbox' && (
-            <AdminInbox contactMessages={contactMessages} waitlist={waitlist} />
+            <AdminInbox
+              contactMessages={contactMessages}
+              waitlist={waitlist}
+              adminId={adminId}
+              operators={accounts.filter((account) => account.role === 'admin')}
+            />
           )}
-          {tab === 'destinations' && (
-            <AdminDestinations destinations={destinations} />
-          )}
-          {tab === 'pricing' && (
-            <AdminCatalog section="pricing" catalog={adminCatalog} />
-          )}
-          {tab === 'content' && (
-            <AdminCatalog section="content" catalog={adminCatalog} />
+          {tab === 'destinations' && <AdminDestinations destinations={destinations} />}
+          {tab === 'pricing' && <AdminCatalog section="pricing" catalog={adminCatalog} />}
+          {tab === 'content' && <AdminCatalog section="content" catalog={adminCatalog} />}
+          {tab === 'followups' && (
+            <AdminWorkflowTasks
+              tasks={tasks}
+              failedJobs={failedJobs}
+              onOpenBooking={(id) => {
+                setBookQuery(id)
+                setBookStatus('all')
+                setTab('bookings')
+              }}
+            />
           )}
           {tab === 'team' && (
             <AdminTeam

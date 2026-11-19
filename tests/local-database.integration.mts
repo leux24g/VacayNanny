@@ -1,3 +1,4 @@
+import { completeApplication } from './fixtures/application'
 import { before, after, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID, randomBytes } from 'node:crypto'
@@ -5,6 +6,7 @@ import { spawn } from 'node:child_process'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { localCli, localCredentials, root } from '../scripts/local-database.mjs'
 import { checkDatabase } from '../lib/database-checks'
+import { applyBookingMutation } from '../lib/booking-ops'
 
 let admin: SupabaseClient
 let anonymous: SupabaseClient
@@ -46,8 +48,7 @@ after(async () => {
     await admin.from('bookings').delete().eq('id', bookingId)
   }
   if (nannyId) await admin.from('nannies').delete().eq('id', nannyId)
-  if (documentPath)
-    await admin.storage.from('nanny-documents').remove([documentPath])
+  if (documentPath) await admin.storage.from('nanny-documents').remove([documentPath])
   if (applicationId)
     await admin.from('nanny_applications').delete().eq('id', applicationId)
   if (userId) await admin.auth.admin.deleteUser(userId)
@@ -68,11 +69,7 @@ test('the full schema is available through the actual local Data API', async () 
 })
 
 test('real Auth triggers create a parent profile and reject client role escalation', async () => {
-  const profile = await signedIn
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
+  const profile = await signedIn.from('profiles').select('role').eq('id', userId).single()
   assert.ifError(profile.error)
   assert.equal(profile.data?.role, 'parent')
   const forged = await signedIn
@@ -80,16 +77,9 @@ test('real Auth triggers create a parent profile and reject client role escalati
     .update({ role: 'admin' })
     .eq('id', userId)
   assert.ok(forged.error)
-  const promoted = await admin
-    .from('profiles')
-    .update({ role: 'admin' })
-    .eq('id', userId)
+  const promoted = await admin.from('profiles').update({ role: 'admin' }).eq('id', userId)
   assert.ifError(promoted.error)
-  const visible = await signedIn
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single()
+  const visible = await signedIn.from('profiles').select('role').eq('id', userId).single()
   assert.ifError(visible.error)
   assert.equal(visible.data?.role, 'admin')
 })
@@ -143,6 +133,15 @@ test('agreement review gates publication and the document remains private in rea
       agreement_signed_path: documentPath,
       agreement_reviewed_at: new Date().toISOString(),
       agreement_reviewed_by: userId,
+      vetting_reviewed_by: userId,
+      vetting_reviewed_at: new Date().toISOString(),
+      vetting_checks: {
+        identity: true,
+        policeClearance: true,
+        references: true,
+        interview: true,
+        qualifications: true,
+      },
     })
     .eq('id', applicationId)
   assert.ifError(review.error)
@@ -193,10 +192,7 @@ test('form writes cannot bypass server validation and rate limits through the Da
       { name: 'Local test', email: 'local@example.test', message: 'Test' },
     ],
     ['waitlist', { email: 'local@example.test' }],
-    [
-      'nanny_references',
-      { application_id: applicationId, full_name: 'Local reference' },
-    ],
+    ['nanny_references', { application_id: applicationId, full_name: 'Local reference' }],
     [
       'nanny_documents',
       {
@@ -205,10 +201,7 @@ test('form writes cannot bypass server validation and rate limits through the Da
         storage_path: documentPath,
       },
     ],
-    [
-      'nanny_applications',
-      { full_name: 'Local test', email: 'local@example.test' },
-    ],
+    ['nanny_applications', { full_name: 'Local test', email: 'local@example.test' }],
   ]
   for (const client of [anonymous, signedIn]) {
     for (const [table, payload] of cases) {
@@ -234,7 +227,9 @@ test('actual PostgreSQL payment functions enforce acceptance, amount, idempotenc
       check_in: date(10),
       check_out: date(12),
       total_amount_kes: 6400,
-      status: 'confirmed',
+      nannies_needed: '1',
+      children_count: '2',
+      status: 'matched',
     })
     .select('id')
     .single()
@@ -245,17 +240,8 @@ test('actual PostgreSQL payment functions enforce acceptance, amount, idempotenc
     p_reference: reference,
   })
   assert.match(beforeAcceptance.error?.message || '', /Accept the nanny match/)
-  assert.ifError(
-    (
-      await admin
-        .from('bookings')
-        .update({
-          parent_confirmed_at: new Date().toISOString(),
-          nanny_response: 'accepted',
-        })
-        .eq('id', bookingId)
-    ).error,
-  )
+  await applyBookingMutation(admin, bookingId, { action: 'accept' }, { id: userId })
+  await applyBookingMutation(admin, bookingId, { action: 'confirm' }, { id: userId })
   const create = await admin.rpc('create_booking_payment', {
     p_booking_id: bookingId,
     p_reference: reference,
@@ -298,12 +284,8 @@ test('actual PostgreSQL payment functions enforce acceptance, amount, idempotenc
   assert.ifError(paid.error)
   assert.equal(paid.data?.payment_status, 'paid')
   assert.ifError(
-    (
-      await admin
-        .from('bookings')
-        .update({ status: 'in_progress' })
-        .eq('id', bookingId)
-    ).error,
+    (await admin.from('bookings').update({ status: 'in_progress' }).eq('id', bookingId))
+      .error,
   )
   const ledger = await admin
     .from('payment_attempts')
@@ -326,21 +308,17 @@ test('real application routes save specialist enquiries, waitlist entries and se
       "alter table public.bookings alter column payment_status set default 'unpaid'",
     ])
   })
-  const child = spawn(
-    process.execPath,
-    ['--import', 'tsx', 'scripts/dev-database.mts'],
-    {
-      cwd: root,
-      env: {
-        ...process.env,
-        PAYSTACK_SECRET_KEY: '',
-        PAYSTACK_WEBHOOK_SECRET: '',
-        RESEND_API_KEY: '',
-        EMAIL_DELIVERY_MODE: 'disabled',
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
+  const child = spawn(process.execPath, ['--import', 'tsx', 'scripts/dev-database.mts'], {
+    cwd: root,
+    env: {
+      ...process.env,
+      PAYSTACK_SECRET_KEY: '',
+      PAYSTACK_WEBHOOK_SECRET: '',
+      RESEND_API_KEY: '',
+      EMAIL_DELIVERY_MODE: 'disabled',
     },
-  )
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
   child.stdout.resume()
   child.stderr.resume()
   context.after(async () => {
@@ -365,6 +343,8 @@ test('real application routes save specialist enquiries, waitlist entries and se
   }
   assert.ok(ready, 'The local app server should become ready.')
   const email = `route-${randomUUID()}@example.test`
+  let submittedApplication: string | undefined
+  let uploadedEntries: Array<{ bucket: string; path: string }> = []
   try {
     const legacy = await admin
       .from('bookings')
@@ -386,6 +366,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
         name: 'Local test family',
         email,
         subject: 'Specialist care quote: Adult & Elderly Care',
+        careService: 'Adult & Elderly Care',
         message: 'Local integration test enquiry.',
       }),
     })
@@ -403,6 +384,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
         parentName: 'Local test family',
         email,
         phone: '+254700000000',
+        childrenCount: '2',
         destination: 'Diani',
         checkIn: date(20),
         checkOut: date(22),
@@ -430,11 +412,56 @@ test('real application routes save specialist enquiries, waitlist entries and se
       .eq('email', email)
       .single()
     assert.ifError(messages.error)
-    assert.equal(
-      messages.data?.subject,
-      'Specialist care quote: Adult & Elderly Care',
+    assert.equal(messages.data?.subject, 'Specialist care quote: Adult & Elderly Care')
+    const bytes = Buffer.from([255, 216, 255, 224, 0, 16, 0, 0])
+    const payload = { ...completeApplication, email, submissionKey: randomUUID() }
+    const prepared = await fetch(`${base}/api/apply/uploads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        payload,
+        files: ['photo', 'id_front', 'id_back', 'selfie'].map((key) => ({
+          key,
+          name: `${key}.jpg`,
+          size: bytes.length,
+        })),
+      }),
+    })
+    assert.equal(prepared.status, 200)
+    const staged = await prepared.json()
+    uploadedEntries = staged.entries
+    for (const entry of staged.entries) {
+      const uploaded = await anonymous.storage
+        .from(entry.bucket)
+        .uploadToSignedUrl(entry.path, entry.token, bytes, { contentType: 'image/jpeg' })
+      assert.ifError(uploaded.error)
+    }
+    const finalized = await fetch(`${base}/api/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ manifest: staged.manifest }),
+    })
+    assert.equal(finalized.status, 200)
+    submittedApplication = (await finalized.json()).id
+    const savedDocuments = await admin
+      .from('nanny_documents')
+      .select('storage_path')
+      .eq('application_id', submittedApplication!)
+    assert.equal(savedDocuments.data?.length, 4)
+    assert.ok(
+      savedDocuments.data?.every((doc) =>
+        doc.storage_path.startsWith('nanny-documents/'),
+      ),
     )
+    const privatePhoto = await anonymous.storage
+      .from('nanny-documents')
+      .download(staged.entries[0].path)
+    assert.ok(privatePhoto.error)
   } finally {
+    for (const entry of uploadedEntries)
+      await admin.storage.from(entry.bucket).remove([entry.path])
+    if (submittedApplication)
+      await admin.from('nanny_applications').delete().eq('id', submittedApplication)
     await admin.from('bookings').delete().eq('email', email)
     await admin.from('bookings').delete().eq('email', `legacy-${email}`)
     await admin.from('contact_messages').delete().eq('email', email)

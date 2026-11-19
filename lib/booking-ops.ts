@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
-  bookingBlocksAvailability,
   bookingHasThread,
   cancellationRefundPercent,
-  datesOverlap,
   dueBookingStatus,
   isReplacementOpen,
   parseCareType,
@@ -12,13 +10,15 @@ import {
   careTypeLabel,
 } from '@/lib/booking'
 import { notifyBookingEvent, type BookingEmailEvent } from '@/lib/email'
+import { validateCareDates } from '@/lib/booking-validation'
 import { profileOwnsBooking } from '@/lib/booking-ownership'
 import { waDigits } from '@/lib/constants'
 import { loadQuoteCatalog, type QuoteCatalog } from '@/lib/catalog-data'
 import { quoteRatesFromCatalog } from '@/lib/catalog'
-import { publicDailyRate } from '@/lib/safeguarding'
+import { publicDailyRate, publicTier } from '@/lib/safeguarding'
 import {
   bestAvailableMatch,
+  scoreNannyMatch,
   matchRequestFromBooking,
   type ClashRow,
 } from '@/lib/match'
@@ -59,10 +59,7 @@ export class BookingActionError extends Error {
 
 export function jsonFromBookingError(err: unknown) {
   if (err instanceof BookingConflictError) {
-    return NextResponse.json(
-      { error: err.message, clashes: err.clashes },
-      { status: 409 },
-    )
+    return NextResponse.json({ error: err.message }, { status: 409 })
   }
   if (err instanceof BookingActionError) {
     return NextResponse.json({ error: err.message }, { status: err.status })
@@ -77,14 +74,14 @@ export type BookingMutation =
   | { action: 'reschedule'; checkIn: string; checkOut: string }
   | { action: 'accept' }
   | { action: 'decline'; reason?: string }
-  | { action: 'assign'; nannyId: string | null; force?: boolean }
+  | { action: 'assign'; nannyId: string | null; force?: boolean; slot?: number }
   | { action: 'set_status'; status: BookingStatus }
-  | { action: 'replace'; reason?: string }
+  | { action: 'replace'; reason?: string; slot?: number }
   | { action: 'refund_replacement' }
   | { action: 'auto_match' }
 
 const NANNY_EMBED =
-  'nannies(id, display_name, slug, photo_url, tier, daily_rate_kes, safeguarding_completed_at)'
+  'nannies!bookings_nanny_id_fkey(id, display_name, slug, photo_url, tier, daily_rate_kes, safeguarding_completed_at), booking_assignments(slot,nanny_id,response,responded_at,nannies(id,display_name,slug,photo_url,tier))'
 
 export async function loadBooking(
   supabase: SupabaseClient,
@@ -120,7 +117,7 @@ export async function suggestMatch(
     supabase
       .from('bookings')
       .select(
-        'id, nanny_id, check_in, check_out, status, nanny_response, parent_name',
+        'id, nanny_id, check_in, check_out, status, nanny_response, booking_assignments(nanny_id)',
       ),
     supabase.from('destinations').select('name, country').eq('is_active', true),
   ])
@@ -162,27 +159,25 @@ export async function findNannyClashes(
   excludeBookingId?: string,
 ): Promise<BookingClash[]> {
   const { data, error } = await supabase
-    .from('bookings')
-    .select('id, check_in, check_out, parent_name, status, nanny_response')
+    .from('booking_care_slots')
+    .select('booking_id,care_date')
     .eq('nanny_id', nannyId)
-  if (error) throw new BookingActionError(error.message, 500)
+    .gte('care_date', checkIn)
+    .lt(
+      'care_date',
+      checkOut > checkIn
+        ? checkOut
+        : new Date(Date.parse(checkIn) + 86400000).toISOString().slice(0, 10),
+    )
+  if (error) throw new BookingActionError('Could not check nanny availability.', 503)
   return (data || [])
-    .filter((row) => row.id !== excludeBookingId)
-    .filter((row) =>
-      bookingBlocksAvailability(
-        row.status as BookingStatus,
-        row.nanny_response,
-      ),
-    )
-    .filter((row) =>
-      datesOverlap(checkIn, checkOut, row.check_in, row.check_out),
-    )
+    .filter((row) => row.booking_id !== excludeBookingId)
     .map((row) => ({
-      id: row.id as string,
-      check_in: row.check_in as string,
-      check_out: row.check_out as string,
-      parent_name: row.parent_name as string,
-      status: row.status as BookingStatus,
+      id: row.booking_id,
+      check_in: row.care_date,
+      check_out: row.care_date,
+      parent_name: '',
+      status: 'matched' as BookingStatus,
     }))
 }
 
@@ -197,24 +192,36 @@ export async function nannyContact(
   nannyId: string | null,
 ): Promise<NannyContact> {
   if (!nannyId) return { name: null, email: null, phone: null }
-  const { data: nanny } = await supabase
+  const { data: nanny, error: nannyError } = await supabase
     .from('nannies')
     .select('display_name, user_id, application_id')
     .eq('id', nannyId)
     .maybeSingle()
+  if (nannyError)
+    throw new BookingActionError(
+      'Nanny contact details are temporarily unavailable.',
+      503,
+    )
   if (!nanny) return { name: null, email: null, phone: null }
 
   let email: string | null = null
   let phone: string | null = null
 
   if (nanny.user_id) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('email, phone')
-      .eq('id', nanny.user_id)
-      .maybeSingle()
-    email = profile?.email ?? null
-    phone = profile?.phone ?? null
+    const [
+      { data: identity, error: identityError },
+      { data: profile, error: profileError },
+    ] = await Promise.all([
+      supabase.auth.admin.getUserById(nanny.user_id),
+      supabase.from('profiles').select('phone').eq('id', nanny.user_id).maybeSingle(),
+    ])
+    if (identityError || profileError)
+      throw new BookingActionError(
+        'Nanny contact details are temporarily unavailable.',
+        503,
+      )
+    email = identity.user?.email || null
+    phone = profile?.phone || null
   }
 
   if ((!email || !phone) && nanny.application_id) {
@@ -226,9 +233,7 @@ export async function nannyContact(
     if (application) {
       email = email || application.email || null
       if (!phone && application.phone) {
-        phone =
-          waDigits(application.phone, application.country_code) ||
-          application.phone
+        phone = waDigits(application.phone, application.country_code) || application.phone
       }
     }
   }
@@ -278,7 +283,7 @@ async function quoteFor(
   })
 }
 
-async function fireEvent(
+export async function fireEvent(
   supabase: SupabaseClient,
   event: BookingEmailEvent,
   booking: Booking,
@@ -288,14 +293,19 @@ async function fireEvent(
     extraNannyId?: string | null
   },
 ) {
-  const nannyId =
-    extra?.nannyId === undefined ? booking.nanny_id : extra.nannyId
+  const nannyId = extra?.nannyId === undefined ? booking.nanny_id : extra.nannyId
   const [assigned, extraNanny] = await Promise.all([
     nannyContact(supabase, nannyId ?? null),
     extra?.extraNannyId
       ? nannyContact(supabase, extra.extraNannyId)
       : Promise.resolve({ name: null, email: null, phone: null }),
   ])
+  const otherNannies = (booking.booking_assignments || [])
+    .map((a) => a.nanny_id)
+    .filter((id) => id !== nannyId)
+  const otherContacts = await Promise.all(
+    otherNannies.map((id) => nannyContact(supabase, id)),
+  )
   await notifyBookingEvent(event, {
     parentName: booking.parent_name,
     parentEmail: booking.email,
@@ -312,13 +322,44 @@ async function fireEvent(
     totalKes: booking.total_amount_kes,
     refundPercent: booking.refund_percent,
     note: extra?.note || booking.cancellation_reason,
-  }).catch((err) => console.error('notifyBookingEvent failed:', err))
+    additionalNannies: otherContacts
+      .filter((c) => c.email)
+      .map((c) => ({ name: c.name || 'Your nanny', email: c.email! })),
+  })
+}
+
+type BookingActor = {
+  id: string | null
+  verifiedEmail?: string | null
+  guestHash?: string | null
 }
 
 export async function applyBookingMutation(
   supabase: SupabaseClient,
   bookingId: string,
   mutation: BookingMutation,
+  actor: BookingActor,
+) {
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      return await applyBookingMutationOnce(supabase, bookingId, mutation, actor)
+    } catch (error) {
+      if (!(error instanceof BookingRetryError) || attempt === 3) throw error
+    }
+  }
+  throw new BookingActionError('This booking changed. Refresh and retry.', 409)
+}
+class BookingRetryError extends BookingActionError {
+  constructor() {
+    super('This booking changed. Refresh and retry.', 409)
+  }
+}
+
+async function applyBookingMutationOnce(
+  supabase: SupabaseClient,
+  bookingId: string,
+  mutation: BookingMutation,
+  actor: BookingActor,
 ): Promise<{ booking: Booking; event: BookingEmailEvent }> {
   const resolved: Exclude<BookingMutation, { action: 'auto_match' }> =
     mutation.action === 'auto_match'
@@ -328,8 +369,6 @@ export async function applyBookingMutation(
   const catalog = await loadQuoteCatalog(supabase)
   const updates: Record<string, unknown> = {}
   let event: BookingEmailEvent
-  let notifyNannyId: string | null | undefined = undefined
-  let extraNannyId: string | null | undefined = undefined
   let note: string | null | undefined =
     resolved.action === 'cancel' ||
     resolved.action === 'decline' ||
@@ -348,12 +387,9 @@ export async function applyBookingMutation(
         throw new BookingActionError('This booking is already confirmed.')
       }
       if (booking.status !== 'matched') {
-        throw new BookingActionError(
-          'Confirm is available after we propose a nanny.',
-        )
+        throw new BookingActionError('Confirm is available after we propose a nanny.')
       }
-      if (!booking.nanny_id)
-        throw new BookingActionError('No nanny is assigned yet.')
+      if (!booking.nanny_id) throw new BookingActionError('No nanny is assigned yet.')
       updates.parent_confirmed_at = new Date().toISOString()
       if (booking.nanny_response === 'accepted') {
         updates.status = 'confirmed'
@@ -395,8 +431,14 @@ export async function applyBookingMutation(
       }
       if (resolved.action !== 'reschedule')
         throw new BookingActionError('Invalid reschedule payload.')
-      if (new Date(resolved.checkOut) < new Date(resolved.checkIn)) {
-        throw new BookingActionError('Check-out must be on or after check-in.')
+      const dateError = validateCareDates(resolved.checkIn, resolved.checkOut)
+      if (dateError) throw new BookingActionError(dateError)
+      for (const assignment of booking.booking_assignments || []) {
+        await assertEligibleNanny(supabase, assignment.nanny_id, {
+          ...booking,
+          check_in: resolved.checkIn,
+          check_out: resolved.checkOut,
+        })
       }
       if (booking.nanny_id) {
         const clashes = await findNannyClashes(
@@ -418,13 +460,17 @@ export async function applyBookingMutation(
       )
       updates.check_in = resolved.checkIn
       updates.check_out = resolved.checkOut
+      updates.parent_confirmed_at = null
+      updates.nanny_response = 'pending'
+      updates.nanny_responded_at = null
+      updates.status = booking.nanny_id ? 'matched' : 'pending'
       updates.total_amount_kes = quote.total
       event = 'rescheduled'
       note = `New dates: ${resolved.checkIn} → ${resolved.checkOut}`
       break
     }
     case 'accept': {
-      if (!booking.nanny_id)
+      if (!(booking.booking_assignments?.length || booking.nanny_id))
         throw new BookingActionError('This booking is not assigned to a nanny.')
       if (booking.status === 'cancelled' || booking.status === 'completed') {
         throw new BookingActionError('This booking is no longer active.')
@@ -441,9 +487,9 @@ export async function applyBookingMutation(
       break
     }
     case 'decline': {
-      if (!booking.nanny_id)
+      if (!(booking.booking_assignments?.length || booking.nanny_id))
         throw new BookingActionError('This booking is not assigned to a nanny.')
-      extraNannyId = booking.nanny_id
+
       const needsReplacement =
         booking.status === 'confirmed' ||
         booking.status === 'in_progress' ||
@@ -459,27 +505,48 @@ export async function applyBookingMutation(
         updates.status = 'matched'
         updates.nanny_response = null
         event = 'replacement_started'
-        notifyNannyId = null
+
         note =
-          (resolved.action === 'decline'
-            ? resolved.reason?.trim()
-            : undefined) || 'Nanny declined a confirmed placement'
+          (resolved.action === 'decline' ? resolved.reason?.trim() : undefined) ||
+          'Nanny declined a confirmed placement'
       } else {
         updates.nanny_id = null
         updates.status = 'pending'
         updates.nanny_response = null
         updates.parent_confirmed_at = null
         event = 'nanny_declined'
-        notifyNannyId = null
+
         note =
-          (resolved.action === 'decline'
-            ? resolved.reason?.trim()
-            : undefined) || 'Nanny declined the assignment'
+          (resolved.action === 'decline' ? resolved.reason?.trim() : undefined) ||
+          'Nanny declined the assignment'
       }
       break
     }
     case 'assign': {
       const nannyId = resolved.nannyId || null
+      if (resolved.force)
+        throw new BookingActionError('Scheduling conflicts cannot be overridden.', 409)
+      if (nannyId) {
+        const selected = await assertEligibleNanny(supabase, nannyId, booking)
+        if ((resolved.slot || 1) === 1) {
+          updates.tier = publicTier(selected)
+          updates.total_amount_kes = (
+            await quoteFor(
+              supabase,
+              {
+                ...booking,
+                nanny_id: nannyId,
+                nannies: null,
+                tier: publicTier(selected),
+              },
+              booking.check_in,
+              booking.check_out,
+              booking.care_type,
+              catalog,
+            )
+          ).total
+        }
+      }
       if (nannyId) {
         if (!resolved.force) {
           const clashes = await findNannyClashes(
@@ -508,16 +575,14 @@ export async function applyBookingMutation(
         } else {
           event = 'matched'
         }
-        notifyNannyId = nannyId
       } else {
-        extraNannyId = booking.nanny_id
         updates.nanny_id = null
         updates.nanny_response = null
         updates.nanny_responded_at = null
         if (booking.status === 'matched' || booking.status === 'confirmed')
           updates.status = 'pending'
         event = 'nanny_declined'
-        notifyNannyId = null
+
         note = 'Assignment cleared by ops'
       }
       break
@@ -526,15 +591,10 @@ export async function applyBookingMutation(
       updates.status = resolved.status
       switch (resolved.status) {
         case 'cancelled': {
-          updates.cancelled_at =
-            booking.cancelled_at || new Date().toISOString()
+          updates.cancelled_at = booking.cancelled_at || new Date().toISOString()
           updates.refund_percent =
             booking.refund_percent ??
-            cancellationRefundPercent(
-              booking.check_in,
-              new Date(),
-              catalog.policies,
-            )
+            cancellationRefundPercent(booking.check_in, new Date(), catalog.policies)
           updates.cancellation_reason =
             booking.cancellation_reason || 'Cancelled by VacayNanny'
           event = 'cancelled'
@@ -574,11 +634,9 @@ export async function applyBookingMutation(
     }
     case 'replace': {
       if (!booking.nanny_id && !isReplacementOpen(booking)) {
-        throw new BookingActionError(
-          'Assign a nanny before starting a replacement.',
-        )
+        throw new BookingActionError('Assign a nanny before starting a replacement.')
       }
-      extraNannyId = booking.nanny_id
+
       updates.replaced_nanny_id = booking.nanny_id || booking.replaced_nanny_id
       updates.nanny_id = null
       updates.nanny_response = null
@@ -588,7 +646,7 @@ export async function applyBookingMutation(
       updates.replacement_fulfilled_at = null
       updates.status = 'matched'
       event = 'replacement_started'
-      notifyNannyId = null
+
       note =
         (resolved.action === 'replace' ? resolved.reason?.trim() : undefined) ||
         'Replacement requested (no-show / cannot attend)'
@@ -601,35 +659,48 @@ export async function applyBookingMutation(
       updates.status = 'cancelled'
       updates.cancelled_at = new Date().toISOString()
       updates.refund_percent = 100
-      updates.cancellation_reason =
-        'Replacement guarantee — refund review requested'
+      updates.cancellation_reason = 'Replacement guarantee — refund review requested'
       updates.nanny_id = null
       event = 'replacement_refunded'
-      notifyNannyId = null
+
       note = `${catalog.policies.replacementSlaHours}-hour replacement guarantee: refund review requested; no automatic transfer has been made`
       break
     }
     default: {
       const _never: never = resolved
-      throw new BookingActionError(
-        `Unhandled action: ${JSON.stringify(_never)}`,
-      )
+      throw new BookingActionError(`Unhandled action: ${JSON.stringify(_never)}`)
     }
   }
 
-  const { error } = await supabase
-    .from('bookings')
-    .update(updates)
-    .eq('id', bookingId)
-  if (error) throw new BookingActionError(error.message, 500)
-
-  const next = await loadBooking(supabase, bookingId)
-  await fireEvent(supabase, event, next, {
-    nannyId: notifyNannyId,
-    extraNannyId,
-    note,
+  const { data: committed, error } = await supabase.rpc('commit_booking_mutation', {
+    p_id: bookingId,
+    p_version: booking.version ?? 0,
+    p_action: resolved.action,
+    p_updates: updates,
+    p_actor: actor.id,
+    p_verified_email: actor.verifiedEmail || null,
+    p_guest_hash: actor.guestHash || null,
+    p_slot: 'slot' in resolved ? resolved.slot || 1 : 1,
+    p_nanny: resolved.action === 'assign' ? resolved.nannyId : null,
+    p_event: event,
+    p_note: note || null,
   })
-  return { booking: next, event }
+  if (error?.code === '40001') throw new BookingRetryError()
+  if (error)
+    throw new BookingActionError(
+      error.code === '23P01'
+        ? 'A selected nanny is unavailable on these dates.'
+        : error.code === '23505'
+          ? 'A nanny cannot fill more than one assignment slot.'
+          : error.code === '23503'
+            ? 'That selection is no longer available. Refresh and choose again.'
+            : error.code === 'P0001'
+              ? error.message
+              : 'Could not update this booking. Refresh and retry.',
+      error.code === '42501' ? 403 : 409,
+    )
+  const next = await loadBooking(supabase, bookingId)
+  return { booking: next, event: (committed?.event || event) as BookingEmailEvent }
 }
 
 export async function resolveBookingAccess(
@@ -648,7 +719,11 @@ export async function resolveBookingAccess(
     .select('id')
     .eq('user_id', profile.id)
     .maybeSingle()
-  const isAssignedNanny = Boolean(nannyRow && booking.nanny_id === nannyRow.id)
+  const isAssignedNanny = Boolean(
+    nannyRow &&
+      (booking.nanny_id === nannyRow.id ||
+        booking.booking_assignments?.some((a) => a.nanny_id === nannyRow.id)),
+  )
   const isAdmin = profile.role === 'admin'
   let senderRole: BookingMessageRole | null = null
   if (isAdmin) senderRole = 'admin'
@@ -696,14 +771,10 @@ export async function advanceDueBookings(
       continue
     }
     if (!updated) continue
-    const next = await loadBooking(supabase, booking.id)
-    const event: BookingEmailEvent =
-      nextStatus === 'completed' ? 'completed' : 'in_progress'
-    await fireEvent(supabase, event, next)
+    // The database status trigger queues this event atomically.
     changed += 1
   }
-  if (failed && options.strict)
-    throw new Error('Some due bookings could not be updated.')
+  if (failed && options.strict) throw new Error('Some due bookings could not be updated.')
   return changed
 }
 
@@ -711,4 +782,53 @@ export function assertBookingThread(booking: Booking) {
   if (!bookingHasThread(booking)) {
     throw new BookingActionError('Chat opens once a nanny is assigned.')
   }
+}
+
+export async function assertEligibleNanny(
+  supabase: SupabaseClient,
+  nannyId: string,
+  booking: Pick<
+    Booking,
+    | 'id'
+    | 'destination'
+    | 'check_in'
+    | 'check_out'
+    | 'tier'
+    | 'youngest_age'
+    | 'notes'
+    | 'care_type'
+    | 'children_count'
+    | 'nannies_needed'
+  >,
+) {
+  const { data, error } = await supabase
+    .from('nannies')
+    .select('*')
+    .eq('id', nannyId)
+    .maybeSingle()
+  if (error || !data) throw new BookingActionError('That nanny is unavailable.', 409)
+  const { data: destinations } = await supabase
+    .from('destinations')
+    .select('name,country')
+    .eq('is_active', true)
+  const match = scoreNannyMatch(
+    data as Nanny,
+    {
+      destination: booking.destination,
+      checkIn: booking.check_in,
+      checkOut: booking.check_out,
+      tier: booking.tier,
+      youngestAge: booking.youngest_age,
+      notes: booking.notes,
+      careType: booking.care_type,
+      childrenCount: booking.children_count,
+      nanniesNeeded: booking.nannies_needed,
+      kenyaDestinations: (destinations || [])
+        .filter((d) => d.country === 'Kenya')
+        .map((d) => d.name),
+    },
+    [],
+  )
+  if (!match.eligible) throw new BookingActionError(match.blockers.join('. '), 409)
+  return data as Nanny
 }

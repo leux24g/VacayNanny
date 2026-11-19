@@ -15,17 +15,18 @@ The local preview and review branch include a shared full-page coastal backgroun
 
 ## Verification
 
-All **34 Playwright browser tests passed**. The suite checks descendants as well as document width, so hiding overflow on the body cannot conceal a broken card. Slideshow checks also cover complete loops, pausing, reduced motion, off-screen suspension and an unavailable image.
+All **38 Playwright browser tests passed**. The suite checks descendants as well as document width, so hiding overflow on the body cannot conceal a broken card. Slideshow checks also cover complete loops, pausing, reduced motion, off-screen suspension and an unavailable image.
 
-| Area | Coverage |
-| --- | --- |
-| Public pages | 17 routes at widths 320, 390, 768, 1024, 1440 and 2560 pixels |
-| Operations | All 11 panels and a populated application review at the same six widths |
-| Signed-in portals | Family bookings, payment controls, nanny profile/placements and safeguarding quiz at phone, tablet and desktop widths |
-| Nanny application | All eight steps at 320, 768, 1024 and 1440 pixels; desktop independent scrolling and mobile normal scrolling |
-| Authentication | Full-page image coverage, a right-aligned desktop form, a contained touch layout, password visibility, and reachable submit button with a shorter viewport |
-| Overlays | Booking, navigation and support at 844 × 390 landscape size; keyboard focus and Escape behavior |
-| Image panels | Three-photo loops on both marketing panels, pause/resume, reduced motion, off-screen suspension and failed-image fallback |
+| Area              | Coverage                                                                                                                                                   |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public pages      | 17 routes at widths 320, 390, 768, 1024, 1440 and 2560 pixels                                                                                              |
+| Operations        | All 12 panels and a populated application review at the same six widths                                                                                    |
+| Signed-in portals | Family bookings, payment controls, nanny profile/placements and safeguarding quiz at phone, tablet and desktop widths                                      |
+| Nanny application | All eight steps at 320, 768, 1024 and 1440 pixels; desktop independent scrolling and mobile normal scrolling                                               |
+| Authentication    | Full-page image coverage, a right-aligned desktop form, a contained touch layout, password visibility, and reachable submit button with a shorter viewport |
+| Overlays          | Booking, navigation and support at 844 × 390 landscape size; keyboard focus and Escape behavior                                                            |
+| Workflow screens  | Specialist quote privacy/error states, enquiry tracking, operator assessment and follow-ups; verified-identity ownership regression                        |
+| Image panels      | Three-photo loops on both marketing panels, pause/resume, reduced motion, off-screen suspension and failed-image fallback                                  |
 
 ESLint, TypeScript and the production build passed. Browser checks use desktop Chrome and Chromium touch emulation. Physical iOS/Android devices and Safari/Firefox have not been tested in this pass.
 

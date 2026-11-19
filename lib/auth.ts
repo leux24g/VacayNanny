@@ -8,14 +8,8 @@ const AUTH_MS = 2000
 
 export type CurrentProfile = Profile & { emailConfirmed: boolean }
 
-export {
-  emailOwnershipProven,
-  profileOwnsBooking,
-} from '@/lib/booking-ownership'
-import {
-  emailOwnershipProven,
-  type AuthIdentity,
-} from '@/lib/booking-ownership'
+export { emailOwnershipProven, profileOwnsBooking } from '@/lib/booking-ownership'
+import { emailOwnershipProven, type AuthIdentity } from '@/lib/booking-ownership'
 
 export async function getSessionUser() {
   if (!hasSupabaseConfig()) return null
@@ -61,7 +55,12 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
           avatar_url: null,
           created_at: identity.created_at,
         }
-        return { ...profile, emailConfirmed: emailOwnershipProven(identity) }
+        // Ownership uses the identity returned by Auth, never editable profile data.
+        return {
+          ...profile,
+          email: identity.email ?? null,
+          emailConfirmed: emailOwnershipProven(identity),
+        }
       } catch {
         return null
       }

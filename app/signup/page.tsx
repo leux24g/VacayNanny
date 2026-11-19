@@ -43,9 +43,12 @@ export default function SignupPage() {
       },
     })
     setLoading(false)
-    if (err) { setError(getFriendlyAuthError(err)); return }
+    if (err) {
+      setError(getFriendlyAuthError(err))
+      return
+    }
     if (data.session) {
-      router.push(role === 'nanny' ? '/become-a-nanny' : '/account')
+      router.push(role === 'nanny' ? '/nanny' : '/account')
       router.refresh()
       return
     }
@@ -84,13 +87,39 @@ export default function SignupPage() {
             <div className="auth-card">
               <div className="login-heading">
                 <div className="eyebrow">Account</div>
-                <h1>Check your <em>email</em></h1>
+                <h1>
+                  Check your <em>email</em>
+                </h1>
                 <p>We sent a confirmation link to {email}. Open it, then sign in.</p>
-                {resendMessage && <p className="field-hint" style={{ marginTop: 12, color: resendMessage.includes('sent') ? '#5ec9b6' : '#ff8a8a' }}>{resendMessage}</p>}
+                {resendMessage && (
+                  <p
+                    className="field-hint"
+                    style={{
+                      marginTop: 12,
+                      color: resendMessage.includes('sent') ? '#5ec9b6' : '#ff8a8a',
+                    }}
+                  >
+                    {resendMessage}
+                  </p>
+                )}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 16 }}>
-                <Link className="btn-submit" href="/login">Go to sign in</Link>
-                <button className="btn-ghost" onClick={resendConfirmation} disabled={resending} style={{ width: '100%' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  marginTop: 16,
+                }}
+              >
+                <Link className="btn-submit" href="/login">
+                  Go to sign in
+                </Link>
+                <button
+                  className="btn-ghost"
+                  onClick={resendConfirmation}
+                  disabled={resending}
+                  style={{ width: '100%' }}
+                >
                   {resending ? 'Sending…' : 'Resend confirmation email'}
                 </button>
               </div>
@@ -99,7 +128,9 @@ export default function SignupPage() {
             <form className="auth-card" onSubmit={submit} autoComplete="on">
               <div className="login-heading">
                 <div className="eyebrow">Account</div>
-                <h1>Create your <em>account</em></h1>
+                <h1>
+                  Create your <em>account</em>
+                </h1>
                 <p>Parents book from here. Nannies use it to continue an application.</p>
               </div>
               <div className="field">
@@ -111,7 +142,7 @@ export default function SignupPage() {
                   autoComplete="name"
                   required
                   value={fullName}
-                  onChange={e => setFullName(e.target.value)}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jane Smith"
                 />
               </div>
@@ -125,7 +156,7 @@ export default function SignupPage() {
                   inputMode="email"
                   required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@email.com"
                   aria-invalid={error ? true : undefined}
                   aria-describedby={error ? 'signup-error' : undefined}
@@ -142,7 +173,7 @@ export default function SignupPage() {
                     required
                     minLength={8}
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
                     aria-invalid={error ? true : undefined}
                     aria-describedby={error ? 'signup-error' : undefined}
@@ -152,7 +183,7 @@ export default function SignupPage() {
                     type="button"
                     aria-pressed={showPassword}
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    onClick={() => setShowPassword(value => !value)}
+                    onClick={() => setShowPassword((value) => !value)}
                   >
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
@@ -185,9 +216,17 @@ export default function SignupPage() {
                   </label>
                 </div>
               </fieldset>
-              {error && <p id="signup-error" className="field-error-msg" role="alert">{error}</p>}
-              <button className="btn-submit" type="submit" disabled={loading}>{loading ? 'Creating…' : 'Create account'}</button>
-              <p className="auth-switch">Already have an account? <Link href="/login">Sign in</Link></p>
+              {error && (
+                <p id="signup-error" className="field-error-msg" role="alert">
+                  {error}
+                </p>
+              )}
+              <button className="btn-submit" type="submit" disabled={loading}>
+                {loading ? 'Creating…' : 'Create account'}
+              </button>
+              <p className="auth-switch">
+                Already have an account? <Link href="/login">Sign in</Link>
+              </p>
             </form>
           )}
         </div>

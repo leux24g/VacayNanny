@@ -12,7 +12,13 @@ import AuthVisual from '@/components/AuthVisual'
 function LoginForm() {
   const router = useRouter()
   const params = useSearchParams()
-  const next = params.get('next') || '/account'
+  const requestedNext = params.get('next') || '/account'
+  const next =
+    requestedNext.startsWith('/') &&
+    !requestedNext.startsWith('//') &&
+    !requestedNext.includes('\\')
+      ? requestedNext
+      : '/account'
   const callbackError = params.get('error')
   const callbackMessage = params.get('message')
   const [email, setEmail] = useState('')
@@ -42,10 +48,20 @@ function LoginForm() {
     const supabase = createSupabaseBrowser()
     const { error: err } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
-    if (err) { setError(getFriendlyAuthError(err)); return }
-    const { data: { user } } = await supabase.auth.getUser()
+    if (err) {
+      setError(getFriendlyAuthError(err))
+      return
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle()
+      await fetch('/api/account/claim-application', { method: 'POST' }).catch(() => null)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
       const role = profile?.role
       router.push(role === 'admin' ? '/admin' : role === 'nanny' ? '/nanny' : next)
       router.refresh()
@@ -61,7 +77,9 @@ function LoginForm() {
           <form className="auth-card" onSubmit={submit} autoComplete="on">
             <div className="login-heading">
               <div className="eyebrow">Account</div>
-              <h1>Sign <em>in</em></h1>
+              <h1>
+                Sign <em>in</em>
+              </h1>
               <p>Use the email you booked with, or the one on your application.</p>
             </div>
             <div className="field">
@@ -74,7 +92,7 @@ function LoginForm() {
                 inputMode="email"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@email.com"
                 aria-invalid={error ? true : undefined}
                 aria-describedby={error ? 'login-error' : undefined}
@@ -93,7 +111,7 @@ function LoginForm() {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Your password"
                   aria-invalid={error ? true : undefined}
                   aria-describedby={error ? 'login-error' : undefined}
@@ -103,15 +121,23 @@ function LoginForm() {
                   type="button"
                   aria-pressed={showPassword}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  onClick={() => setShowPassword(value => !value)}
+                  onClick={() => setShowPassword((value) => !value)}
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
               </div>
             </div>
-            {error && <p id="login-error" className="field-error-msg" role="alert">{error}</p>}
-            <button className="btn-submit" type="submit" disabled={loading}>{loading ? 'Signing in…' : 'Sign in'}</button>
-            <p className="auth-switch">New here? <Link href="/signup">Create an account</Link></p>
+            {error && (
+              <p id="login-error" className="field-error-msg" role="alert">
+                {error}
+              </p>
+            )}
+            <button className="btn-submit" type="submit" disabled={loading}>
+              {loading ? 'Signing in…' : 'Sign in'}
+            </button>
+            <p className="auth-switch">
+              New here? <Link href="/signup">Create an account</Link>
+            </p>
           </form>
         </div>
       </main>

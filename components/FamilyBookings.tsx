@@ -80,11 +80,7 @@ export default function FamilyBookings({
   const [rescheduleId, setRescheduleId] = useState<string | null>(null)
   const [dates, setDates] = useState({ checkIn: '', checkOut: '' })
 
-  async function act(
-    id: string,
-    action: string,
-    extra?: Record<string, string>,
-  ) {
+  async function act(id: string, action: string, extra?: Record<string, string>) {
     setBusy(id)
     setError('')
     try {
@@ -115,8 +111,8 @@ export default function FamilyBookings({
       <div className="trip-empty">
         <h3>No trips yet</h3>
         <p>
-          Search nannies and send a request. Matches, messages, and reviews will
-          show up here.
+          Search nannies and send a request. Matches, messages, and reviews will show up
+          here.
         </p>
         <Link href="/nannies" className="btn-coral">
           Find a nanny
@@ -133,18 +129,18 @@ export default function FamilyBookings({
         const canConfirm =
           b.status === 'matched' &&
           Boolean(b.nanny_id) &&
+          (!b.booking_assignments ||
+            b.booking_assignments.length === Number(b.nannies_needed)) &&
           !b.parent_confirmed_at
         const canCancel =
-          b.status === 'pending' ||
-          b.status === 'matched' ||
-          b.status === 'confirmed'
+          b.status === 'pending' || b.status === 'matched' || b.status === 'confirmed'
         const canReschedule = canCancel
-        const refund = cancellationRefundPercent(
-          b.check_in,
-          new Date(),
-          policies,
-        )
-        const nannyName = b.nannies?.display_name
+        const refund = cancellationRefundPercent(b.check_in, new Date(), policies)
+        const nannyName = b.booking_assignments?.length
+          ? b.booking_assignments
+              .map((a) => a.nannies?.display_name || 'Assigned nanny')
+              .join(' & ')
+          : b.nannies?.display_name
         const nights = tripNights(b.check_in, b.check_out)
         const family = [
           b.children_count
@@ -155,17 +151,12 @@ export default function FamilyBookings({
           .filter(Boolean)
           .join(' · ')
         return (
-          <article
-            className={`trip-card${canConfirm ? ' needs-you' : ''}`}
-            key={b.id}
-          >
+          <article className={`trip-card${canConfirm ? ' needs-you' : ''}`} key={b.id}>
             <div className="trip-card-head">
               <div>
                 <p className="trip-when">
                   {formatTripRange(b.check_in, b.check_out)}
-                  {nights
-                    ? ` · ${nights} ${nights === 1 ? 'night' : 'nights'}`
-                    : ''}
+                  {nights ? ` · ${nights} ${nights === 1 ? 'night' : 'nights'}` : ''}
                 </p>
                 <h3>{b.destination}</h3>
               </div>
@@ -191,28 +182,48 @@ export default function FamilyBookings({
               <div>
                 <dt>Estimate</dt>
                 <dd className="trip-price">
-                  {b.total_amount_kes != null
-                    ? formatKes(b.total_amount_kes)
-                    : '—'}
+                  {b.total_amount_kes != null ? formatKes(b.total_amount_kes) : '—'}
                 </dd>
               </div>
             </dl>
-            {(b.parent_confirmed_at ||
-              b.nanny_response ||
-              b.status === 'cancelled') && (
+            {(b.parent_confirmed_at || b.nanny_response || b.status === 'cancelled') && (
               <ul className="trip-notes">
                 {b.parent_confirmed_at && <li>You confirmed this match.</li>}
-                {b.nanny_response && <li>{nannyReply(b.nanny_response)}</li>}
+                {b.booking_assignments?.map((assignment) => (
+                  <li key={assignment.slot}>
+                    {assignment.nannies?.display_name || 'Nanny'}:{' '}
+                    {assignment.response === 'accepted'
+                      ? 'Accepted'
+                      : 'Awaiting response'}
+                  </li>
+                ))}
+                {!b.booking_assignments?.length && b.nanny_response && (
+                  <li>{nannyReply(b.nanny_response)}</li>
+                )}
                 {b.status === 'cancelled' && (
                   <li>{refundPolicyLabel(b.refund_percent ?? 0, policies)}</li>
                 )}
               </ul>
             )}
             {canConfirm && nannyName && (
-              <p className="trip-prompt">
-                Confirm this match to lock in {nannyName}.
+              <p className="trip-prompt">Confirm this match to lock in {nannyName}.</p>
+            )}
+            {b.match_expires_at && b.status === 'matched' && (
+              <p className="trip-notes">
+                Proposal valid until{' '}
+                {new Date(b.match_expires_at).toLocaleString('en-KE', {
+                  timeZone: 'Africa/Nairobi',
+                })}{' '}
+                EAT.
               </p>
             )}
+            {b.status === 'matched' &&
+              Number(b.nannies_needed) > (b.booking_assignments?.length || 0) && (
+                <p className="trip-notes">
+                  {b.booking_assignments?.length || 0} of {b.nannies_needed} nannies
+                  proposed. Our team will complete your care team before you confirm.
+                </p>
+              )}
             <BookingPayment booking={b} token={guestToken} />
             {(canConfirm || canReschedule || canCancel) && (
               <div className="booking-actions">
@@ -287,11 +298,7 @@ export default function FamilyBookings({
                     />
                   </div>
                 </div>
-                <button
-                  className="btn-coral"
-                  type="submit"
-                  disabled={busy === b.id}
-                >
+                <button className="btn-coral" type="submit" disabled={busy === b.id}>
                   Save dates
                 </button>
               </form>
@@ -304,9 +311,7 @@ export default function FamilyBookings({
                   {'☆'.repeat(5 - b.review.rating)}
                 </div>
                 <p>{b.review.body}</p>
-                <p
-                  className={`review-mod-status${b.review.is_published ? ' live' : ''}`}
-                >
+                <p className={`review-mod-status${b.review.is_published ? ' live' : ''}`}>
                   {b.review.is_published
                     ? 'Live on the nanny profile'
                     : 'Submitted — waiting for VacayNanny to publish'}

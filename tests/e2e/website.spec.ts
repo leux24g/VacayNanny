@@ -36,9 +36,7 @@ test('booking modal has labels, traps focus, and restores focus on Escape', asyn
   await expect(dialog.getByLabel('Full Name')).toBeVisible()
   await dialog.getByRole('button', { name: 'Request My Nanny' }).focus()
   await page.keyboard.press('Tab')
-  await expect(
-    dialog.getByRole('button', { name: 'Close booking form' }),
-  ).toBeFocused()
+  await expect(dialog.getByRole('button', { name: 'Close booking form' })).toBeFocused()
   await page.keyboard.press('Escape')
   await expect(dialog).toHaveCount(0)
   await expect(opener).toBeFocused()
@@ -64,10 +62,9 @@ test('successful guest request offers tracking and optional registration', async
   await dialog.getByLabel('Destination', { exact: true }).selectOption('Diani')
   await dialog.getByLabel('Check-in Date').fill('2027-04-10')
   await dialog.getByLabel('Check-out Date').fill('2027-04-12')
+  await dialog.getByLabel('Number of Children').selectOption('2')
   await dialog.getByRole('button', { name: 'Request My Nanny' }).click()
-  await expect(
-    dialog.getByRole('link', { name: 'Continue as a guest' }),
-  ).toBeVisible()
+  await expect(dialog.getByRole('link', { name: 'Continue as a guest' })).toBeVisible()
   await expect(
     dialog.getByRole('link', {
       name: 'Create an account to track your booking',
@@ -75,25 +72,15 @@ test('successful guest request offers tracking and optional registration', async
   ).toBeVisible()
 })
 
-test('mobile navigation and key pages have no horizontal overflow', async ({
-  page,
-}) => {
+test('mobile navigation and key pages have no horizontal overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/')
   await page.getByRole('button', { name: 'Menu', exact: true }).click()
   await expect(
-    page
-      .getByRole('navigation')
-      .getByRole('link', { name: 'For families', exact: true }),
+    page.getByRole('navigation').getByRole('link', { name: 'For families', exact: true }),
   ).toBeVisible()
   await page.getByRole('button', { name: 'Menu', exact: true }).click()
-  for (const route of [
-    '/',
-    '/nannies',
-    '/contact',
-    '/become-a-nanny',
-    '/login',
-  ]) {
+  for (const route of ['/', '/nannies', '/contact', '/become-a-nanny', '/login']) {
     await page.goto(route)
     expect(
       await page.evaluate(
@@ -116,22 +103,16 @@ test('operations stays protected and works through the normal authenticated rout
   await page.getByLabel('Password', { exact: true }).fill('local-review')
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
   await expect(page).toHaveURL('/admin')
-  await expect(
-    page.getByRole('heading', { name: 'Overview', exact: true }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible()
   await page
     .locator('.ops-content')
     .evaluate((element) =>
-      Promise.all(
-        element.getAnimations().map((animation) => animation.finished),
-      ),
+      Promise.all(element.getAnimations().map((animation) => animation.finished)),
     )
   await page.screenshot({ path: testInfo.outputPath('admin-desktop.png') })
   const nav = page.getByRole('navigation', { name: 'Operations' })
   await nav.getByRole('button', { name: /Bookings/ }).click()
-  await expect(
-    page.getByRole('heading', { name: 'Bookings', exact: true }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Bookings', exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Test Family', exact: true }),
   ).toBeVisible()
@@ -141,9 +122,7 @@ test('operations stays protected and works through the normal authenticated rout
   ).toBeVisible()
   await page.setViewportSize({ width: 390, height: 844 })
   expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= window.innerWidth,
-    ),
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
   ).toBe(true)
   await page.screenshot({
     path: 'test-results/admin-mobile.png',
@@ -154,9 +133,7 @@ test('operations stays protected and works through the normal authenticated rout
   await page
     .locator('.ops-content')
     .evaluate((element) =>
-      Promise.all(
-        element.getAnimations().map((animation) => animation.finished),
-      ),
+      Promise.all(element.getAnimations().map((animation) => animation.finished)),
     )
   await page.screenshot({
     path: 'test-results/admin-desktop.png',
@@ -176,9 +153,7 @@ test('guest booking requires its secure token and exposes payment only after acc
   await expect(page.getByText('Test Family')).toHaveCount(0)
   const response = await page.goto(`/booking/${id}?token=${'a'.repeat(64)}`)
   expect(response?.headers()['referrer-policy']).toBe('no-referrer')
-  await expect(
-    page.getByRole('button', { name: 'Pay KES 4,400' }),
-  ).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Pay KES 4,400' })).toBeVisible()
   await page.getByRole('button', { name: 'Pay KES 4,400' }).click()
   await expect(
     page.getByRole('region', { name: 'Booking payment' }).getByRole('alert'),
@@ -199,9 +174,7 @@ test('operational endpoints stay private and local review stays outside search i
     data: { event: 'charge.success' },
   })
   expect(webhook.status()).toBe(503)
-  expect(await (await request.get('/robots.txt')).text()).toContain(
-    'Disallow: /',
-  )
+  expect(await (await request.get('/robots.txt')).text()).toContain('Disallow: /')
   const sitemap = await (await request.get('/sitemap.xml')).text()
   expect(sitemap).toContain('/contact')
   expect(sitemap).not.toMatch(/\/admin|\/booking\/|\/payments\//)

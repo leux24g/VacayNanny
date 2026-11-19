@@ -66,9 +66,7 @@ export default function BookingModal({
     notes: '',
     addonCodes: [] as string[],
   })
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>(
-    'idle',
-  )
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [error, setError] = useState('')
   const [trackingPath, setTrackingPath] = useState('')
   const dialogRef = useRef<HTMLDivElement>(null)
@@ -130,8 +128,7 @@ export default function BookingModal({
         checkOut: defaults?.checkOut || f.checkOut,
         tier: defaults?.tier || f.tier,
         infantCare: Boolean(defaults?.infantCare) || f.infantCare,
-        youngestAge:
-          f.youngestAge || (defaults?.infantCare ? 'Under 1 year' : ''),
+        youngestAge: f.youngestAge || (defaults?.infantCare ? 'Under 1 year' : ''),
       }))
     }
   }
@@ -157,9 +154,7 @@ export default function BookingModal({
           ...f,
           name:
             f.name ||
-            String(
-              profile?.full_name || user.user_metadata?.full_name || '',
-            ).trim(),
+            String(profile?.full_name || user.user_metadata?.full_name || '').trim(),
           email: f.email || String(profile?.email || user.email || '').trim(),
           phone: f.phone || String(profile?.phone || '').trim(),
         }))
@@ -174,9 +169,7 @@ export default function BookingModal({
   }, [open])
 
   function change(
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
   ) {
     const { name, value } = e.target
     setForm((f) => ({
@@ -239,11 +232,7 @@ export default function BookingModal({
         aria-label="Request a nanny"
         style={{ maxWidth: 560, maxHeight: '90dvh', overflowY: 'auto' }}
       >
-        <button
-          className="modal-x"
-          onClick={onClose}
-          aria-label="Close booking form"
-        >
+        <button className="modal-x" onClick={onClose} aria-label="Close booking form">
           ✕
         </button>
         {status === 'done' ? (
@@ -259,9 +248,9 @@ export default function BookingModal({
               Request Received
             </h2>
             <p style={{ color: 'rgba(23,50,77,0.5)', fontSize: '0.9rem' }}>
-              We&apos;ll review your request and email {form.email} with the
-              next steps. Your booking is confirmed after you and your nanny
-              accept the match. Payment follows before care starts.
+              We&apos;ll review your request and email {form.email} with the next steps.
+              Your booking is confirmed after you and your nanny accept the match. Payment
+              follows before care starts.
             </p>
             <div className="booking-actions">
               {trackingPath && (
@@ -378,20 +367,18 @@ export default function BookingModal({
                   <select
                     id="booking-children"
                     name="children"
+                    required
                     value={form.children}
                     onChange={change}
                   >
                     <option value="">Select</option>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4+</option>
+                    {Array.from({ length: 12 }, (_, index) => (
+                      <option key={index + 1}>{index + 1}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="mfield">
-                  <label htmlFor="booking-youngestAge">
-                    Youngest child&apos;s age
-                  </label>
+                  <label htmlFor="booking-youngestAge">Youngest child&apos;s age</label>
                   <select
                     id="booking-youngestAge"
                     name="youngestAge"
@@ -416,17 +403,14 @@ export default function BookingModal({
                     value={form.nanniesNeeded}
                     onChange={change}
                   >
-                    {Array.from(
-                      { length: site.policies.maxNannies },
-                      (_, index) => {
-                        const count = String(index + 1)
-                        return (
-                          <option key={count} value={count}>
-                            {count === '1' ? '1 nanny' : `${count} nannies`}
-                          </option>
-                        )
-                      },
-                    )}
+                    {Array.from({ length: site.policies.maxNannies }, (_, index) => {
+                      const count = String(index + 1)
+                      return (
+                        <option key={count} value={count}>
+                          {count === '1' ? '1 nanny' : `${count} nannies`}
+                        </option>
+                      )
+                    })}
                   </select>
                 </div>
                 <div className="mfield">
@@ -461,20 +445,14 @@ export default function BookingModal({
                   ))}
                 </select>
                 <p className="modal-hint">
-                  {
-                    careOptions.find((care) => care.code === form.careType)
-                      ?.hint
-                  }
+                  {careOptions.find((care) => care.code === form.careType)?.hint}
                 </p>
               </div>
               {site.addons.some((addon) => addon.pricingMode === 'flat') && (
                 <div className="mfield" style={{ marginBottom: '1rem' }}>
                   <label>Add-ons</label>
                   {site.addons
-                    .filter(
-                      (addon) =>
-                        addon.pricingMode === 'flat' && addon.amountKes,
-                    )
+                    .filter((addon) => addon.pricingMode === 'flat' && addon.amountKes)
                     .map((addon) => (
                       <label
                         className="force-assign"
@@ -533,8 +511,7 @@ export default function BookingModal({
                         strictRates: site.source === 'database',
                       }),
                       parseCareType(form.careType),
-                      careOptions.find((care) => care.code === form.careType)
-                        ?.label,
+                      careOptions.find((care) => care.code === form.careType)?.label,
                     )
                   : 'Pick dates to see the estimate.'}
               </div>
@@ -559,11 +536,7 @@ export default function BookingModal({
                   {error}
                 </p>
               )}
-              <button
-                className="msubmit"
-                type="submit"
-                disabled={status === 'loading'}
-              >
+              <button className="msubmit" type="submit" disabled={status === 'loading'}>
                 {status === 'loading' ? 'Sending…' : 'Request My Nanny →'}
               </button>
             </form>
