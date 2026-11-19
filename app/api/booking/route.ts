@@ -8,6 +8,8 @@ import { parseAddonCodes, quoteRatesFromCatalog } from '@/lib/catalog'
 import { loadQuoteCatalog } from '@/lib/catalog-data'
 import { limitRoute } from '@/lib/rate-limit'
 import { publicDailyRate } from '@/lib/safeguarding'
+import { createGuestAccess } from '@/lib/guest-access'
+import { siteUrl } from '@/lib/constants'
 
 export async function POST(request: NextRequest) {
   try {
@@ -121,7 +123,10 @@ export async function POST(request: NextRequest) {
     const careLabel = quoteCatalog.care.find(care => care.code === careType)?.label
 
     const assigned = Boolean(nannyId)
+    const guestAccess = createGuestAccess()
     const row = {
+      guest_access_token_hash: guestAccess.hash,
+      payment_status: 'unpaid',
       parent_id: parentId,
       nanny_id: nannyId,
       parent_name: parentName,
@@ -141,19 +146,25 @@ export async function POST(request: NextRequest) {
       total_amount_kes: total,
       addon_codes: addonCodes,
     }
-    let { error } = await supabase.from('bookings').insert([row]).select('id').maybeSingle()
+    let { data: saved, error } = await supabase.from('bookings').insert([row]).select('id').maybeSingle()
     if (error && /addon_codes/.test(error.message)) {
       const withoutAddons = { ...row }
       Reflect.deleteProperty(withoutAddons, 'addon_codes')
       const retry = await supabase.from('bookings').insert([withoutAddons]).select('id').maybeSingle()
       error = retry.error
+      saved = retry.data
     }
 
-    if (error) {
+    if (error || !saved) {
       console.error('Supabase booking error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: 'Could not save the booking. Please contact support.' }, { status: 500 })
     }
 
+    const trackingPath = `/booking/${saved.id}?token=${guestAccess.token}`
+    await sendBookingEmails({ parentName, email, phone, destination, checkIn, checkOut,
+      childrenAges: [childrenCount, youngestAge].filter(Boolean).join(' · '), tier: tier || 'Any', message: notes,
+      trackingUrl: siteUrl(trackingPath),
+    }).catch(err => console.error('sendBookingEmails failed:', err))
     if (assigned) {
       notifyBookingEvent('matched', {
         parentName,
@@ -169,21 +180,9 @@ export async function POST(request: NextRequest) {
         totalKes: total,
         note: 'Family requested this nanny',
       }).catch(err => console.error('notifyBookingEvent matched failed:', err))
-    } else {
-      sendBookingEmails({
-        parentName,
-        email,
-        phone,
-        destination,
-        checkIn,
-        checkOut,
-        childrenAges: [childrenCount, youngestAge].filter(Boolean).join(' · '),
-        tier: tier || 'Any',
-        message: notes,
-      }).catch(err => console.error('sendBookingEmails failed:', err))
     }
 
-    return NextResponse.json({ success: true, total, careType }, { status: 200 })
+    return NextResponse.json({ success: true, total, careType, trackingPath }, { status: 200 })
   } catch (err) {
     return jsonFromBookingError(err)
   }

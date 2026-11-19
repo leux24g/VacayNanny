@@ -498,12 +498,12 @@ export default function BecomeANanny() {
         <div className="success-screen active" style={{ paddingTop: '8rem' }}>
           <div className="success-icon">✅</div>
           <h2>Application Submitted!</h2>
-          <p>Thank you, {firstName}! Your application has been received. Our team will review it within 3–5 business days and contact you via email and phone.</p>
+          <p>Thank you, {firstName}! Your application has been received. Our team will review your details, experience and documents, and contact you by email with the next steps. Submitting an application does not approve your profile.</p>
           <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>Check <strong>{email}</strong> for your confirmation.</p>
           <div className="success-steps">
             <div className="success-step">
               <div className="success-step-num">1</div>
-              <p>Application review (3–5 business days)</p>
+              <p>Application and document review</p>
             </div>
             <div className="success-step">
               <div className="success-step-num">2</div>
@@ -515,7 +515,7 @@ export default function BecomeANanny() {
             </div>
             <div className="success-step">
               <div className="success-step-num">4</div>
-              <p>Profile goes live — start earning!</p>
+              <p>Sign your agreement, then receive profile activation</p>
             </div>
           </div>
           <div style={{ marginTop: '2.5rem' }}>
@@ -737,7 +737,7 @@ export default function BecomeANanny() {
 
             <div className="form-card">
               <h3>Identity selfie <span className="req">*</span></h3>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: 16 }}>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(23,50,77,0.5)', marginBottom: 16 }}>
                 Hold your National ID next to your face. Good lighting, face clearly visible.
               </p>
               <UploadBox
@@ -747,7 +747,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(0)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(0)}>← Back</button>
               <button className="btn-primary" onClick={() => goStep(2)}>Next: Background →</button>
             </div>
           </div>
@@ -764,7 +764,7 @@ export default function BecomeANanny() {
 
             <div className="form-card">
               <h3>Certificate of Good Conduct (CoGC)</h3>
-              <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', marginBottom: '16px', lineHeight: '1.55' }}>
+              <p style={{ fontSize: '0.85rem', color: 'rgba(23,50,77,0.5)', marginBottom: '16px', lineHeight: '1.55' }}>
                 A CoGC is issued by the Kenya Police Service and is valid for 1 year. You can apply online at <a href="https://www.ecitizen.go.ke" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--coral)' }}>eCitizen</a>.
               </p>
               <div className="radio-cards">
@@ -795,7 +795,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(1)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(1)}>← Back</button>
               <button className="btn-primary" onClick={() => goStep(3)}>Next: Experience →</button>
             </div>
           </div>
@@ -858,7 +858,7 @@ export default function BecomeANanny() {
 
             <div className="form-card">
               <h3>Certifications <span className="optional-tag">Optional but recommended</span></h3>
-              <p style={{ fontSize: '0.83rem', color: 'rgba(255,255,255,0.45)', marginBottom: '16px' }}>Add any childcare, first-aid, or education certificates you hold.</p>
+              <p style={{ fontSize: '0.83rem', color: 'rgba(23,50,77,0.45)', marginBottom: '16px' }}>Add any childcare, first-aid, or education certificates you hold.</p>
               {certifications.map((cert, i) => (
                 <div key={i} style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
                   <input
@@ -893,7 +893,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(2)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(2)}>← Back</button>
               <button className="btn-primary" onClick={() => goStep(4)}>Next: Skills →</button>
             </div>
           </div>
@@ -988,7 +988,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(3)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(3)}>← Back</button>
               <button className="btn-primary" onClick={() => goStep(5)}>Next: References →</button>
             </div>
           </div>
@@ -1080,7 +1080,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(4)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(4)}>← Back</button>
               <button className="btn-primary" onClick={() => goStep(6)}>Next: Availability →</button>
             </div>
           </div>
@@ -1133,7 +1133,7 @@ export default function BecomeANanny() {
 
             <div className="form-card">
               <h3>Preferred Locations</h3>
-              <p style={{ fontSize: '0.83rem', color: 'rgba(255,255,255,0.45)', marginBottom: '12px' }}>Select destinations you&apos;d love to work in.</p>
+              <p style={{ fontSize: '0.83rem', color: 'rgba(23,50,77,0.45)', marginBottom: '12px' }}>Select destinations you&apos;d love to work in.</p>
               <div className="check-grid">
                 {locationChoices.map(loc => (
                   <CheckItem
@@ -1148,7 +1148,7 @@ export default function BecomeANanny() {
             <div className="form-card">
               <h3>Additional Comfort Levels</h3>
               <div style={{ marginBottom: '16px' }}>
-                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>Are you comfortable working in homes with pets?</p>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(23,50,77,0.6)', marginBottom: '10px' }}>Are you comfortable working in homes with pets?</p>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {['Yes, any pets','Yes, dogs/cats only','No pets','Depends on the pet'].map(opt => (
                     <div
@@ -1164,7 +1164,7 @@ export default function BecomeANanny() {
                 </div>
               </div>
               <div>
-                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginBottom: '10px' }}>Comfortable caring for multiple children simultaneously?</p>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(23,50,77,0.6)', marginBottom: '10px' }}>Comfortable caring for multiple children simultaneously?</p>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   {['Yes — up to 2','Yes — up to 4','Yes — any number','Prefer 1 child'].map(opt => (
                     <div
@@ -1182,7 +1182,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(5)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(5)}>← Back</button>
               <button className="btn-primary" onClick={() => goStep(7)}>Review My Application →</button>
             </div>
           </div>
@@ -1267,7 +1267,7 @@ export default function BecomeANanny() {
             </div>
 
             <div className="btn-row">
-              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(6)}>← Back</button>
+              <button className="btn-ghost" style={{ background: 'transparent', border: '1px solid rgba(23,50,77,0.2)', color: 'var(--deep)', borderRadius: '50px', padding: '12px 24px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif' }} onClick={() => goStep(6)}>← Back</button>
               <button
                 className="btn-submit"
                 onClick={submitForm}

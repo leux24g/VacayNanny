@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile, profileOwnsBooking } from '@/lib/auth'
 import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
 import { applyBookingMutation, jsonFromBookingError, loadBooking } from '@/lib/booking-ops'
+import { validGuestToken } from '@/lib/guest-access'
 
 export async function PATCH(
   request: NextRequest,
@@ -12,21 +13,23 @@ export async function PATCH(
       return NextResponse.json({ error: 'Booking storage is not configured yet.' }, { status: 503 })
     }
     const profile = await getCurrentProfile()
-    if (!profile) return NextResponse.json({ error: 'Sign in to manage this booking.' }, { status: 401 })
 
     const { id } = await params
     const body = await request.json()
     const supabase = createServerClient()
     const booking = await loadBooking(supabase, id)
 
-    const isParent = profileOwnsBooking(profile, booking)
-    const { data: nannyRow } = await supabase
+    const guestToken = request.headers.get('authorization')?.replace(/^Bearer /, '')
+    const guest = validGuestToken(guestToken, booking.guest_access_token_hash)
+    if (!profile && !guest) return NextResponse.json({ error: 'Use your secure booking link or sign in.' }, { status: 401 })
+    const isParent = guest || Boolean(profile && profileOwnsBooking(profile, booking))
+    const { data: nannyRow } = profile ? await supabase
       .from('nannies')
       .select('id')
       .eq('user_id', profile.id)
-      .maybeSingle()
+      .maybeSingle() : { data: null }
     const isAssignedNanny = Boolean(nannyRow && booking.nanny_id === nannyRow.id)
-    const isAdmin = profile.role === 'admin'
+    const isAdmin = profile?.role === 'admin'
 
     const action = String(body.action || '')
     if (action === 'confirm' || action === 'cancel' || action === 'reschedule') {

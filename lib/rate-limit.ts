@@ -5,6 +5,7 @@ const WINDOW_SECONDS = 60 * 60
 
 const LIMITS = {
   apply: { ip: 5, email: 3 },
+  payment: { ip: 30, email: 15 },
   booking: { ip: 10, email: 6 },
   contact: { ip: 8, email: 4 },
   waitlist: { ip: 8, email: 3 },

@@ -114,6 +114,9 @@ export type Booking = {
   replacement_fulfilled_at: string | null
   replaced_nanny_id: string | null
   addon_codes?: string[]
+  payment_status?: 'unpaid' | 'paid' | 'not_required' | 'refund_pending' | 'refunded'
+  paid_at?: string | null
+  guest_access_token_hash?: string | null
   created_at: string
   updated_at?: string
   nannies?: Pick<Nanny, 'id' | 'display_name' | 'slug' | 'photo_url' | 'tier' | 'daily_rate_kes' | 'safeguarding_completed_at'> | null
@@ -121,6 +124,10 @@ export type Booking = {
 }
 
 export type NannyApplication = {
+  agreement_signed_path?: string | null
+  agreement_reviewed_at?: string | null
+  agreement_reviewed_by?: string | null
+  approval_email_sent_at?: string | null
   id: string
   user_id: string | null
   full_name: string

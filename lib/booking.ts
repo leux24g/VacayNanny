@@ -165,11 +165,12 @@ export function placementEndAt(checkIn: string, checkOut: string): Date {
 
 /** Next status if check-in/out has elapsed. Never moves a booking backwards. */
 export function dueBookingStatus(
-  booking: { status: BookingStatus; check_in: string; check_out: string },
+  booking: { status: BookingStatus; check_in: string; check_out: string; payment_status?: string },
   now = new Date(),
 ): BookingStatus | null {
   switch (booking.status) {
     case 'confirmed': {
+      if (booking.payment_status && !['paid','not_required'].includes(booking.payment_status)) return null
       if (now.getTime() >= placementEndAt(booking.check_in, booking.check_out).getTime()) return 'completed'
       if (now.getTime() >= placementStartAt(booking.check_in).getTime()) return 'in_progress'
       return null

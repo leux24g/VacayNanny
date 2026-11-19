@@ -50,8 +50,8 @@ export default async function NannyDash() {
         {!nanny && (
           <div className="form-card">
             <h3>Profile not live yet</h3>
-            <p style={{ color: 'rgba(255,255,255,0.55)', marginTop: 8 }}>
-              Apply to join and wait for vetting. Once approved, your profile appears here.
+            <p style={{ color: 'rgba(23,50,77,0.55)', marginTop: 8 }}>
+              Your application is reviewed first. After approval, read, sign and return the agreement sent by email. Your profile will be activated after our team reviews the signed copy.
             </p>
             <Link href="/become-a-nanny" className="btn-primary" style={{ marginTop: 16, display: 'inline-block' }}>Apply now</Link>
           </div>
@@ -61,7 +61,7 @@ export default async function NannyDash() {
             {needsSafeguardingModule(nanny) && (
               <div className="form-card">
                 <h3>Elite safeguarding required</h3>
-                <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: 8, lineHeight: 1.6 }}>
+                <p style={{ color: 'rgba(23,50,77,0.6)', marginTop: 8, lineHeight: 1.6 }}>
                   Your profile is approved at Gold, but families see you as Pro until you pass the safeguarding module.
                 </p>
                 <Link href="/nanny/safeguarding" className="btn-coral" style={{ marginTop: 16, display: 'inline-block' }}>

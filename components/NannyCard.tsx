@@ -19,29 +19,70 @@ export default function NannyCard({
   const label = tierLabel(shownTier, tierLabels(site.tiers))
   return (
     <div className="nanny-card">
-      <Link href={`/nannies/${nanny.slug}`} className="nc-photo" style={{ display: 'block' }}>
-        <MediaImage src={nanny.photo_url || '/images/top-right.png'} alt={nanny.display_name} fill sizes="(max-width: 700px) 100vw, 320px" />
+      <Link
+        href={`/nannies/${nanny.slug}`}
+        className="nc-photo"
+        style={{ display: 'block' }}
+      >
+        <MediaImage
+          src={nanny.photo_url || '/images/top-right.png'}
+          alt={nanny.display_name}
+          fill
+          sizes="(max-width: 700px) 100vw, 320px"
+        />
         <span className={`tier-pill ${tierClass(shownTier)}`}>{label}</span>
       </Link>
       <div className="nc-body">
-        <Link href={`/nannies/${nanny.slug}`} className="nc-name" style={{ color: 'inherit', textDecoration: 'none' }}>
+        <Link
+          href={`/nannies/${nanny.slug}`}
+          className="nc-name"
+          style={{ color: 'inherit', textDecoration: 'none' }}
+        >
           {nanny.display_name}
         </Link>
-        <div className="nc-loc">{[nanny.town, nanny.destinations.slice(0, 2).join(' · ')].filter(Boolean).join(' · ')}</div>
+        <div className="nc-loc">
+          {[nanny.town, nanny.destinations.slice(0, 2).join(' · ')]
+            .filter(Boolean)
+            .join(' · ')}
+        </div>
         <div className="nc-stars">
-          <span>{'★'.repeat(Math.round(nanny.rating_avg || 5))}</span> ({nanny.review_count} reviews)
+          {nanny.review_count > 0 && nanny.rating_avg > 0 ? (
+            <>
+              <span aria-label={`${nanny.rating_avg.toFixed(1)} out of 5`}>
+                {'★'.repeat(Math.round(nanny.rating_avg))}
+              </span>{' '}
+              ({nanny.review_count} reviews)
+            </>
+          ) : (
+            'New to our community'
+          )}
         </div>
         <div className="nc-tags">
-          {(nanny.tags.length ? nanny.tags : nanny.languages).slice(0, 4).map(t => (
-            <span className="nc-tag" key={t}>{t}</span>
-          ))}
+          {(nanny.tags.length ? nanny.tags : nanny.languages)
+            .slice(0, 4)
+            .map((t) => (
+              <span className="nc-tag" key={t}>
+                {t}
+              </span>
+            ))}
         </div>
         <div className="nc-foot">
-          <div className="nc-rate">{formatKes(rate)}<small>/day</small></div>
+          <div className="nc-rate">
+            {formatKes(rate)}
+            <small>/day</small>
+          </div>
           {onBook ? (
-            <button className="book-btn" onClick={() => onBook(nanny)}>Book Now</button>
+            <button className="book-btn" onClick={() => onBook(nanny)}>
+              Book Now
+            </button>
           ) : (
-            <Link href={`/nannies/${nanny.slug}`} className="book-btn" style={{ textDecoration: 'none' }}>View</Link>
+            <Link
+              href={`/nannies/${nanny.slug}`}
+              className="book-btn"
+              style={{ textDecoration: 'none' }}
+            >
+              View
+            </Link>
           )}
         </div>
       </div>

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
 import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
-import { slugify } from '@/lib/constants'
-import { tierDailyRate } from '@/lib/catalog-data'
-import { sendApplicationStatusEmail, sendInterviewInviteEmail } from '@/lib/email'
+import { sendApplicationStatusEmail, sendInterviewInviteEmail, sendProfileActivatedEmail } from '@/lib/email'
+import { loadNannyAgreement } from '@/lib/nanny-agreement'
+import { publishApprovedApplication } from '@/lib/publish-nanny'
 import {
   formatNairobiInterview,
   fromNairobiDatetimeLocal,
   sortDocuments,
 } from '@/lib/application-docs'
-import type { ApplicationStatus, NannyApplication, NannyDocument, NannyReference, NannyTier } from '@/lib/types'
+import type { ApplicationStatus, NannyApplication, NannyDocument, NannyReference } from '@/lib/types'
 
 const APP_STATUSES: ApplicationStatus[] = ['pending', 'reviewing', 'interview', 'approved', 'rejected']
 
@@ -59,6 +59,7 @@ export async function PATCH(
   const { id } = await params
   const body = await request.json().catch(() => ({})) as {
     status?: unknown
+    publish?: unknown
     adminNotes?: unknown
     interviewAt?: unknown
     notifyInterview?: unknown
@@ -79,6 +80,16 @@ export async function PATCH(
     .eq('id', id)
     .single()
   if (fetchErr || !app) return NextResponse.json({ error: 'Application not found' }, { status: 404 })
+
+  if (body.publish === true) {
+    const result = await publishApprovedApplication(supabase, app as NannyApplication)
+    if (!result.ok) return NextResponse.json({error:result.error},{status:result.status})
+    if (result.fresh && result.email) await sendProfileActivatedEmail({fullName:result.fullName,email:result.email,slug:result.slug}).catch(err=>console.error('Activation notification failed',err))
+    return NextResponse.json({success:true,slug:result.slug})
+  }
+  if (status === 'approved' && (!app.approval_email_sent_at || app.status !== 'approved')) {
+    try { await loadNannyAgreement() } catch(error) { return NextResponse.json({error:error instanceof Error?error.message:'Agreement unavailable.'},{status:503}) }
+  }
 
   const previousStatus = app.status as ApplicationStatus
   const previousInterview = (app as { interview_at?: string | null }).interview_at ?? null
@@ -101,73 +112,22 @@ export async function PATCH(
 
   const nextStatus = (updates.status as ApplicationStatus | undefined) || previousStatus
 
-  if (nextStatus === 'approved') {
-    const { data: existing } = await supabase.from('nannies').select('id').eq('application_id', id).maybeSingle()
-    if (!existing) {
-      const base = slugify(app.full_name) || 'nanny'
-      let slug = base
-      for (let i = 2; i < 20; i++) {
-        const { data: clash } = await supabase.from('nannies').select('id').eq('slug', slug).maybeSingle()
-        if (!clash) break
-        slug = `${base}-${i}`
-      }
-      const { data: photoDoc } = await supabase
-        .from('nanny_documents')
-        .select('storage_path')
-        .eq('application_id', id)
-        .eq('kind', 'photo')
-        .maybeSingle()
-      let photoUrl: string | null = null
-      if (photoDoc?.storage_path?.startsWith('nanny-photos/')) {
-        const path = photoDoc.storage_path.replace('nanny-photos/', '')
-        const { data } = supabase.storage.from('nanny-photos').getPublicUrl(path)
-        photoUrl = data.publicUrl
-      }
-      const tier = (app.estimated_tier || 'bronze') as NannyTier
-      const { error: nannyErr } = await supabase.from('nannies').insert([{
-        user_id: app.user_id,
-        application_id: id,
-        slug,
-        display_name: app.full_name,
-        photo_url: photoUrl,
-        bio: app.bio,
-        tier,
-        daily_rate_kes: await tierDailyRate(supabase, tier),
-        county: app.county,
-        town: app.town,
-        destinations: app.preferred_locations?.length ? app.preferred_locations : [app.town].filter(Boolean),
-        languages: app.languages || [],
-        age_groups: app.age_groups || [],
-        services: app.services || [],
-        certifications: app.certifications || [],
-        tags: [...(app.certifications || []), ...(app.languages || [])].slice(0, 6),
-        available_days: app.available_days || [],
-        willing_to_travel: app.willing_to_travel,
-        is_active: true,
-      }])
-      if (nannyErr) return NextResponse.json({ error: nannyErr.message }, { status: 500 })
-
-      if (app.user_id) {
-        await supabase.from('profiles').update({ role: 'nanny' }).eq('id', app.user_id)
-      }
-    }
+  if (nextStatus === 'approved' && app.user_id) {
+    const {error: roleError} = await supabase.from('profiles').update({role:'nanny'}).eq('id',app.user_id).neq('role','admin')
+    if (roleError) return NextResponse.json({error:roleError.message},{status:500})
   }
-
   const notesForMail = adminNotes !== undefined ? adminNotes : app.admin_notes
-  if (nextStatus !== previousStatus && (nextStatus === 'approved' || nextStatus === 'rejected')) {
-    let slug: string | null = null
-    if (nextStatus === 'approved') {
-      const { data: live } = await supabase.from('nannies').select('slug').eq('application_id', id).maybeSingle()
-      slug = live?.slug ?? null
-    }
-    sendApplicationStatusEmail({
-      fullName: app.full_name,
-      email: app.email,
-      status: nextStatus,
-      slug,
-      notes: typeof notesForMail === 'string' ? notesForMail : null,
-      needsSafeguarding: nextStatus === 'approved' && (app.estimated_tier === 'gold'),
-    }).catch(err => console.error('sendApplicationStatusEmail failed:', err))
+  const shouldNotify = nextStatus === 'approved'
+    ? (previousStatus !== 'approved' || !app.approval_email_sent_at)
+    : nextStatus === 'rejected' && previousStatus !== 'rejected'
+  if (shouldNotify && (nextStatus === 'approved' || nextStatus === 'rejected')) {
+    try {
+      await sendApplicationStatusEmail({fullName:app.full_name,email:app.email,status:nextStatus,notes:typeof notesForMail === 'string'?notesForMail:null})
+      if (nextStatus === 'approved') {
+        const {error: mailError} = await supabase.from('nanny_applications').update({approval_email_sent_at:new Date().toISOString()}).eq('id',id)
+        if (mailError) return NextResponse.json({error:'Email sent, but recording delivery failed. Check the email log before retrying.'},{status:500})
+      }
+    } catch(error) { return NextResponse.json({error:error instanceof Error?error.message:'Could not send approval email. Retry approval to send it.'},{status:502}) }
   }
 
   const nextInterview = interviewProvided ? interviewAt : previousInterview

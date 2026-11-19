@@ -144,7 +144,7 @@ export default function NanniesBrowser({
         {filtered.length === 0 && (
           <div className="form-card" style={{ textAlign: 'center' }}>
             <h3>No matches yet</h3>
-            <p style={{ color: 'rgba(255,255,255,0.55)', marginTop: 8 }}>Try another destination, drop a filter, or send a booking request and we&apos;ll auto-match someone who fits.</p>
+            <p style={{ color: 'rgba(23,50,77,0.55)', marginTop: 8 }}>Try another destination, drop a filter, or send a booking request and we&apos;ll auto-match someone who fits.</p>
           </div>
         )}
       </div>

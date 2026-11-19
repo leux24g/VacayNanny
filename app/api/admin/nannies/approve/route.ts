@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
-import { sendApplicationStatusEmail } from '@/lib/email'
+import { sendProfileActivatedEmail } from '@/lib/email'
 import { approveNannyAccount } from '@/lib/publish-nanny'
 import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
 
@@ -20,13 +20,11 @@ export async function POST(request: NextRequest) {
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
   if (result.fresh && result.email) {
-    sendApplicationStatusEmail({
+    sendProfileActivatedEmail({
       fullName: result.fullName,
       email: result.email,
-      status: 'approved',
       slug: result.slug,
-      needsSafeguarding: result.tier === 'gold',
-    }).catch(err => console.error('sendApplicationStatusEmail failed:', err))
+    }).catch(err => console.error('sendProfileActivatedEmail failed:', err))
   }
 
   return NextResponse.json({ success: true, slug: result.slug })

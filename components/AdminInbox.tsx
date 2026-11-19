@@ -82,7 +82,7 @@ export default function AdminInbox({
                 </span>
                 <span className="review-val">{m.subject || 'No subject'}</span>
               </div>
-              <p style={{ color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, fontSize: '0.9rem', margin: '10px 0 12px', whiteSpace: 'pre-wrap' }}>
+              <p style={{ color: 'rgba(23,50,77,0.7)', lineHeight: 1.6, fontSize: '0.9rem', margin: '10px 0 12px', whiteSpace: 'pre-wrap' }}>
                 {m.message}
               </p>
               <div className="booking-actions" style={{ marginTop: 0 }}>
@@ -113,7 +113,7 @@ export default function AdminInbox({
             </div>
           )}
           {byRegion.length > 0 && (
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', marginBottom: 16 }}>
+            <p style={{ color: 'rgba(23,50,77,0.5)', fontSize: '0.85rem', marginBottom: 16 }}>
               {byRegion.map(([region, count]) => `${region} ${count}`).join(' · ')}
             </p>
           )}
