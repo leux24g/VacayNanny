@@ -1,6 +1,6 @@
 # VacayNanny on Vercel
 
-The refreshed application is live at `https://www.vacaynanny.net` on the existing Vercel project `vacaynanny/vacay-nanny`. Production deployment `dpl_FQyGSGwR4dH74mTgfqz8H1JeLj23` contains application commit `80bfe44c7ae18a56e71805c3d1d0d22f6846251d`. Database migrations, production SMTP/Paystack configuration, Auth origins and the minute-level workflow scheduler were applied on 24 November 2026. See [release verification and remaining dependencies](database-readiness.md).
+The refreshed application is live at `https://www.vacaynanny.net` on the existing Vercel project `vacaynanny/vacay-nanny`. Production deployment `dpl_3G7oKS7HEH8JqmB3nMFvfNxtBpE7` contains application commit `371691bc59f723943bc7bd64cd364a3ac3da9200`. The client, nanny and admin portals, mandatory agreement acceptance, completion reports and bounded queue recovery are included; see [portal operations](portal-operations.md). Database migrations, production SMTP/Paystack configuration, Auth origins and the minute-level workflow scheduler were applied on 24 November 2026. See [release verification and remaining dependencies](database-readiness.md).
 
 The release was uploaded directly with authorized project-scoped Vercel access. [PR #15](https://github.com/vacaynanny/VacayNanny/pull/15) contains the source but still needs an upstream maintainer merge; the available GitHub account cannot merge into the upstream repository. A successful manual release does not resolve the Git integration's team authorization check. Avoid redeploying the older `main` branch over this release.
 
@@ -137,7 +137,7 @@ npm run test:e2e
 
 For an isolated build, explicitly clear the Supabase URL and keys in the command environment. The GitHub Actions workflow already does this and uses only local fixtures for browser tests. A separate job starts the Docker stack and runs the real local integration suite. It requires no production secrets and saves review artifacts for seven days. A local test run does not confirm that the workflow has run on GitHub.
 
-The 24 November production release passed platform builds and public/payment/worker smoke checks. The full functional suites used isolated local data: 52 unit tests, 29 database integration tests and 46 browser tests passed, together with lint and type checks. The supplied revised agreement is now configured. External inbox delivery, a separately provisioned UAT environment and live merchant acceptance remain separate checks.
+The 24 November production release passed platform builds and public/payment/worker smoke checks. The full functional suites used isolated local data: 60 unit tests, 36 database integration tests and 50 browser tests passed, together with lint and type checks. The supplied revised agreement is now configured. External inbox delivery, a separately provisioned UAT environment and live merchant acceptance remain separate checks.
 
 ## Earlier agreement draft (superseded)
 
