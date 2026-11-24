@@ -453,7 +453,7 @@ footer.sec   { background:var(--bg); }
 .field label { font-size:0.85rem;font-weight:500;color:var(--text-muted); }
 .field label .req { color:var(--coral);margin-left:2px; }
 .field-hint { font-size:0.78rem;color:var(--text-muted);margin-top:-4px; }
-input[type="text"],input[type="email"],input[type="password"],input[type="tel"],input[type="date"],input[type="number"],select,textarea {
+input:not([type]),input[type="text"],input[type="email"],input[type="password"],input[type="tel"],input[type="date"],input[type="number"],select,textarea {
   background:var(--input-bg);
   border:1px solid var(--input-border);
   border-radius:10px;
