@@ -1,6 +1,6 @@
 import type { OpsTask, FailedJob } from '@/components/AdminWorkflowTasks'
 import { requireProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import AdminClient from './AdminClient'
 import { advanceDueBookings } from '@/lib/booking-ops'
 import { getAdminCatalog } from '@/lib/catalog-data'
@@ -34,19 +34,12 @@ export default async function AdminPage() {
   let payments: PaymentAttempt[] = []
   let tasks: OpsTask[] = []
   let failedJobs: FailedJob[] = []
+  let queueHealth: import('@/components/AdminWorkflowTasks').QueueHealth | null = null
   let dataError: string | null = null
   try {
     const supabase = createServerClient()
     await advanceDueBookings(supabase)
-    const [
-      { data: apps },
-      { data: books },
-      { data: nannyRows },
-      { data: reviewRows },
-      { data: contactRows },
-      { data: waitlistRows },
-      { data: destRows },
-    ] = await Promise.all([
+    const records = await Promise.all([
       supabase
         .from('nanny_applications')
         .select('*')
@@ -54,7 +47,7 @@ export default async function AdminPage() {
       supabase
         .from('bookings')
         .select(
-          '*,booking_assignments(slot,nanny_id,response,nannies(id,display_name,slug,photo_url,tier))',
+          '*,booking_assignments(slot,nanny_id,response,completed_at,completion_report,report_submitted_at,nannies(id,display_name,slug,photo_url,tier))',
         )
         .order('created_at', { ascending: false }),
       supabase.from('nannies').select('*').order('display_name'),
@@ -69,6 +62,16 @@ export default async function AdminPage() {
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }),
       supabase.from('destinations').select('*').order('sort_order').order('name'),
     ])
+    if (records.some(result => result.error)) throw new Error('Some operational records could not be loaded.')
+    const [
+      { data: apps },
+      { data: books },
+      { data: nannyRows },
+      { data: reviewRows },
+      { data: contactRows },
+      { data: waitlistRows },
+      { data: destRows },
+    ] = records
     applications = (apps || []) as NannyApplication[]
     bookings = (books || []) as Booking[]
     nannies = (nannyRows || []) as Nanny[]
@@ -78,6 +81,9 @@ export default async function AdminPage() {
     contactMessages = (contactRows || []) as ContactMessage[]
     waitlist = (waitlistRows || []) as WaitlistEntry[]
     destinations = (destRows || []) as Destination[]
+    const health = await supabase.rpc('workflow_queue_health')
+    if (health.error) throw new Error('Queue health could not be loaded.')
+    queueHealth = health.data
     const [catalog, registered] = await Promise.all([
       getAdminCatalog(supabase),
       loadRegisteredAccounts(supabase),
@@ -91,7 +97,7 @@ export default async function AdminPage() {
         .limit(200),
       supabase
         .from('workflow_jobs')
-        .select('id,kind,status,attempts,last_error,created_at')
+        .select('id,kind,status,attempts,last_error,created_at,delivery_started_at,delivery_accepted_at')
         .eq('status', 'failed')
         .limit(100),
     ])
@@ -130,6 +136,7 @@ export default async function AdminPage() {
       adminCatalog={adminCatalog}
       payments={payments}
       dataError={dataError}
+      queueHealth={queueHealth}
       tasks={tasks}
       failedJobs={failedJobs}
     />

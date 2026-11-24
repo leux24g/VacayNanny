@@ -6,10 +6,12 @@ export default function EmailOtpForm({
   purpose,
   next = '/account',
   initialMessage = '',
+  initialRole = 'parent',
 }: {
   purpose: 'login' | 'signup' | 'reset'
   next?: string
   initialMessage?: string
+  initialRole?: 'parent' | 'nanny'
 }) {
   const signup = purpose === 'signup',
     reset = purpose === 'reset',
@@ -18,7 +20,7 @@ export default function EmailOtpForm({
     [fullName, setFullName] = useState(''),
     [password, setPassword] = useState(''),
     [showPassword, setShowPassword] = useState(false),
-    [role, setRole] = useState('parent'),
+    [role, setRole] = useState(initialRole),
     [challenge, setChallenge] = useState(''),
     [code, setCode] = useState(''),
     [busy, setBusy] = useState(false),
@@ -194,7 +196,7 @@ export default function EmailOtpForm({
                       type="radio"
                       name="role"
                       checked={role === r.value}
-                      onChange={() => setRole(r.value)}
+                      onChange={() => setRole(r.value === 'nanny' ? 'nanny' : 'parent')}
                     />
                     <span>{r.label}</span>
                     <small>{r.hint}</small>
@@ -203,6 +205,7 @@ export default function EmailOtpForm({
               </div>
             </fieldset>
           )}
+          {signup && role === 'nanny' && <p className="field-hint">First <Link href="/become-a-nanny">complete your nanny application and accept the agreement</Link>, then register using that same email. Your application and activation status will appear in your nanny portal.</p>}
         </>
       ) : (
         <div className="field">

@@ -1401,3 +1401,36 @@ footer.sec { background:#edf0e7; border-top:1px solid var(--card-border); paddin
 .care-completion input,.otp-code { width:100%; min-height:48px; padding:12px; border:1px solid var(--input-border); border-radius:8px; color:var(--deep); background:#fffdfa; font-size:1.3rem; letter-spacing:.25em; }
 .care-completion form { display:grid; gap:12px; }
 .otp-actions { display:flex; flex-wrap:wrap; gap:12px; }
+
+/* Agreement reading, acceptance and portal records */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.agreement-page { max-width:1000px; padding-top:140px; padding-bottom:70px; }
+.agreement-page h1 { font-size:clamp(2rem,5vw,3.6rem); margin:16px 0; }
+.agreement-page>p { line-height:1.75; }
+.agreement-page-text { border:1px solid #17324d25; border-radius:16px; background:#fffdf8; padding:clamp(18px,4vw,38px); margin:24px 0; }
+.agreement-page-text pre { white-space:pre-wrap; overflow-wrap:anywhere; font:inherit; font-size:.92rem; line-height:1.8; margin:16px 0 0; }
+.agreement-fields { border:1px solid #17324d30; border-radius:14px; padding:20px; margin:24px 0; min-width:0; }
+.agreement-fields legend { padding:0 8px; font-family:var(--font-display,Georgia,serif); font-size:1.25rem; font-weight:600; }
+.agreement-fields>p { line-height:1.7; margin:10px 0 16px; }
+.agreement-fields .field { margin:18px 0; }
+.agreement-fields input:not([type=checkbox]),.agreement-fields select { max-width:100%; min-width:0; }
+.agreement-consent { display:flex; align-items:flex-start; gap:12px; line-height:1.7; font-size:.88rem; margin:18px 0; cursor:pointer; }
+.agreement-consent input { flex:none; width:20px; height:20px; margin:4px 0; accent-color:var(--deep); }
+.agreement-form>.agreement-consent { flex-direction:row; }
+.agreement-commercial { margin:20px 0; padding:14px; background:#edf0e7; border-radius:10px; line-height:1.7; }
+.agreement-commercial summary { cursor:pointer; font-weight:600; }
+.agreement-commercial table { border-collapse:collapse; width:100%; font-size:.8rem; margin:16px 0; }
+.agreement-commercial th,.agreement-commercial td { padding:9px 6px; text-align:left; border-bottom:1px solid #17324d25; }
+.agreement-commercial p { margin:12px 0; }
+.agreement-commercial ul { padding-left:20px; }
+.agreement-fingerprint { display:block; overflow-wrap:anywhere; font-size:.75rem; padding:12px 0; }
+.agreement-private-details { padding:16px; margin-top:14px; background:#edf0e7; border-radius:10px; overflow-wrap:anywhere; }
+.agreement-private-details dd { margin:4px 0 14px; }
+.queue-stats { display:flex; gap:18px; flex-wrap:wrap; margin:12px 0; }
+.queue-stats strong { font-size:1.3rem; display:block; }
+.radio-card { font:inherit; color:inherit; text-align:left; }
+@media(max-width:620px) { .agreement-fields { padding:14px; }.agreement-page { padding-top:115px; }.agreement-commercial { padding:10px; }.agreement-commercial th,.agreement-commercial td { padding:7px 3px; font-size:.74rem; } }
+.completion-report-form { display:flex; flex-direction:column; gap:14px; margin:18px 0; }
+.completion-report-form>label:not(.agreement-consent) { display:flex; flex-direction:column; gap:8px; font-size:.86rem; }
+.completion-report-form input:not([type=checkbox]),.completion-report-form textarea { width:100%; min-width:0; border:1px solid #17324d35; border-radius:9px; padding:12px; background:#fffdf8; color:var(--deep); font:inherit; }
+.completion-report-form textarea { min-height:95px; resize:vertical; }

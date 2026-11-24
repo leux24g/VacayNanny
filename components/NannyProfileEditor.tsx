@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import MediaImage from '@/components/MediaImage'
 import { useRouter } from 'next/navigation'
 import { DAYS_OF_WEEK, formatKes, tierLabel } from '@/lib/constants'
@@ -58,6 +58,7 @@ export default function NannyProfileEditor({
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
   const [fileError, setFileError] = useState('')
+  useEffect(()=>()=>{if(preview.startsWith('blob:'))URL.revokeObjectURL(preview)},[preview])
 
   function toggle(list: string[], value: string, setList: (next: string[]) => void) {
     setList(list.includes(value) ? list.filter(item => item !== value) : [...list, value])
@@ -79,6 +80,7 @@ export default function NannyProfileEditor({
       const err = validateFile(next)
       if (err) {
         setFileError(err)
+        setFile(null)
         return
       }
       setFile(next)
@@ -93,6 +95,7 @@ export default function NannyProfileEditor({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
+    if(fileError)return
     setBusy(true)
     setError('')
     setSaved(false)
@@ -113,6 +116,8 @@ export default function NannyProfileEditor({
       setFile(null)
       setSaved(true)
       router.refresh()
+    } catch {
+      setError('Could not connect. Your changes are still on this page; please retry.')
     } finally {
       setBusy(false)
     }
@@ -213,9 +218,9 @@ export default function NannyProfileEditor({
         </span>
       </label>
 
-      {error && <p className="field-error-msg">{error}</p>}
+      {error && <p className="field-error-msg" role="alert">{error}</p>}
       {saved && <p className="field-hint" style={{ color: '#5ec9b6' }}>Saved. {isActive ? 'You are live.' : 'You are hidden from search.'}</p>}
-      <button className="btn-coral" type="submit" disabled={busy} style={{ marginTop: 12 }}>
+      <button className="btn-coral" type="submit" disabled={busy || Boolean(fileError)} style={{ marginTop: 12 }}>
         {busy ? 'Saving…' : 'Save profile'}
       </button>
     </form>

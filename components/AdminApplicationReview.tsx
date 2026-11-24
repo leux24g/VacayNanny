@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import AdminAgreementEvidence from '@/components/AdminAgreementEvidence'
+import type { AgreementSummary } from '@/lib/nanny-onboarding'
 import MediaImage from '@/components/MediaImage'
 import { useRouter } from 'next/navigation'
 import {
@@ -46,10 +48,12 @@ export default function AdminApplicationReview({
   application,
   references,
   documents,
+  acceptance = null,
 }: {
   application: NannyApplication
   references: NannyReference[]
   documents: NannyDocument[]
+  acceptance?: AgreementSummary | null
 }) {
   const router = useRouter()
   const [checks, setChecks] = useState<Record<string, boolean>>(
@@ -115,7 +119,7 @@ export default function AdminApplicationReview({
     <div className="profile-layout">
       <div>
         {error && (
-          <p className="field-error-msg" style={{ marginBottom: 16 }}>
+          <p role="alert" className="field-error-msg" style={{ marginBottom: 16 }}>
             {error}
           </p>
         )}
@@ -302,6 +306,7 @@ export default function AdminApplicationReview({
       </div>
 
       <aside>
+        <AdminAgreementEvidence acceptance={acceptance} applicationId={application.id} />
         <div className="form-card">
           <h3>Decision</h3>
           <div className="review-row">
@@ -320,7 +325,7 @@ export default function AdminApplicationReview({
                   fontSize: '0.78rem',
                   opacity: application.status === s ? 1 : 0.6,
                 }}
-                disabled={busy === s}
+                disabled={Boolean(busy) || (s === 'approved' && !acceptance?.current)}
                 onClick={() => patch({ status: s }, s)}
               >
                 {s}
@@ -393,7 +398,7 @@ export default function AdminApplicationReview({
               <button
                 type="button"
                 className="btn-coral"
-                disabled={Boolean(busy) || application.status !== 'approved'}
+                disabled={Boolean(busy) || application.status !== 'approved' || !acceptance?.current}
                 onClick={() => patch({ publish: true }, 'publish')}
               >
                 {busy === 'publish' ? 'Activating…' : 'Activate nanny profile'}
@@ -401,13 +406,14 @@ export default function AdminApplicationReview({
             </>
           ) : (
             <form onSubmit={saveAgreement} className="agreement-form">
+              {application.agreement_submitted_path && <><a className="btn-ghost" href={`/api/admin/applications/${application.id}/agreement?submitted=true`} target="_blank" rel="noopener noreferrer">Open nanny-submitted signed PDF</a><label className="force-assign"><input type="checkbox" name="useSubmitted" value="true" defaultChecked />Use the nanny-submitted copy for this review</label></>}
               <label>
-                Signed agreement (PDF, up to 8 MB)
+                Signed agreement (PDF, up to 4 MB)
                 <input
                   type="file"
                   name="agreement"
                   accept="application/pdf"
-                  required
+                  required={!application.agreement_submitted_path}
                   disabled={application.status !== 'approved'}
                 />
               </label>
@@ -419,7 +425,7 @@ export default function AdminApplicationReview({
                   required
                   disabled={application.status !== 'approved'}
                 />
-                I have reviewed the signed agreement and confirmed the details.
+                I have reviewed the required details, approved tier, nanny signature and witness details and signature in this PDF.
               </label>
               <button
                 className="btn-coral"

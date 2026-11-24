@@ -1,6 +1,7 @@
 import { careRangeEnd } from '@/lib/booking'
 import { validateCareDates } from '@/lib/booking-validation'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 /** One reservation per nanny and care day, including additional carers. */
 export async function getBusyNannyIds(

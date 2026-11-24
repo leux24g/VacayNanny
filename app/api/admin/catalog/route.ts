@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
 import { normalizeTier, slugify } from '@/lib/constants'
 import { parseCareType } from '@/lib/booking'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import type { CareType, NannyTier } from '@/lib/types'
 
 const KINDS = ['tier', 'care', 'addon', 'faq', 'step', 'policy'] as const

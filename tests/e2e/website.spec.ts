@@ -113,7 +113,7 @@ test('operations stays protected and works through the normal authenticated rout
   await nav.getByRole('button', { name: /Bookings/ }).click()
   await expect(page.getByRole('heading', { name: 'Bookings', exact: true })).toBeVisible()
   await expect(
-    page.getByRole('heading', { name: 'Test Family', exact: true }),
+    page.getByRole('article').filter({hasText:'Diani'}).getByRole('heading', { name: 'Test Family', exact: true }),
   ).toBeVisible()
   await nav.getByRole('button', { name: /Payments/ }).click()
   await expect(

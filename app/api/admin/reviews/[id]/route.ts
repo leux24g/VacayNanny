@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 type ReviewAction = 'publish' | 'hide'
 

@@ -6,7 +6,8 @@ import {
   loadBooking,
   resolveBookingAccess,
 } from '@/lib/booking-ops'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import type { BookingMessage } from '@/lib/types'
 
 export async function GET(

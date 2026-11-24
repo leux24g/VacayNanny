@@ -36,14 +36,16 @@ export async function checkDatabase(
     [
       'Signed agreements',
       'nanny_applications',
-      'agreement_signed_path,agreement_reviewed_at,agreement_reviewed_by,approval_email_sent_at,submission_key,vetting_checks,decision_version',
+      'agreement_signed_path,agreement_reviewed_at,agreement_reviewed_by,approval_email_sent_at,submission_key,vetting_checks,decision_version,agreement_submitted_path,agreement_submitted_at',
     ],
     [
       'One-time verification',
       'otp_challenges',
       'purpose,code_hash,expires_at,attempts,consumed_at',
     ],
-    ['Care completion', 'booking_assignments', 'completed_at'],
+    ['Agreement acceptance', 'nanny_agreement_acceptances', 'application_id,version,document_sha256,signer_name,accepted_at'],
+    ['Care completion', 'booking_assignments', 'completed_at,completion_report,report_submitted_at'],
+    ['Worker monitoring','workflow_worker_runs','id,started_at,finished_at,status,processed,failed'],
     ['Booking workflow', 'bookings', 'version,match_expires_at'],
     ['Nanny moderation', 'nannies', 'is_suspended,suspension_reason'],
     ['Care team assignments', 'booking_assignments', 'booking_id,slot,nanny_id,response'],
@@ -53,7 +55,7 @@ export async function checkDatabase(
       'contact_messages',
       'care_service,care_status,assigned_to,quote_version,quote_expires_at',
     ],
-    ['Notification queue', 'workflow_jobs', 'kind,status,available_at,lease_token'],
+    ['Notification queue', 'workflow_jobs', 'kind,status,available_at,lease_token,delivery_started_at,delivery_accepted_at'],
     ['Operations follow-ups', 'ops_tasks', 'kind,status,assigned_to'],
   ]
   const checks = await Promise.all(
@@ -102,6 +104,16 @@ export async function checkDatabase(
       'accept_care_quote',
       'claim_workflow_jobs',
       'run_workflow_automation',
+      'nanny_signup_application',
+      'nanny_agreement_is_current',
+      'accept_nanny_agreement',
+      'submit_nanny_signed_agreement',
+      'add_nanny_document',
+      'save_care_completion_report',
+      'workflow_queue_health',
+      'retry_workflow_job',
+      'begin_workflow_email_delivery',
+      'confirm_workflow_email_delivery',
     ].every((name) => schema?.paths?.[`/rpc/${name}`])
     checks.push({
       name: 'Workflow functions',

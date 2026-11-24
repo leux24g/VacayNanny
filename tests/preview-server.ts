@@ -1,7 +1,8 @@
 // An isolated Supabase fixture: browser tests never read or mutate production data.
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
-import { createHash, randomUUID } from 'node:crypto'
+import { createCipheriv,createHash,randomBytes,randomUUID } from 'node:crypto'
+import { NANNY_AGREEMENT_SHA256,NANNY_AGREEMENT_VERSION } from '../lib/nanny-agreement-rules'
 import { smtpFixture } from './smtp-fixture'
 import { demoCatalog } from '../lib/catalog-data'
 
@@ -9,11 +10,14 @@ async function main() {
   const smtp = await smtpFixture()
   const verifiedSessions = new Set<string>()
   const otpChallenges = new Map<string, Record<string, unknown>>()
+  const fixtureKey='portal-fixture-synthetic-key'
+  function sealed(value:unknown) { const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',createHash('sha256').update(fixtureKey).digest(),iv);const bytes=Buffer.concat([cipher.update(JSON.stringify(value)),cipher.final()]);return {iv:iv.toString('base64'),tag:cipher.getAuthTag().toString('base64'),data:bytes.toString('base64')} }
   const reviewMode = process.argv.includes('--review')
   const adminId = '33333333-3333-4333-8333-333333333333'
   const parentId = '44444444-4444-4444-8444-444444444444'
   const nannyUserId = '55555555-5555-4555-8555-555555555555'
   const applicationId = '66666666-6666-4666-8666-666666666666'
+  const ownApplicationId='cccccccc-cccc-4ccc-8ccc-cccccccccccc'
   const nannyId = '22222222-2222-4222-8222-222222222222'
   const bookingId = '11111111-1111-4111-8111-111111111111'
   const careBookingId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
@@ -52,7 +56,7 @@ async function main() {
     slug: 'test-nanny',
     display_name: 'Test Nanny',
     user_id: nannyUserId,
-    application_id: null,
+    application_id: ownApplicationId,
     tier: 'bronze',
     daily_rate_kes: 2200,
     is_active: true,
@@ -176,7 +180,7 @@ async function main() {
         gender: 'Female',
         county: 'Kwale',
         town: 'Diani',
-        national_id_number: null,
+        national_id_number: 'SYNTHETIC-ID-1234',
         kra_pin: null,
         cogc_status: 'yes',
         cogc_date: null,
@@ -368,6 +372,13 @@ async function main() {
     })),
     homepage_steps: [],
   }
+  const originalApplication=tables.nanny_applications[0] as Record<string,unknown>
+  tables.nanny_applications.push({...originalApplication,id:ownApplicationId,user_id:nannyUserId,email:'nanny@example.test',full_name:'Test Nanny',status:'approved',agreement_signed_path:`${ownApplicationId}/agreements/reviewed.pdf`,agreement_reviewed_at:created,agreement_reviewed_by:adminId})
+  tables.nanny_agreement_acceptances=[{application_id:applicationId,version:NANNY_AGREEMENT_VERSION,document_sha256:NANNY_AGREEMENT_SHA256,signer_name:'Test Applicant',accepted_at:created,details:sealed({fullName:'Test Applicant',nationalIdNumber:'SYNTHETIC-ID-1234',email:originalApplication.email,phone:'+254700000000',payoutMethod:'mpesa',payoutAccountName:'Test Applicant',payoutAccountNumber:'+254712345678',payoutBankName:''})},{application_id:ownApplicationId,version:NANNY_AGREEMENT_VERSION,document_sha256:NANNY_AGREEMENT_SHA256,signer_name:'Test Nanny',accepted_at:created,details:sealed({fullName:'Test Nanny',nationalIdNumber:'SYNTHETIC-ID-1234',email:'nanny@example.test',phone:'+254700000000',payoutMethod:'mpesa',payoutAccountName:'Test Nanny',payoutAccountNumber:'+254712345678',payoutBankName:''})}]
+  tables.nanny_documents=[{id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',application_id:ownApplicationId,kind:'id_front',storage_path:`nanny-documents/${ownApplicationId}/synthetic-id.pdf`,file_name:'synthetic-id.pdf',mime_type:'application/pdf'},{id:'ffffffff-ffff-4fff-8fff-ffffffffffff',application_id:applicationId,kind:'cogc',storage_path:`nanny-documents/${applicationId}/synthetic-police.pdf`,file_name:'synthetic-police.pdf',mime_type:'application/pdf'}]
+  const paidBookingId='dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  tables.bookings.push({...booking,id:paidBookingId,destination:'Watamu',status:'completed',payment_status:'paid',paid_at:created,booking_assignments:[]})
+  tables.payment_attempts.push({id:'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',booking_id:paidBookingId,reference:'VN-bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',amount_subunit:440000,currency:'KES',status:'success',authorization_url:'https://checkout.paystack.com/SENSITIVE-DO-NOT-EXPOSE',channel:'mobile_money',created_at:created,paid_at:created})
   function fixtureSession(identity = user, sessionId: string = randomUUID()) {
     const payload = {
       sub: identity.id,
@@ -549,6 +560,16 @@ async function main() {
       res.end('true')
       return
     }
+    if(['/rest/v1/rpc/nanny_signup_application','/rest/v1/rpc/nanny_agreement_is_current','/rest/v1/rpc/claim_nanny_applications','/rest/v1/rpc/workflow_queue_health'].includes(url.pathname)) {
+      let raw='';for await(const chunk of req)raw+=chunk.toString();const body=raw?JSON.parse(raw):{}
+      const apps=tables.nanny_applications as Array<Record<string,unknown>>,accepted=tables.nanny_agreement_acceptances as Array<Record<string,unknown>>
+      if(url.pathname.endsWith('workflow_queue_health'))res.end(JSON.stringify({ready:0,scheduled:0,processing:0,stale:0,failed:0,oldestReadyAt:null,lastSuccessAt:created,workerStale:false,lastRun:{status:'completed',startedAt:created,finishedAt:created,processed:0,failed:0,error:null}}))
+      else if(url.pathname.endsWith('nanny_signup_application'))res.end(JSON.stringify(apps.find(a=>String(a.email).toLowerCase()===String(body.p_email).toLowerCase() && accepted.some(c=>c.application_id===a.id))?.id || null))
+      else if(url.pathname.endsWith('nanny_agreement_is_current'))res.end(JSON.stringify(accepted.some(c=>c.application_id===body.p_application)))
+      else res.end(JSON.stringify(apps.filter(a=>String(a.email).toLowerCase()===String(body.p_verified_email).toLowerCase() && (a.user_id===null || a.user_id===body.p_actor) && accepted.some(c=>c.application_id===a.id)).length))
+      return
+    }
+    if(req.method==='GET' && url.pathname.startsWith('/storage/v1/object/')) {res.setHeader('Content-Type','application/pdf');res.end('%PDF-1.4\nSYNTHETIC LOCAL TEST DOCUMENT ONLY\n%%EOF');return}
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       res.statusCode = 405
       res.end(
@@ -626,6 +647,7 @@ async function main() {
           SMTP_USER: 'local-fixture@example.test',
           SMTP_PASSWORD: 'synthetic-only',
           CRON_SECRET: '',
+          NOTIFICATION_ENCRYPTION_KEY:fixtureKey,
           VACAYNANNY_TEST_DIST: '.next-tests',
         },
       },

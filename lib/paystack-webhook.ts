@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyWebhook } from '@/lib/payment-rules'
 import { reconcilePayment } from '@/lib/paystack'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { paystackSettings, type PaystackEnvironment } from '@/lib/paystack-settings'
 
 export async function handlePaystackWebhook(request: NextRequest, environment?: PaystackEnvironment) {

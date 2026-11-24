@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { limitRoute } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {

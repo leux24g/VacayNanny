@@ -11,6 +11,8 @@ export type OpsTask = {
   booking_id: string | null
 }
 export type FailedJob = {
+  delivery_started_at?:string | null
+  delivery_accepted_at?:string | null
   id: string
   kind: string
   status: string
@@ -18,14 +20,21 @@ export type FailedJob = {
   last_error: string | null
   created_at: string
 }
+export type QueueHealth = {
+  ready:number; scheduled:number; processing:number; stale:number; failed:number
+  oldestReadyAt:string | null; lastSuccessAt:string | null; workerStale?:boolean
+  lastRun:{ startedAt:string; finishedAt:string|null; status:string; processed:number; failed:number; error:string|null } | null
+}
 export default function AdminWorkflowTasks({
   tasks,
   failedJobs,
   onOpenBooking,
+  queueHealth,
 }: {
   tasks: OpsTask[]
   failedJobs: FailedJob[]
   onOpenBooking: (id: string) => void
+  queueHealth?: QueueHealth | null
 }) {
   const router = useRouter(),
     [busy, setBusy] = useState(''),
@@ -55,6 +64,7 @@ export default function AdminWorkflowTasks({
         Expired proposals, replacement deadlines, suspensions and failed notifications
         appear here.
       </p>
+      {queueHealth && <div className="ops-card" aria-label="Queue health"><h3>Queue health</h3><div className="queue-stats"><p><strong>{queueHealth.ready}</strong> ready</p><p><strong>{queueHealth.scheduled}</strong> waiting for scheduled time or retry</p><p><strong>{queueHealth.processing}</strong> processing</p><p><strong>{queueHealth.stale}</strong> interrupted leases</p><p><strong>{queueHealth.failed}</strong> need review</p></div><p>Last successful worker: {queueHealth.lastSuccessAt ? `${new Date(queueHealth.lastSuccessAt).toLocaleString('en-GB',{timeZone:'Africa/Nairobi'})} EAT` : 'Awaiting a completed run'}</p><p>Interrupted jobs are recovered after three minutes. Transient failures back off automatically; repeated failures and uncertain email deliveries require operator review.</p>{(queueHealth.workerStale || queueHealth.lastRun?.status === 'failed') && <p role="alert" className="field-error-msg">The workflow worker needs attention. Check the scheduler, worker logs and provider settings. {queueHealth.lastRun?.error}</p>}{queueHealth.stale > 0 && <p role="status">An interrupted job is waiting for its lease to expire or be reclaimed by the next worker.</p>}</div>}
       {error && (
         <p role="alert" className="field-error-msg">
           {error}
@@ -107,6 +117,7 @@ export default function AdminWorkflowTasks({
             className="btn-ghost"
             disabled={busy === job.id}
             onClick={() => {
+              if(job.delivery_accepted_at){void update(job.id,{kind:'job',resumeConfirmed:true});return}
               if (
                 window.confirm(
                   'Check the provider delivery log first. Retry only if this notification was not delivered.',
@@ -115,7 +126,7 @@ export default function AdminWorkflowTasks({
                 void update(job.id, { kind: 'job', confirmedNotDelivered: true })
             }}
           >
-            Retry after checking delivery
+            {job.delivery_accepted_at ? 'Resume saved delivery' : 'Retry after checking delivery'}
           </button>
         </article>
       ))}

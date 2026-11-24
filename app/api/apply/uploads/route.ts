@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { validateApplication } from '@/lib/application-validation'
 import { APPLICATION_FILE_MAX_BYTES } from '@/lib/application-files'
 import { sealWorkflow } from '@/lib/workflow-secrets'

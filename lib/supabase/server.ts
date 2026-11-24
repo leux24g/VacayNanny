@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { requestSignal } from '@/lib/worker-context'
 
 export async function createSupabaseServer() {
   const cookieStore = await cookies()
@@ -7,6 +8,7 @@ export async function createSupabaseServer() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global:{fetch:(input,init)=>fetch(input,{...init,signal:requestSignal(8000,init?.signal)})},
       cookies: {
         getAll() {
           return cookieStore.getAll()

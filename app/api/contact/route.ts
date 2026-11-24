@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomUUID } from 'node:crypto'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { getCurrentProfile } from '@/lib/auth'
 import { hashGuestToken } from '@/lib/guest-access'
 import { careLinkToken, sealWorkflow } from '@/lib/workflow-secrets'

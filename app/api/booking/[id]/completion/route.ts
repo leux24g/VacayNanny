@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { loadBooking } from '@/lib/booking-ops'
 import {
   newOtp,
@@ -11,6 +11,7 @@ import {
   OTP_SECONDS,
   OTP_RESEND_SECONDS,
 } from '@/lib/otp'
+import { completionReportErrors, type CompletionReport } from '@/lib/completion-report'
 export const runtime = 'nodejs'
 async function actorAndBooking(id: string) {
   const profile = await getCurrentProfile()
@@ -45,6 +46,9 @@ export async function POST(
         { status: 403 },
       )
     const { db, profile, booking, nanny } = context
+    const body=await request.json().catch(()=>null)
+    const errors=completionReportErrors(body?.report)
+    if(errors.length)return NextResponse.json({error:errors[0],errors},{status:400})
     if (!emailReady())
       return NextResponse.json(
         { error: 'Email delivery is not available. Please contact our team.' },
@@ -56,12 +60,15 @@ export async function POST(
         { status: 429 },
       )
     const otp = newOtp()
+    const saved=await db.rpc('save_care_completion_report',{p_booking:id,p_actor:profile.id,p_report:body.report})
+    if(saved.error)return NextResponse.json({error:'The completion report could not be saved. Check the hours, work details and current placement status.'},{status:409})
+    const report=saved.data as CompletionReport
     const { error } = await db.rpc('issue_otp_challenge', {
       p_id: otp.id,
       p_purpose: 'care',
       p_subject: otpDigest('care-subject', `${id}:${nanny.id}`),
       p_hash: otpDigest(otp.id, otp.code),
-      p_payload: {},
+      p_payload: {report},
       p_actor: profile.id,
       p_booking: id,
     })
@@ -88,7 +95,7 @@ export async function POST(
         otp.code,
         otp.id,
         'care',
-        `${nanny.display_name} has requested confirmation for your ${booking.destination} booking (${booking.check_in} to ${booking.check_out}).`,
+        `${nanny.display_name} has requested confirmation for your ${booking.destination} booking (${booking.check_in} to ${booking.check_out}).\n\nReported hours: ${report.hoursWorked}\nWork and handover: ${report.summary}\nAgreed additional services: ${report.additionalServices || 'None reported'}\nApproved expense notes: ${report.expenses || 'None reported'}\n\nReview this report in your client portal. If anything is incorrect, ask the nanny or VacayNanny to correct it before sharing your code.`,
       )
     } catch {
       await db

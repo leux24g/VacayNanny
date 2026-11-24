@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile, profileOwnsBooking } from '@/lib/auth'
 import { jsonFromBookingError, loadBooking } from '@/lib/booking-ops'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,0 +1,23 @@
+.navigation { display:flex; flex-wrap:wrap; gap:8px; padding:16px 0 24px; }
+.navigation a { border:1px solid #17324d24; border-radius:28px; padding:10px 16px; color:var(--deep); background:#fffdf8; font-size:.85rem; text-decoration:none; }
+.navigation a:hover { background:#e6ecdf; }
+.navigation a:focus-visible { outline:2px solid var(--deep); outline-offset:3px; }
+.section { scroll-margin-top:110px; margin:24px 0 32px; min-width:0; }
+.section h2 { font-size:clamp(1.5rem,3vw,2rem); margin-bottom:12px; }
+.actions { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:14px; }
+.action { display:block; padding:22px; border:1px solid #17324d20; border-radius:16px; background:#fffdf8; color:var(--deep); text-decoration:none; }
+.action strong { display:block; margin-bottom:8px; font-size:1.05rem; }
+.action span,.hint { color:#17324da6; font-size:.9rem; line-height:1.65; }
+.filters { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0; align-items:center; }
+.filters input { min-width:0; flex:1 1 180px; padding:12px; border:1px solid #17324d33; border-radius:10px; background:#fffdf8; }
+.filters button { padding:10px 14px; border:1px solid #17324d33; border-radius:22px; background:#fffdf8; color:var(--deep); cursor:pointer; font:inherit; font-size:.82rem; }
+.filters button[aria-pressed=true] { background:var(--deep); color:white; }
+.notice { border:1px solid #d38876; border-radius:12px; padding:18px; margin:20px 0; background:#fff0e9; line-height:1.65; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr)); gap:20px; align-items:start; }
+.record { border:1px solid #17324d22; background:#fffdf8; border-radius:16px; padding:22px; margin:14px 0; overflow-wrap:anywhere; }
+.record dl { display:grid; grid-template-columns:minmax(95px,1fr) 2fr; gap:10px 16px; margin:18px 0; }
+.record dt { color:#17324da6; }.record dd { margin:0; }
+.steps { padding-left:22px; line-height:1.8; }.steps li { padding:5px 0; }
+.documentList { padding:0; list-style:none; }.documentList li { border-bottom:1px solid #17324d20; padding:12px 0; }
+.documentList a { overflow-wrap:anywhere; }
+@media(max-width:620px) { .record { padding:18px; }.record dl { grid-template-columns:1fr; gap:4px; }.record dd { margin-bottom:12px; } }

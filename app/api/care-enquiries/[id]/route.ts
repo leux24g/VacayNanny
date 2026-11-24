@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { hashGuestToken } from '@/lib/guest-access'
 export async function PATCH(
   request: NextRequest,

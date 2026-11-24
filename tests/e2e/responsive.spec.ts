@@ -16,6 +16,7 @@ const publicRoutes = [
   '/about',
   '/contact',
   '/become-a-nanny',
+  '/nanny-agreement',
   '/login',
   '/signup',
   '/forgot-password',

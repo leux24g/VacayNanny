@@ -42,6 +42,8 @@ async function insertFromApplication(supabase: SupabaseClient, app: NannyApplica
     .select('storage_path,mime_type')
     .eq('application_id', app.id)
     .eq('kind', 'photo')
+    .order('created_at',{ascending:false})
+    .limit(1)
     .maybeSingle()
   let photoUrl: string | null = null
   if (photoDoc?.storage_path?.startsWith('nanny-photos/')) {
@@ -59,6 +61,8 @@ async function insertFromApplication(supabase: SupabaseClient, app: NannyApplica
         error: 'The reviewed profile photo could not be loaded.',
       }
     publishedPhotoPath = `live/${app.id}/${randomUUID()}`
+    const staging=await supabase.rpc('enqueue_workflow_job',{p_kind:'public_photo_cleanup',p_payload:{path:publishedPhotoPath},p_key:`photo-upload:${publishedPhotoPath}`})
+    if(staging.error)return {ok:false as const,status:503,error:'Could not prepare safe photo publication. Please retry.'}
     const upload = await supabase.storage
       .from('nanny-photos')
       .upload(publishedPhotoPath, download.data, {
@@ -101,7 +105,7 @@ async function insertFromApplication(supabase: SupabaseClient, app: NannyApplica
     },
   ])
   if (error) {
-    if (publishedPhotoPath)
+    if (publishedPhotoPath && /^(23|P0001|42501)/.test(error.code || ''))
       await supabase.storage.from('nanny-photos').remove([publishedPhotoPath])
     return { ok: false as const, status: 500, error: error.message }
   }
@@ -112,6 +116,9 @@ export async function publishApprovedApplication(
   supabase: SupabaseClient,
   app: NannyApplication,
 ): Promise<PublishResult> {
+  const acceptance = await supabase.rpc('nanny_agreement_is_current',{p_application:app.id})
+  if (acceptance.error) return {ok:false,status:503,error:'Agreement acceptance could not be checked. Refresh and retry.'}
+  if (acceptance.data !== true) return {ok:false,status:409,error:'The nanny must read and accept the current agreement before activation.'}
   if (
     app.status !== 'approved' ||
     !app.agreement_signed_path ||

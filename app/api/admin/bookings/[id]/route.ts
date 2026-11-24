@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { applyBookingMutation, jsonFromBookingError } from '@/lib/booking-ops'
 import type { BookingStatus } from '@/lib/types'
 

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import PageShell from '@/components/PageShell'
 import CareEnquiryView from '@/components/CareEnquiryView'
 import { getCurrentProfile, profileOwnsBooking } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { validGuestToken } from '@/lib/guest-access'
 import { familyCareEnquiry, type CareEnquiry } from '@/lib/care-enquiries'
 export const metadata = {

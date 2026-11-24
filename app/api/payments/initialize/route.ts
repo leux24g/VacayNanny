@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile, profileOwnsBooking } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { loadBooking } from '@/lib/booking-ops'
 import { validGuestToken } from '@/lib/guest-access'
 import { initializePayment } from '@/lib/paystack'

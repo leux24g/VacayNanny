@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
-import { uploadPublicPhoto, validateProfileImage } from '@/lib/profile-media'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
+import { ProfileImageError, queuePublicPhotoCleanup, uploadPublicPhoto, validateProfileImage } from '@/lib/profile-media'
 
 function cleanName(value: unknown) {
   return String(value || '').replace(/\s+/g, ' ').trim()
@@ -32,10 +33,13 @@ export async function PATCH(request: NextRequest) {
     if (fullName.length > 80) {
       return NextResponse.json({ error: 'Name is too long.' }, { status: 400 })
     }
+    if (phone && (!/^[+()\d\s-]+$/.test(phone) || phone.replace(/\D/g,'').length < 9 || phone.replace(/\D/g,'').length > 15))
+      return NextResponse.json({ error: 'Enter a valid phone number, including the country code where applicable.' },{status:400})
     const imageError = validateProfileImage(file)
     if (imageError) return NextResponse.json({ error: imageError }, { status: 400 })
 
     const supabase = createServerClient()
+    if(file || removeAvatar)await queuePublicPhotoCleanup(supabase,profile.avatar_url)
     const updates: Record<string, unknown> = {
       full_name: fullName,
       phone: phone || null,
@@ -52,12 +56,13 @@ export async function PATCH(request: NextRequest) {
       .eq('id', profile.id)
       .select('id, role, full_name, email, phone, avatar_url, created_at')
       .maybeSingle()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: 'Could not save your profile. Please retry.' }, { status: 503 })
     if (!data) return NextResponse.json({ error: 'Profile not found.' }, { status: 404 })
 
     return NextResponse.json({ success: true, profile: data })
   } catch (err) {
-    console.error('Account profile update failed:', err)
+    if(err instanceof ProfileImageError)return NextResponse.json({error:err.message},{status:400})
+    console.error('Account profile update failed')
     return NextResponse.json({ error: 'Could not save your profile.' }, { status: 500 })
   }
 }

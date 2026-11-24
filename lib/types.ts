@@ -105,6 +105,7 @@ export type Booking = {
   booking_assignments?: BookingAssignment[]
   my_response?: NannyResponse | null
   my_completed_at?: string | null
+  my_completion_report?: import('./completion-report').CompletionReport | null
   id: string
   parent_id: string | null
   nanny_id: string | null
@@ -154,6 +155,8 @@ export type Booking = {
 }
 
 export type BookingAssignment = {
+  completion_report?: import('./completion-report').CompletionReport | null
+  report_submitted_at?: string | null
   slot: number
   nanny_id: string
   response: 'pending' | 'accepted'
@@ -163,6 +166,9 @@ export type BookingAssignment = {
 }
 
 export type NannyApplication = {
+  decision_version?: number
+  agreement_submitted_path?: string | null
+  agreement_submitted_at?: string | null
   vetting_checks?: Record<string, boolean>
   vetting_reviewed_at?: string | null
   vetting_reviewed_by?: string | null

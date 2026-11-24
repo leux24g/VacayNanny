@@ -1,3 +1,4 @@
+import { recordTestAcceptance } from './fixtures/acceptance.mjs'
 import { completeApplication } from './fixtures/application'
 import { before, after, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -123,7 +124,8 @@ test('agreement review gates publication and the document remains private in rea
     .from('nannies')
     .update({ is_active: true })
     .eq('id', nannyId)
-  assert.match(premature.error?.message || '', /signed agreement/)
+  assert.match(premature.error?.message || '', /accept the current agreement/)
+  await recordTestAcceptance(admin,applicationId,'Local sample nanny')
   documentPath = `local-tests/${applicationId}/signed.pdf`
   // Deliberately labelled test bytes; never configured as the official agreement.
   const upload = await admin.storage

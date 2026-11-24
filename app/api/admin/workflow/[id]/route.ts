@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -27,20 +27,9 @@ export async function PATCH(
         { error: 'This follow-up changed or was already resolved.' },
         { status: 409 },
       )
-  } else if (body.kind === 'job' && body.confirmedNotDelivered === true) {
-    const { data, error } = await db
-      .from('workflow_jobs')
-      .update({
-        status: 'pending',
-        attempts: 0,
-        available_at: new Date().toISOString(),
-        last_error: null,
-      })
-      .eq('id', id)
-      .eq('status', 'failed')
-      .select('id')
-      .maybeSingle()
-    if (error || !data)
+  } else if (body.kind === 'job' && (body.confirmedNotDelivered === true || body.resumeConfirmed === true)) {
+    const { error } = await db.rpc('retry_workflow_job', { p_id:id,p_actor:admin.id,p_confirmed_not_delivered:body.confirmedNotDelivered === true })
+    if (error)
       return NextResponse.json(
         { error: 'Only a failed notification can be retried.' },
         { status: 409 },
@@ -50,7 +39,7 @@ export async function PATCH(
       { error: 'Choose a valid follow-up action.' },
       { status: 400 },
     )
-  await db.from('workflow_audit').insert({
+  if (body.kind !== 'job') await db.from('workflow_audit').insert({
     actor_id: admin.id,
     entity_type: body.kind === 'job' ? 'notification' : 'ops_task',
     entity_id: id,

@@ -63,3 +63,4 @@
   .mobileProgress select { width: 100%; min-width: 0; min-height: 48px; border: 1px solid #bdc9bd; border-radius: 6px; padding: 10px; font: inherit; font-size: 1rem; color: var(--deep); background: #fffdf8; }
   .mobileProgress select:focus-visible { outline: 2px solid #476b54; outline-offset: 3px; }
 }
+.form :global(.consent-item):has(.checkNative:focus-visible) { outline:2px solid #476b54; outline-offset:3px; }

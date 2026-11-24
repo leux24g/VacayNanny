@@ -2,7 +2,7 @@ import PageShell from '@/components/PageShell'
 import Link from 'next/link'
 import PaymentReturnLink from '@/components/PaymentReturnLink'
 import { reconcilePayment } from '@/lib/paystack'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 export const metadata = {
   title: 'Payment update — VacayNanny',

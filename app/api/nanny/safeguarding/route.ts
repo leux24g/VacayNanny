@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
 import { scoreSafeguardingQuiz, SAFEGUARDING_PASS_MARK } from '@/lib/safeguarding'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import type { Nanny } from '@/lib/types'
 
 export async function POST(request: NextRequest) {

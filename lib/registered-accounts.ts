@@ -15,9 +15,10 @@ function accountRole(profileRole: UserRole | null, signupRole: unknown): UserRol
 export async function loadRegisteredAccounts(
   supabase: SupabaseClient,
 ): Promise<RegisteredAccount[]> {
-  const { data: profileRows } = await supabase
+  const { data: profileRows, error: profileError } = await supabase
     .from('profiles')
     .select('id, role, full_name, email, phone, avatar_url, created_at')
+  if (profileError) throw new Error('Account profiles could not be loaded.')
   const profiles = new Map(
     ((profileRows || []) as Profile[]).map((profile) => [profile.id, profile]),
   )
@@ -25,7 +26,7 @@ export async function loadRegisteredAccounts(
   const users = []
   for (let page = 1; page <= 20; page += 1) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 })
-    if (error) break
+    if (error) throw new Error('Registered accounts could not all be loaded.')
     users.push(...data.users)
     if (data.users.length < 200) break
   }

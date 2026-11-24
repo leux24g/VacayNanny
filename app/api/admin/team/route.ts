@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import type { UserRole } from '@/lib/types'
+import { acceptedSignupApplication } from '@/lib/nanny-onboarding'
 
 function parseRole(value: unknown): UserRole | null {
   if (value === 'parent' || value === 'nanny' || value === 'admin') return value
@@ -21,6 +23,12 @@ export async function PATCH(request: NextRequest) {
   if (!id || !role) return NextResponse.json({ error: 'Choose a person and a role.' }, { status: 400 })
 
   const supabase = createServerClient()
+  if (role === 'nanny') {
+    const identity = await supabase.auth.admin.getUserById(id)
+    const email = identity.data.user?.email
+    if (identity.error || !email || !(await acceptedSignupApplication(supabase, email)))
+      return NextResponse.json({ error: 'This person must submit a nanny application and accept the current agreement before receiving a nanny account.' }, { status: 409 })
+  }
   const { data: current, error: loadError } = await supabase
     .from('profiles')
     .select('id, role')

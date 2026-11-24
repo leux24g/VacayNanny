@@ -185,14 +185,14 @@ async function submitFixture(failure: 'upload' | 'database' | 'ambiguous' | null
 }
 test('upload failure cannot report success and cleans up files already uploaded', async () => {
   const result = await submitFixture('upload')
-  assert.equal(result.status, 500)
+  assert.equal(result.status, 503)
   assert.equal(result.commits, 0)
   assert.equal(result.cleanups, 1)
   assert.notEqual(result.result.success, true)
 })
 test('reference/document transaction failure rolls back submission and cleans every staged file', async () => {
   const result = await submitFixture('database')
-  assert.equal(result.status, 500)
+  assert.equal(result.status, 503)
   assert.equal(result.commits, 1)
   assert.equal(result.cleanups, 4)
 })
@@ -206,7 +206,7 @@ test('successful complete application commits once without removing its files', 
 
 test('an ambiguous database timeout preserves staged files for reconciliation', async () => {
   const result = await submitFixture('ambiguous')
-  assert.equal(result.status, 500)
+  assert.equal(result.status, 503)
   assert.equal(result.commits, 1)
   assert.equal(result.cleanups, 0)
 })

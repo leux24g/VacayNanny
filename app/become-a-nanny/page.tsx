@@ -11,6 +11,8 @@ import styles from './Application.module.css'
 import { APPLICATION_FILE_MAX_BYTES } from '@/lib/application-files'
 import { APPLY_EXTRA_DESTINATIONS, mergeDestinationChoices } from '@/lib/destinations'
 import { useDestinationNames } from '@/lib/useDestinationNames'
+import NannyAgreementFields from '@/components/NannyAgreementFields'
+import { EMPTY_AGREEMENT, type AgreementFields } from '@/lib/nanny-agreement-rules'
 
 /* ── Country codes ── */
 const COUNTRY_CODES = [
@@ -24,10 +26,9 @@ const COUNTRY_CODES = [
 
 /* ── Kenya phone validation ── */
 function isValidKenyanNumber(phone: string): boolean {
-  const cleaned = phone.replace(/\D/g, '')
+  const cleaned = phone.replace(/\D/g, '').replace(/^254/, '').replace(/^0/, '')
   if (cleaned.length !== 9) return false
-  const validPrefixes = ['70', '71', '72', '73', '74', '75', '76', '77', '78', '79', '11']
-  return validPrefixes.some((p) => cleaned.startsWith(p))
+  return /^[17]\d{8}$/.test(cleaned)
 }
 
 /* ── Age validation (must be >= 21) ── */
@@ -90,10 +91,10 @@ function RadioCard({
   onClick: () => void
 }) {
   return (
-    <div className={`radio-card${selected ? ' selected' : ''}`} onClick={onClick}>
+    <button type="button" aria-pressed={selected} className={`radio-card${selected ? ' selected' : ''}`} onClick={onClick}>
       <div className={`radio-dot${selected ? ' selected' : ''}`} />
       <span className="radio-label">{label}</span>
-    </div>
+    </button>
   )
 }
 
@@ -111,44 +112,12 @@ function PhoneInput({
   onCodeChange: (c: string) => void
   id?: string
 }) {
-  const [open, setOpen] = useState(false)
-  const current = COUNTRY_CODES.find((c) => c.code === countryCode) || COUNTRY_CODES[0]
   return (
-    <div className="phone-wrap" style={{ position: 'relative' }}>
-      <div className="country-code-btn" onClick={() => setOpen((o) => !o)}>
-        <span>{current.flag}</span>
-        <span>{current.code}</span>
-        <span style={{ fontSize: '0.65rem', opacity: 0.5 }}>▼</span>
-      </div>
-      <div className={`cc-dropdown${open ? ' open' : ''}`}>
-        {COUNTRY_CODES.map((cc) => (
-          <div
-            key={cc.code}
-            className="cc-option"
-            onClick={() => {
-              onCodeChange(cc.code)
-              setOpen(false)
-            }}
-          >
-            <span>{cc.flag}</span>
-            <span>{cc.label}</span>
-            <span style={{ marginLeft: 'auto', opacity: 0.5 }}>{cc.code}</span>
-          </div>
-        ))}
-      </div>
-      <input
-        id={id}
-        type="tel"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="7xx xxx xxx"
-        style={{
-          background: 'transparent',
-          border: 'none',
-          borderRadius: '0 10px 10px 0',
-          flex: 1,
-        }}
-      />
+    <div className="phone-wrap">
+      <select className="country-code-btn" aria-label={id ? `${id} country calling code` : 'Country calling code'} value={countryCode} onChange={event => onCodeChange(event.target.value)} style={{maxWidth:115,minWidth:85,border:0,borderRight:'1px solid #17324d22',background:'transparent',padding:'12px 6px'}}>
+        {COUNTRY_CODES.map(country=><option key={country.code} value={country.code}>{country.flag} {country.code}</option>)}
+      </select>
+      <input id={id} type="tel" value={value} onChange={event=>onChange(event.target.value)} autoComplete="tel-national" maxLength={20} placeholder="7xx xxx xxx" style={{background:'transparent',border:'none',borderRadius:'0 10px 10px 0',flex:1,minWidth:0}} />
     </div>
   )
 }
@@ -170,6 +139,7 @@ function UploadBox({
     <div className={`upload-box${filename ? ' uploaded' : ''}`}>
       <input
         type="file"
+        aria-label={label}
         accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,image/*"
         onChange={(e) => {
           const file = e.target.files?.[0] || null
@@ -384,6 +354,10 @@ export default function BecomeANanny() {
   const [consent1, setConsent1] = useState(false)
   const [consent2, setConsent2] = useState(false)
   const [consent3, setConsent3] = useState(false)
+  const [agreement, setAgreement] = useState<AgreementFields>({ ...EMPTY_AGREEMENT })
+  useEffect(() => {
+    if (errors.length) formPanel.current?.querySelector<HTMLElement>('.step-error')?.focus()
+  }, [errors])
 
   function toggleArr(arr: string[], val: string, set: (a: string[]) => void) {
     set(arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val])
@@ -438,6 +412,7 @@ export default function BecomeANanny() {
     }
     if (step === 2) {
       if (!cogcStatus) errs.push('Police clearance status is required.')
+      if (cogcStatus === 'yes' && !uploads.cogc) errs.push('Upload the police clearance certificate you declared.')
     }
     if (step === 3) {
       if (!expYears) errs.push('Years of experience is required.')
@@ -447,8 +422,10 @@ export default function BecomeANanny() {
     if (step === 5) {
       if (!ref1Name.trim()) errs.push('Reference 1 name is required.')
       if (!ref1Phone.trim()) errs.push('Reference 1 phone is required.')
+      if (!ref1Rel) errs.push('Reference 1 relationship is required.')
       if (!ref2Name.trim()) errs.push('Reference 2 name is required.')
       if (!ref2Phone.trim()) errs.push('Reference 2 phone is required.')
+      if (!ref2Rel) errs.push('Reference 2 relationship is required.')
       if (
         ref1Email &&
         ref2Email &&
@@ -484,6 +461,7 @@ export default function BecomeANanny() {
   }
 
   async function submitForm() {
+    if (submitting) return
     const payload = {
       submissionKey: submissionKey.current,
       fullName: `${firstName} ${lastName}`,
@@ -531,6 +509,7 @@ export default function BecomeANanny() {
       consentBackground: consent1,
       consentTerms: consent2,
       consentAccuracy: consent3,
+      ...agreement,
     }
     const mapKinds: Record<string, string> = {
       headshot: 'photo',
@@ -596,7 +575,7 @@ export default function BecomeANanny() {
       const data = await res.json().catch(() => null)
       if (res.ok) {
         setSubmitted(true)
-        sessionStorage.removeItem('vn_nanny_form')
+        try { sessionStorage.removeItem('vn_nanny_form') } catch { /* Submission has already succeeded. */ }
         window.scrollTo({ top: 0, behavior: 'smooth' })
       } else {
         setErrors([data?.error || 'Submission failed. Please try again.'])
@@ -663,9 +642,10 @@ export default function BecomeANanny() {
             </div>
           </div>
           <div style={{ marginTop: '2.5rem' }}>
-            <Link href="/" className="btn-coral">
-              Return to Home
+            <Link href="/signup?role=nanny" className="btn-coral">
+              Create your nanny account
             </Link>
+            <p>Use the same application email. Your agreement acceptance has been recorded; your profile will remain private until verification and activation are complete.</p>
           </div>
         </div>
       </>
@@ -726,6 +706,7 @@ export default function BecomeANanny() {
                 Tell us about yourself and the experience you bring. We&apos;ll guide you
                 through the rest, one step at a time.
               </p>
+              <p className="field-hint">Contact details are kept in this tab. If you refresh or leave, re-enter the remaining answers, reselect your files and accept the agreement again before submitting.</p>
               <div className={styles.introNote}>
                 <CareIcon kind="leaf" />
                 <span>
@@ -769,7 +750,7 @@ export default function BecomeANanny() {
             </nav>
             <div className={`form-container ${styles.form}`} id="application-form">
               {errors.length > 0 && (
-                <div className="step-error" role="alert">
+                <div className="step-error" role="alert" tabIndex={-1}>
                   <strong>Please fix the following:</strong>
                   <ul>
                     {errors.map((e, i) => (
@@ -2174,56 +2155,58 @@ export default function BecomeANanny() {
                     </div>
                   </div>
 
+                  <NannyAgreementFields value={agreement} onChange={setAgreement} legalName={`${firstName} ${lastName}`.trim()} />
+
                   {/* CONSENTS */}
                   <div className="form-card" style={{ marginTop: '24px' }}>
                     <h3>Declarations & Consent</h3>
-                    <div
+                    <label
                       className={`consent-item${consent1 ? ' checked' : ''}`}
-                      onClick={() => setConsent1((c) => !c)}
                     >
-                      <div className={`consent-box${consent1 ? ' checked' : ''}`}>
+                      <input className={styles.checkNative} type="checkbox" checked={consent1} onChange={event => setConsent1(event.target.checked)} />
+                      <span aria-hidden="true" className={`consent-box${consent1 ? ' checked' : ''}`}>
                         {consent1 ? '✓' : ''}
-                      </div>
+                      </span>
                       <span className="consent-text">
                         I consent to VacayNanny conducting background checks, including
                         verification of my police clearance certificate and contacting my
                         references. <span className="req">*</span>
                       </span>
-                    </div>
-                    <div
+                    </label>
+                    <label
                       className={`consent-item${consent2 ? ' checked' : ''}`}
-                      onClick={() => setConsent2((c) => !c)}
                     >
-                      <div className={`consent-box${consent2 ? ' checked' : ''}`}>
+                      <input className={styles.checkNative} type="checkbox" checked={consent2} onChange={event => setConsent2(event.target.checked)} />
+                      <span aria-hidden="true" className={`consent-box${consent2 ? ' checked' : ''}`}>
                         {consent2 ? '✓' : ''}
-                      </div>
+                      </span>
                       <span className="consent-text">
                         I agree to VacayNanny&apos;s{' '}
-                        <a href="/terms" style={{ color: 'var(--coral)' }}>
+                        <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--coral)' }}>
                           Terms of Service
                         </a>{' '}
                         and{' '}
-                        <a href="/privacy" style={{ color: 'var(--coral)' }}>
+                        <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--coral)' }}>
                           Privacy Policy
                         </a>
                         , including the use of my data for matching me with families.{' '}
                         <span className="req">*</span>
                       </span>
-                    </div>
-                    <div
+                    </label>
+                    <label
                       className={`consent-item${consent3 ? ' checked' : ''}`}
-                      onClick={() => setConsent3((c) => !c)}
                     >
-                      <div className={`consent-box${consent3 ? ' checked' : ''}`}>
+                      <input className={styles.checkNative} type="checkbox" checked={consent3} onChange={event => setConsent3(event.target.checked)} />
+                      <span aria-hidden="true" className={`consent-box${consent3 ? ' checked' : ''}`}>
                         {consent3 ? '✓' : ''}
-                      </div>
+                      </span>
                       <span className="consent-text">
                         I confirm that all information provided in this application is
                         accurate and truthful to the best of my knowledge. I understand
                         that providing false information may result in immediate
                         disqualification. <span className="req">*</span>
                       </span>
-                    </div>
+                    </label>
                   </div>
 
                   <div className="btn-row">

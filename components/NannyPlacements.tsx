@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CareCompletion from '@/components/CareCompletion'
+import CompletionReportView from './CompletionReportView'
 import BookingCalendar from '@/components/BookingCalendar'
 import BookingThread from '@/components/BookingThread'
 import {
@@ -33,6 +34,8 @@ export default function NannyPlacements({ bookings }: { bookings: Booking[] }) {
         return
       }
       router.refresh()
+    } catch {
+      setError('Could not connect. Your placement has not been changed; please retry.')
     } finally {
       setBusy(null)
     }
@@ -50,7 +53,7 @@ export default function NannyPlacements({ bookings }: { bookings: Booking[] }) {
       <div className="form-card">
         <h3>Assigned bookings</h3>
         {error && (
-          <p className="field-error-msg" style={{ marginBottom: 12 }}>
+          <p role="alert" className="field-error-msg" style={{ marginBottom: 12 }}>
             {error}
           </p>
         )}
@@ -97,8 +100,9 @@ export default function NannyPlacements({ bookings }: { bookings: Booking[] }) {
                 </div>
               )}
               {b.status === 'in_progress' && (
-                <CareCompletion bookingId={b.id} completedAt={b.my_completed_at} />
+                <CareCompletion bookingId={b.id} completedAt={b.my_completed_at} savedReport={b.my_completion_report} />
               )}
+              {b.status === 'completed' && b.my_completion_report && <CompletionReportView report={b.my_completion_report} name="Your placement" confirmedAt={b.my_completed_at} />}
               {bookingHasThread(b) && (
                 <BookingThread
                   bookingId={b.id}

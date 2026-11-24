@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { createSupabaseServer } from '@/lib/supabase/server'
-import { consumeAuthOtp, establishOtpSession } from '@/lib/auth-otp'
+import { AuthOtpError, consumeAuthOtp, establishOtpSession } from '@/lib/auth-otp'
 import { limitOtp } from '@/lib/otp'
 export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
@@ -55,10 +55,11 @@ export async function POST(request: NextRequest) {
         { success: true, next: '/login?password=reset' },
         { headers: { 'Cache-Control': 'no-store' } },
       )
-    await db.rpc('claim_nanny_applications', {
+    const claim = await db.rpc('claim_nanny_applications', {
       p_actor: user.id,
       p_verified_email: payload.email,
     })
+    if (claim.error) throw new Error('Application linking is temporarily unavailable. Please sign in again.')
     const { data: profile } = await db
       .from('profiles')
       .select('role')
@@ -84,10 +85,10 @@ export async function POST(request: NextRequest) {
       },
       { headers: { 'Cache-Control': 'no-store' } },
     )
-  } catch {
+  } catch (error) {
     return NextResponse.json(
-      { error: 'Could not finish sign-in. Please request a new code.' },
-      { status: 503 },
+      { error: error instanceof AuthOtpError ? error.message : 'Could not finish sign-in. Please sign in again or request a new code.' },
+      { status: error instanceof AuthOtpError ? error.status : 503 },
     )
   }
 }

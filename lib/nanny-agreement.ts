@@ -1,6 +1,6 @@
 import 'server-only'
 import { emailSettings } from '@/lib/email-settings'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 export async function loadNannyAgreement() {
   const path = process.env.NANNY_AGREEMENT_STORAGE_PATH

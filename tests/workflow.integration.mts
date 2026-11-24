@@ -1,3 +1,4 @@
+import { recordTestAcceptance, testAcceptance } from './fixtures/acceptance.mjs'
 import { before, after, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
@@ -108,6 +109,7 @@ async function newNanny(userId: string | null = null) {
       })
     ).error,
   )
+  await recordTestAcceptance(db,id,'Workflow Test Nanny')
   const saved = await db
     .from('nannies')
     .insert({
@@ -359,6 +361,7 @@ test('an anonymous application can be linked to its verified account without ste
   await db
     .from('nanny_applications')
     .insert({ id: applicationId, full_name: 'Guest applicant', email })
+  await recordTestAcceptance(db,applicationId,'Guest applicant')
   assert.ifError(
     (
       await db.rpc('claim_nanny_applications', {
@@ -497,6 +500,7 @@ test('complete application save is atomic and duplicate submission keys do not c
     id,
     submission_key: key,
     full_name: 'Complete application test',
+    agreement_acceptance:testAcceptance('Complete application test'),
     date_of_birth: '1990-01-01',
     email: 'complete@example.test',
     languages: ['English'],

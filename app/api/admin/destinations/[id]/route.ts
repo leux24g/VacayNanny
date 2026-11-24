@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
 import { parseDestinationPayload } from '@/lib/destinations'
 import { slugify } from '@/lib/constants'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 async function uniqueSlug(base: string, excludeId: string) {
   const supabase = createServerClient()

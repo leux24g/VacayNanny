@@ -276,6 +276,7 @@ export async function sendApplicationEmails(data: {
 }
 
 export async function sendApplicationStatusEmail(data: {
+  decisionVersion?:number
   fullName: string
   email: string
   status: 'approved' | 'rejected'
@@ -304,6 +305,7 @@ export async function sendApplicationStatusEmail(data: {
     ...content,
     attachments,
     applicationApprovalId: approved ? data.applicationId : undefined,
+    applicationStatus:data.applicationId ? {id:data.applicationId,status:data.status,version:data.decisionVersion} : undefined,
   })
   if (result.error)
     throw new Error(

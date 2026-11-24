@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 
 export async function POST() {
   const profile = await getCurrentProfile()

@@ -1,3 +1,4 @@
+import { recordTestAcceptance } from './fixtures/acceptance.mjs'
 import { before, after, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { randomUUID } from 'node:crypto'
@@ -60,6 +61,9 @@ before(async () => {
 })
 after(async () => {
   for (const id of bookings) {
+    const challenges=await db.from('otp_challenges').select('id').eq('booking_id',id)
+    if(challenges.data?.length)await db.from('workflow_jobs').delete().in('dedupe_key',challenges.data.map(c=>`payout-review:${c.id}`))
+    await db.from('ops_tasks').delete().eq('booking_id',id)
     await db.from('otp_challenges').delete().eq('booking_id', id)
     await db.from('workflow_audit').delete().eq('entity_id', id)
     await db.from('bookings').delete().eq('id', id)
@@ -319,6 +323,7 @@ async function newNanny(userId: string) {
       })
     ).error,
   )
+  await recordTestAcceptance(db,id,'Completion Test')
   const row = await db
     .from('nannies')
     .insert({
@@ -374,6 +379,11 @@ test('care completion requires each assigned nanny’s family code, cannot be fo
   assert.ok(
     (await db.from('bookings').update({ status: 'completed' }).eq('id', id)).error,
   )
+  const reportByActor=new Map<string,unknown>()
+  for(const actor of [nannyUser,secondUser]) {
+    const report=await db.rpc('save_care_completion_report',{p_booking:id,p_actor:actor,p_report:{hoursWorked:8,summary:'Completed the agreed childcare and family handover.',additionalServices:'',expenses:'',accuracy:true}})
+    assert.ifError(report.error);reportByActor.set(actor,report.data)
+  }
   const firstCode = newOtp(),
     secondCode = newOtp()
   for (const [otp, actor] of [
@@ -387,7 +397,7 @@ test('care completion requires each assigned nanny’s family code, cannot be fo
           p_purpose: 'care',
           p_subject: randomUUID(),
           p_hash: otpDigest(otp.id, otp.code),
-          p_payload: {},
+          p_payload: {report:reportByActor.get(actor)},
           p_actor: actor,
           p_booking: id,
         })
@@ -411,7 +421,14 @@ test('care completion requires each assigned nanny’s family code, cannot be fo
       p_booking: id,
     })
   assert.ok((await attempt(firstCode, family)).error)
-  const a = await attempt(firstCode, nannyUser)
+  const updatedReport=await db.rpc('save_care_completion_report',{p_booking:id,p_actor:nannyUser,p_report:{hoursWorked:7.5,summary:'Updated report after reviewing the family handover.',additionalServices:'',expenses:'',accuracy:true}})
+  assert.ifError(updatedReport.error)
+  assert.equal((await attempt(firstCode,nannyUser)).data.ok,false,'Editing a report invalidates its previously issued client code.')
+  const stale=newOtp()
+  assert.ok((await db.rpc('issue_otp_challenge',{p_id:stale.id,p_purpose:'care',p_subject:randomUUID(),p_hash:otpDigest(stale.id,stale.code),p_payload:{report:reportByActor.get(nannyUser)},p_actor:nannyUser,p_booking:id})).error,'A stale report cannot race a new code request.')
+  const fresh=newOtp()
+  assert.ifError((await db.rpc('issue_otp_challenge',{p_id:fresh.id,p_purpose:'care',p_subject:randomUUID(),p_hash:otpDigest(fresh.id,fresh.code),p_payload:{report:updatedReport.data},p_actor:nannyUser,p_booking:id})).error)
+  const a = await attempt(fresh, nannyUser)
   assert.ifError(a.error)
   assert.equal(a.data.completed, false)
   assert.equal(
@@ -432,4 +449,5 @@ test('care completion requires each assigned nanny’s family code, cannot be fo
     .eq('entity_id', id)
     .eq('action', 'care_completion_verified')
   assert.equal(audit.data?.length, 2)
+  assert.equal((await db.from('ops_tasks').select('id').eq('booking_id',id).eq('kind','payout_review')).data?.length,2,'Each confirmed nanny report creates one manual payout review.')
 })

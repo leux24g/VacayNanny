@@ -1,0 +1,5 @@
+import type { CompletionReport } from '@/lib/completion-report'
+import styles from './Portal.module.css'
+export default function CompletionReportView({report,name,confirmedAt}:{report:CompletionReport;name:string;confirmedAt?:string|null}) {
+  return <article className={styles.record}><h4>Completion report · {name}</h4><p><strong>Reported work:</strong> {report.hoursWorked} hours{report.dateFrom ? ` · ${report.dateFrom} to ${report.dateTo}` : ''}</p><p>{report.summary}</p>{report.additionalServices&&<p><strong>Agreed additional services:</strong> {report.additionalServices}</p>}{report.expenses&&<p><strong>Approved expense notes:</strong> {report.expenses}</p>}<p className="field-hint">{confirmedAt?`Client confirmation recorded on ${new Date(confirmedAt).toLocaleString('en-GB',{timeZone:'Africa/Nairobi'})} EAT. Payout remains subject to operations review.`:'Awaiting client confirmation. Review these details before sharing the completion code. Reported extras do not automatically change the booking price.'}</p></article>
+}

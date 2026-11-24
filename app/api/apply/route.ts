@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { randomUUID } from 'node:crypto'
 import { validateApplication } from '@/lib/application-validation'
 import { createSupabaseServer } from '@/lib/supabase/server'
@@ -15,6 +16,7 @@ import {
   type ApplicationUploadManifest,
 } from '@/lib/application-uploads'
 import type { NannyTier } from '@/lib/types'
+import { applicationAcceptance } from '@/lib/nanny-onboarding'
 
 function estimateTier(body: Record<string, unknown>): NannyTier {
   const years = parseInt(String(body.experienceYears || '0'), 10) || 0
@@ -169,6 +171,7 @@ export async function POST(request: NextRequest) {
       consent_background: Boolean(body.consentBackground),
       consent_terms: Boolean(body.consentTerms),
       consent_accuracy: Boolean(body.consentAccuracy),
+      agreement_acceptance: applicationAcceptance(body),
     }
 
     const refs = [
@@ -249,7 +252,7 @@ export async function POST(request: NextRequest) {
       if (error) {
         preserveFiles = !/^(23|P0001|42501)/.test(error.code || '')
         throw new Error(
-          'Your complete application could not be saved. Please retry with the same details.',
+          'Your complete application could not be saved. Keep your details and retry; contact us if it continues.',
         )
       }
       committed = data?.id === applicationId
@@ -260,7 +263,7 @@ export async function POST(request: NextRequest) {
           await supabase.storage.from(upload.bucket).remove([upload.path])
     }
   } catch (err) {
-    console.error('Apply route error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Application submission failed')
+    return NextResponse.json({ error: err instanceof Error && /Could not|could not|could not be|upload failed/i.test(err.message) ? err.message : 'We could not submit your application. Your details are still on this page; please retry.' }, { status: 503 })
   }
 }

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import BookingReviewForm from '@/components/BookingReviewForm'
 import BookingThread from '@/components/BookingThread'
 import BookingPayment from '@/components/BookingPayment'
+import CompletionReportView from '@/components/CompletionReportView'
 import {
   bookingHasThread,
   canLeaveReview,
@@ -123,7 +124,7 @@ export default function FamilyBookings({
 
   return (
     <div className="trip-list">
-      {error && <p className="field-error-msg trip-error">{error}</p>}
+      {error && <p role="alert" className="field-error-msg trip-error">{error}</p>}
       {bookings.map((b) => {
         const care = parseCareType(b.care_type)
         const canConfirm =
@@ -170,6 +171,7 @@ export default function FamilyBookings({
                 it with that nanny only after their agreed care is complete.
               </p>
             )}
+            {b.booking_assignments?.filter(assignment=>assignment.completion_report).map(assignment=><CompletionReportView key={assignment.nanny_id} report={assignment.completion_report!} name={assignment.nannies?.display_name || 'Assigned nanny'} confirmedAt={assignment.completed_at} />)}
             <dl className="trip-facts">
               <div>
                 <dt>Nanny</dt>

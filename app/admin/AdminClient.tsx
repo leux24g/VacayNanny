@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AdminCompletionReports from '@/components/AdminCompletionReports'
 import Link from 'next/link'
 import {
   bookingHasThread,
@@ -112,6 +113,7 @@ export default function AdminClient({
   dataError = null,
   tasks = [],
   failedJobs = [],
+  queueHealth = null,
 }: {
   applications: NannyApplication[]
   bookings: Booking[]
@@ -127,6 +129,7 @@ export default function AdminClient({
   dataError?: string | null
   tasks?: OpsTask[]
   failedJobs?: FailedJob[]
+  queueHealth?: import('@/components/AdminWorkflowTasks').QueueHealth | null
 }) {
   const router = useRouter()
   const site = useSiteCatalog()
@@ -782,7 +785,7 @@ export default function AdminClient({
           )}
 
           {tab === 'payments' && (
-            <AdminPayments payments={payments} bookings={bookings} />
+            <><AdminPayments payments={payments} bookings={bookings} /><AdminCompletionReports bookings={bookings} onOpenBooking={id=>{setBookQuery(id);setBookStatus('all');setTab('bookings')}} /></>
           )}
           {tab === 'nannies' && <AdminNannies nannies={nannies} accounts={accounts} />}
           {tab === 'reviews' && <AdminReviews reviews={reviews} />}
@@ -800,6 +803,7 @@ export default function AdminClient({
           {tab === 'followups' && (
             <AdminWorkflowTasks
               tasks={tasks}
+              queueHealth={queueHealth}
               failedJobs={failedJobs}
               onOpenBooking={(id) => {
                 setBookQuery(id)

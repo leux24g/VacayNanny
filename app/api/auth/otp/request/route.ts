@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { requestAuthOtp, AuthOtpError } from '@/lib/auth-otp'
 import { emailReady, limitOtp, OTP_SECONDS, OTP_RESEND_SECONDS } from '@/lib/otp'
 export const runtime = 'nodejs'

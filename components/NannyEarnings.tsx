@@ -1,6 +1,7 @@
 import { formatKes } from '@/lib/constants'
 import { statusLabel, summarizeNannyEarnings } from '@/lib/booking'
 import type { Booking } from '@/lib/types'
+import { TIER_COMMISSION } from '@/lib/nanny-agreement-rules'
 
 export default function NannyEarnings({ bookings }: { bookings: Booking[] }) {
   const stats = summarizeNannyEarnings(bookings)
@@ -8,10 +9,11 @@ export default function NannyEarnings({ bookings }: { bookings: Booking[] }) {
 
   return (
     <div className="form-card">
-      <h3>Earnings</h3>
+      <h3>Booking values &amp; payout terms</h3>
       <p className="field-hint" style={{ marginBottom: 16 }}>
         Quoted family totals for your placements. Payouts are processed by VacayNanny after a booking is completed — this is not a wallet balance.
       </p>
+      <details className="agreement-commercial"><summary>Current agreement commission and payout process</summary><ul>{Object.entries(TIER_COMMISSION).map(([tier,rate]) => <li key={tier}>{tier[0].toUpperCase()+tier.slice(1)}: {rate.commission} platform commission · {rate.payout} nanny share of agreed service charges.</li>)}</ul><p>Approved pass-through expenses and taxes collected for remittance are treated as stated in your agreement. Your individual share and any adjustment are checked against the booking record. Historical bookings keep their agreed terms.</p><p>Complete your booking report and obtain the client completion confirmation. Once these are received and checked, payout is processed to your verified details within three business days, subject to a documented dispute or legal restriction. Contact the team for your payout statement; the amounts below are family totals and do not show money already transferred to you.</p></details>
       <div className="earnings-grid">
         <div>
           <div className="stat-num">{formatKes(stats.completedKes)}</div>

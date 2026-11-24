@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentProfile } from '@/lib/auth'
 import { DAYS_OF_WEEK } from '@/lib/constants'
 import { destinationNames } from '@/lib/destinations'
-import { uploadPublicPhoto, validateProfileImage } from '@/lib/profile-media'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { ProfileImageError, queuePublicPhotoCleanup, uploadPublicPhoto, validateProfileImage } from '@/lib/profile-media'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import type { Nanny } from '@/lib/types'
 
 const DAY_SET = new Set<string>(DAYS_OF_WEEK)
@@ -112,6 +113,7 @@ export async function PATCH(request: NextRequest) {
       available_days: availableDays,
       destinations,
     }
+    if(file || removePhoto)await queuePublicPhotoCleanup(supabase,current.photo_url)
     if (file) {
       updates.photo_url = await uploadPublicPhoto(supabase, `live/${current.id}`, file)
     } else if (removePhoto) {
@@ -126,7 +128,7 @@ export async function PATCH(request: NextRequest) {
       .eq('is_suspended', false)
       .select('*')
       .maybeSingle()
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error:error.code==='P0001'?error.message:'Could not save your profile. Please retry.' }, { status:error.code==='P0001'?409:503 })
     if (!data)
       return NextResponse.json(
         { error: 'Could not update this profile.' },
@@ -135,7 +137,8 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ success: true, nanny: data })
   } catch (err) {
-    console.error('Nanny profile update failed:', err)
+    if(err instanceof ProfileImageError)return NextResponse.json({error:err.message},{status:400})
+    console.error('Nanny profile update failed')
     return NextResponse.json({ error: 'Could not save your profile.' }, { status: 500 })
   }
 }

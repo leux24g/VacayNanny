@@ -1,3 +1,4 @@
+import { NANNY_AGREEMENT_VERSION } from '../../lib/nanny-agreement-rules'
 export const completeApplication = {
   fullName: 'Synthetic Applicant',
   email: 'applicant@example.test',
@@ -20,6 +21,13 @@ export const completeApplication = {
   ref2Name: 'Reference Two',
   ref2Relationship: 'Supervisor',
   ref2Phone: '712345680',
+  agreementAccepted: true,
+  agreementVersion: NANNY_AGREEMENT_VERSION,
+  agreementSignerName: 'Synthetic Applicant',
+  payoutMethod: 'mpesa',
+  payoutAccountName: 'Synthetic Applicant',
+  payoutAccountNumber: '+254712345678',
+  payoutBankName: '',
   consentBackground: true,
   consentTerms: true,
   consentAccuracy: true,

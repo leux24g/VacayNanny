@@ -41,7 +41,7 @@ The following sequence records dependencies for future environments. The product
 
 The existing production destination catalog has no rows. Destination filters will populate after an administrator publishes the operating destinations; the booking form retains its Other option. Existing catalog content was not replaced with sample seed data.
 
-The approved blank agreement PDF is still required before application approval emails can be sent. The draft has not been substituted for an official attachment. SMTP authentication passed, and OTP/application mail delivery was tested through a local SMTP sink; external inbox delivery has not been asserted.
+The revised PDF supplied by the user is configured as the private approval attachment and public readable agreement. The historical draft is superseded. Acceptance and activation requirements are documented in [portal operations](portal-operations.md). SMTP authentication passed, and OTP/application mail delivery was tested through a local SMTP sink; external inbox delivery has not been asserted.
 
 Cloudflare blocked automated completion of Paystack's hosted payment form. Test API charges and production webhook delivery passed, while completing the external checkout form, live acceptance and international-card enablement remain separate merchant checks. UAT still needs a dedicated hosted test database and stable HTTPS origin; the validation preview is not a configured UAT environment. Leaked-password protection remains disabled and requires account/plan review.
 

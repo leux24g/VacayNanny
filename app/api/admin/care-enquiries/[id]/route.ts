@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { careLinkToken, sealWorkflow } from '@/lib/workflow-secrets'
 import { siteUrl } from '@/lib/constants'
 import { escapeHtml } from '@/lib/application-email-templates'

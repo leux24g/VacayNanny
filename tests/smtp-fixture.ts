@@ -1,6 +1,6 @@
 // Loopback-only SMTP sink for tests and synthetic UI review. Never forwards mail.
 import { createServer } from 'node:net'
-export async function smtpFixture() {
+export async function smtpFixture(options: {holdAfterData?:boolean} = {}) {
   const messages: Array<{ to: string; raw: string; code: string | null }> = []
   const server = createServer((socket) => {
     socket.write('220 localhost Test SMTP\r\n')
@@ -25,7 +25,7 @@ export async function smtpFixture() {
             data = false
             raw = ''
             recipients = []
-            socket.write('250 2.0.0 Queued locally\r\n')
+            if(!options.holdAfterData)socket.write('250 2.0.0 Queued locally\r\n')
           } else raw += line + '\r\n'
         } else if (/^EHLO|^HELO/i.test(line))
           socket.write('250-localhost\r\n250 AUTH PLAIN\r\n')

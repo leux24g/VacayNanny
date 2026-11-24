@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import PageShell from '@/components/PageShell'
 import FamilyBookings from '@/components/FamilyBookings'
 import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { loadBooking } from '@/lib/booking-ops'
 import { validGuestToken } from '@/lib/guest-access'
 

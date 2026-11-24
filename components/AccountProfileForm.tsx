@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import MediaImage from '@/components/MediaImage'
 import { useRouter } from 'next/navigation'
 import type { Profile } from '@/lib/types'
@@ -15,8 +15,13 @@ export default function AccountProfileForm({ profile }: { profile: Profile }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  useEffect(()=>()=>{if(preview.startsWith('blob:'))URL.revokeObjectURL(preview)},[preview])
 
   function onFile(next: File | null) {
+    if(next && (!['image/jpeg','image/png','image/webp'].includes(next.type) || next.size>4*1024*1024)) {
+      setError('Choose a JPG, PNG or WebP photo up to 4 MB.');setFile(null);return
+    }
+    setError('')
     setFile(next)
     setRemoveAvatar(false)
     if (next) setPreview(URL.createObjectURL(next))
@@ -42,6 +47,8 @@ export default function AccountProfileForm({ profile }: { profile: Profile }) {
       setFile(null)
       setSaved(true)
       router.refresh()
+    } catch {
+      setError('Could not connect. Your changes are still on this page; please retry.')
     } finally {
       setBusy(false)
     }
@@ -117,8 +124,8 @@ export default function AccountProfileForm({ profile }: { profile: Profile }) {
           placeholder="+254 7xx xxx xxx"
         />
       </div>
-      {error && <p className="field-error-msg">{error}</p>}
-      {saved && <p className="account-saved">Saved. Future requests will use these details.</p>}
+      {error && <p className="field-error-msg" role="alert">{error}</p>}
+      {saved && <p className="account-saved" role="status">Saved. Future requests will use these details.</p>}
       <button className="btn-coral account-save" type="submit" disabled={busy}>
         {busy ? 'Saving…' : 'Save profile'}
       </button>

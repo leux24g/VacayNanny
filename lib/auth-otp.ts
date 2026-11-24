@@ -3,6 +3,8 @@ import { randomBytes } from 'node:crypto'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { newOtp, otpDigest, sendOtp } from './otp'
 import { sealWorkflow, openWorkflow } from './workflow-secrets'
+import { acceptedSignupApplication } from './nanny-onboarding'
+import { requestSignal } from './worker-context'
 export type AuthPurpose = 'login' | 'signup' | 'reset'
 export type AuthOtpPayload = {
   version: 2
@@ -12,6 +14,8 @@ export type AuthOtpPayload = {
   tokenHash?: string
   setupPassword?: boolean
   session?: { access_token: string; refresh_token: string }
+  newAccount?: { fullName: string }
+  applicationId?: string
 }
 export class AuthOtpError extends Error {
   constructor(
@@ -27,6 +31,7 @@ function detachedAuth() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+      global:{fetch:(input,init)=>fetch(input,{...init,signal:requestSignal(10000,init?.signal)})},
     },
   )
 }
@@ -38,6 +43,11 @@ export async function requestAuthOtp(
   role: 'parent' | 'nanny',
   password: string,
 ) {
+  const applicationId = purpose === 'signup' && role === 'nanny'
+    ? await acceptedSignupApplication(db, email)
+    : null
+  if (purpose === 'signup' && role === 'nanny' && !applicationId)
+    throw new AuthOtpError('Complete your nanny application and accept the current agreement using this email before creating a nanny account.', 409)
   const { data: userId, error: lookupError } = await db.rpc('otp_email_user', {
     p_email: email,
   })
@@ -80,7 +90,8 @@ export async function requestAuthOtp(
   if (purpose === 'reset' && !userId) return otp.id
   try {
     let tokenHash: string | undefined
-    if (!session) {
+    const newAccount = purpose === 'signup' && !identity ? { fullName: name } : undefined
+    if (!session && !newAccount) {
       const generated = userId
         ? await db.auth.admin.generateLink({ type: 'magiclink', email })
         : await db.auth.admin.generateLink({
@@ -101,6 +112,8 @@ export async function requestAuthOtp(
       session,
       tokenHash,
       setupPassword,
+      newAccount,
+      applicationId: applicationId || undefined,
     } satisfies AuthOtpPayload)
     const saved = await db
       .from('otp_challenges')
@@ -138,8 +151,27 @@ export async function establishOtpSession(
   payload: AuthOtpPayload,
   password = '',
 ) {
+  if (payload.intent === 'signup' && payload.role === 'nanny') {
+    const application = await acceptedSignupApplication(db, payload.email)
+    if (!application || application !== payload.applicationId)
+      throw new AuthOtpError('Review and accept the current nanny agreement before creating your account.', 409)
+  }
   const detached = detachedAuth()
   let session = payload.session
+  if (payload.newAccount) {
+    if (payload.intent !== 'signup' || password.length < 12 || password.length > 256)
+      throw new AuthOtpError('Use a password of 12 to 256 characters.')
+    // No Auth account is created until the application's own email code is verified.
+    const created = await db.auth.admin.createUser({
+      email: payload.email, password, email_confirm: true,
+      user_metadata: { full_name: payload.newAccount.fullName },
+    })
+    if (created.error || !created.data.user)
+      throw new AuthOtpError('Could not create your account. If you already registered, sign in or reset your password.', 409)
+    const signed = await detached.auth.signInWithPassword({ email: payload.email, password })
+    if (signed.error || !signed.data.session) throw new Error('Could not finish verification. Please sign in.')
+    session = { access_token: signed.data.session.access_token, refresh_token: signed.data.session.refresh_token }
+  }
   if (!session) {
     const verified = await detached.auth.verifyOtp({
       token_hash: payload.tokenHash!,

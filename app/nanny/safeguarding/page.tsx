@@ -1,5 +1,5 @@
 import { requireProfile } from '@/lib/auth'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import PageShell from '@/components/PageShell'
 import SafeguardingModule from '@/components/SafeguardingModule'
 import Link from 'next/link'

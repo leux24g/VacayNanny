@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminProfile } from '@/lib/auth'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { loadNannyAgreement } from '@/lib/nanny-agreement'
 import { publishApprovedApplication } from '@/lib/publish-nanny'
 import { fromNairobiDatetimeLocal, sortDocuments } from '@/lib/application-docs'

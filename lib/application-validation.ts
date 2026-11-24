@@ -1,5 +1,6 @@
 import { validIsoDate } from './booking-validation'
 import { DAYS_OF_WEEK } from './constants'
+import { validateAgreement } from './nanny-agreement-rules'
 
 export function validateApplication(
   body: Record<string, unknown>,
@@ -7,6 +8,7 @@ export function validateApplication(
   now = new Date(),
 ): string[] {
   const errors: string[] = []
+  errors.push(...validateAgreement(body, typeof body.fullName === 'string' ? body.fullName : ''))
   const text = (key: string) =>
     typeof body[key] === 'string' ? String(body[key]).trim() : ''
   const list = (key: string) =>

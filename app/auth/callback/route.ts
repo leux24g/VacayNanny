@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createSupabaseServer } from '@/lib/supabase/server'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { emailOwnershipProven } from '@/lib/booking-ownership'
 import { SITE_URL } from '@/lib/constants'
 

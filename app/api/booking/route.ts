@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient, hasSupabaseConfig } from '@/lib/supabase'
+import { hasSupabaseConfig } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/service'
 import { randomUUID } from 'node:crypto'
 import { validateCareDates } from '@/lib/booking-validation'
 import { sealWorkflow } from '@/lib/workflow-secrets'
