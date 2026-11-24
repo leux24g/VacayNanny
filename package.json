@@ -20,12 +20,14 @@
     "db:stop": "tsx scripts/db-local.mts stop",
     "dev:database": "tsx scripts/dev-database.mts",
     "test:integration": "tsx --conditions=react-server --test tests/*.integration.mts",
-    "db:backup": "tsx scripts/backup-data.mts"
+    "db:backup": "tsx scripts/backup-data.mts",
+    "email:verify": "tsx scripts/verify-email.mts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.112.3",
     "next": "16.4.6",
+    "nodemailer": "10.6.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "resend": "^6.17.2",
@@ -37,6 +39,7 @@
     "@playwright/test": "^1.65.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "8.0.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

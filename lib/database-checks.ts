@@ -38,6 +38,12 @@ export async function checkDatabase(
       'nanny_applications',
       'agreement_signed_path,agreement_reviewed_at,agreement_reviewed_by,approval_email_sent_at,submission_key,vetting_checks,decision_version',
     ],
+    [
+      'One-time verification',
+      'otp_challenges',
+      'purpose,code_hash,expires_at,attempts,consumed_at',
+    ],
+    ['Care completion', 'booking_assignments', 'completed_at'],
     ['Booking workflow', 'bookings', 'version,match_expires_at'],
     ['Nanny moderation', 'nannies', 'is_suspended,suspension_reason'],
     ['Care team assignments', 'booking_assignments', 'booking_id,slot,nanny_id,response'],
@@ -84,6 +90,9 @@ export async function checkDatabase(
       schema?.paths?.['/rpc/create_booking_payment'] &&
       schema?.paths?.['/rpc/settle_booking_payment']
     const workflows = [
+      'issue_otp_challenge',
+      'consume_otp_challenge',
+      'otp_email_user',
       'commit_booking_mutation',
       'save_complete_application',
       'claim_nanny_applications',

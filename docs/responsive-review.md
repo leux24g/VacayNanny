@@ -15,7 +15,7 @@ The local preview and review branch include a shared full-page coastal backgroun
 
 ## Verification
 
-All **38 Playwright browser tests passed**. The suite checks descendants as well as document width, so hiding overflow on the body cannot conceal a broken card. Slideshow checks also cover complete loops, pausing, reduced motion, off-screen suspension and an unavailable image.
+All **41 Playwright browser tests passed**. The suite checks descendants as well as document width, so hiding overflow on the body cannot conceal a broken card. Slideshow checks also cover complete loops, pausing, reduced motion, off-screen suspension and an unavailable image.
 
 | Area              | Coverage                                                                                                                                                   |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -23,7 +23,7 @@ All **38 Playwright browser tests passed**. The suite checks descendants as well
 | Operations        | All 12 panels and a populated application review at the same six widths                                                                                    |
 | Signed-in portals | Family bookings, payment controls, nanny profile/placements and safeguarding quiz at phone, tablet and desktop widths                                      |
 | Nanny application | All eight steps at 320, 768, 1024 and 1440 pixels; desktop independent scrolling and mobile normal scrolling                                               |
-| Authentication    | Full-page image coverage, a right-aligned desktop form, a contained touch layout, password visibility, and reachable submit button with a shorter viewport |
+| Authentication    | Full-page image coverage, a right-aligned desktop form, a contained touch layout, email-code verification, and reachable submit button with a shorter viewport |
 | Overlays          | Booking, navigation and support at 844 × 390 landscape size; keyboard focus and Escape behavior                                                            |
 | Workflow screens  | Specialist quote privacy/error states, enquiry tracking, operator assessment and follow-ups; verified-identity ownership regression                        |
 | Image panels      | Three-photo loops on both marketing panels, pause/resume, reduced motion, off-screen suspension and failed-image fallback                                  |
@@ -32,10 +32,10 @@ ESLint, TypeScript and the production build passed. Browser checks use desktop C
 
 ## Local review
 
-Run `npm run dev:review` and open `http://localhost:3101`. Use `local-review` with these fixture-only emails:
+Run `npm run dev:review` and open `http://localhost:3101`. Use these fixture-only emails, then read the current code from `http://127.0.0.1:4748/__otp?email=operator@example.test` (replace the email as needed):
 
 - `operator@example.test` — operations
 - `family@example.test` — family bookings
 - `nanny@example.test` — nanny portal
 
-The review server binds to loopback and disables application writes, email and payment calls. These are sample accounts, not production credentials.
+The review server binds to loopback and disables application-data writes and payment calls, and captures synthetic email in a loopback-only SMTP sink. These are sample accounts, not production credentials.

@@ -1,3 +1,4 @@
+import { enterEmailCode } from './auth'
 import { expect, test, type Page } from '@playwright/test'
 
 const screens = [
@@ -76,9 +77,7 @@ async function expectLayoutToFit(page: Page, label: string) {
 
 async function signIn(page: Page, account: 'operator' | 'family' | 'nanny') {
   await page.goto('/login')
-  await page.getByLabel('Email', { exact: true }).fill(`${account}@example.test`)
-  await page.getByLabel('Password', { exact: true }).fill('local-review')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await enterEmailCode(page, `${account}@example.test`)
   await expect(page).toHaveURL(
     account === 'operator' ? '/admin' : account === 'nanny' ? '/nanny' : '/account',
   )
@@ -186,11 +185,9 @@ test('sign-in background covers the page and keeps the form usable on desktop an
   expect(visual!.width).toBe(page.viewportSize()!.width)
   expect(email!.x).toBeGreaterThan(page.viewportSize()!.width / 2)
   expect(visual!.y + visual!.height).toBeGreaterThan(email!.y)
-  await page.getByRole('button', { name: 'Show password' }).click()
-  await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute(
-    'type',
-    'text',
-  )
+  await expect(
+    page.getByRole('button', { name: 'Send sign-in code', exact: true }),
+  ).toBeVisible()
   await page.screenshot({
     path: testInfo.outputPath('login-desktop.png'),
     caret: 'initial',
@@ -210,12 +207,12 @@ test('sign-in background covers the page and keeps the form usable on desktop an
   expect(mobileImage!.y + mobileImage!.height).toBeGreaterThan(mobileEmail!.y)
   await expectLayoutToFit(mobile, 'Touch sign-in')
   await mobile.setViewportSize({ width: 390, height: 400 })
-  await mobile.getByLabel('Password', { exact: true }).focus()
+  await mobile.getByLabel('Email', { exact: true }).focus()
   await mobile
-    .getByRole('button', { name: 'Sign in', exact: true })
+    .getByRole('button', { name: 'Send sign-in code', exact: true })
     .scrollIntoViewIfNeeded()
   await expect(
-    mobile.getByRole('button', { name: 'Sign in', exact: true }),
+    mobile.getByRole('button', { name: 'Send sign-in code', exact: true }),
   ).toBeInViewport()
   await context.close()
 })

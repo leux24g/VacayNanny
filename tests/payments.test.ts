@@ -136,10 +136,10 @@ test('unpaid placements never start or complete automatically', () => {
   )
   assert.equal(
     dueBookingStatus({ ...booking, payment_status: 'paid' }, now),
-    'completed',
+    'in_progress',
   )
   assert.equal(
     dueBookingStatus({ ...booking, payment_status: 'not_required' }, now),
-    'completed',
+    'in_progress',
   )
 })

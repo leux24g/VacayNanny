@@ -1,3 +1,4 @@
+import { enterEmailCode } from './auth'
 import { test, expect } from '@playwright/test'
 
 test('public discovery and specialist quote preserve the selected service', async ({
@@ -99,9 +100,7 @@ test('operations stays protected and works through the normal authenticated rout
 }, testInfo) => {
   await page.goto('/admin')
   await expect(page).toHaveURL(/\/login/)
-  await page.getByLabel('Email', { exact: true }).fill('operator@example.test')
-  await page.getByLabel('Password', { exact: true }).fill('local-review')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await enterEmailCode(page, 'operator@example.test')
   await expect(page).toHaveURL('/admin')
   await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible()
   await page

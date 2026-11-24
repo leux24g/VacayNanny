@@ -8,9 +8,7 @@ export type SetupCheck = {
 }
 
 function configured(value: string | undefined) {
-  return Boolean(
-    value?.trim() && !/YOUR_|REPLACE_|CHANGEME|^example/i.test(value),
-  )
+  return Boolean(value?.trim() && !/YOUR_|REPLACE_|CHANGEME|^example/i.test(value))
 }
 
 export function checkSetup(
@@ -46,9 +44,7 @@ export function checkSetup(
   const cron = env.CRON_SECRET || ''
   add(
     'Scheduled job secret',
-    configured(cron) && cron.length >= 32 && !/[\r\n\s]/.test(cron)
-      ? 'ready'
-      : 'pending',
+    configured(cron) && cron.length >= 32 && !/[\r\n\s]/.test(cron) ? 'ready' : 'pending',
     configured(cron) && cron.length >= 32 && !/[\r\n\s]/.test(cron)
       ? 'A private cron secret is configured.'
       : 'Set a random CRON_SECRET of at least 32 characters.',
@@ -59,11 +55,7 @@ export function checkSetup(
     env.EMAIL_DELIVERY_MODE &&
     !['disabled', 'send'].includes(env.EMAIL_DELIVERY_MODE)
   ) {
-    add(
-      'Email delivery',
-      'invalid',
-      'EMAIL_DELIVERY_MODE must be disabled or send.',
-    )
+    add('Email delivery', 'invalid', 'EMAIL_DELIVERY_MODE must be disabled or send.')
   } else if (email.mode === 'disabled') {
     add(
       'Email delivery',
@@ -73,29 +65,28 @@ export function checkSetup(
         : 'Sending is disabled; local previews remain available.',
     )
   } else {
+    const ready =
+      email.provider === 'smtp'
+        ? configured(email.smtp.user) && configured(email.smtp.password)
+        : configured(email.apiKey) && email.apiKey?.startsWith('re_')
     add(
       'Email delivery',
-      configured(email.apiKey) && email.apiKey?.startsWith('re_')
-        ? 'ready'
-        : 'pending',
-      configured(email.apiKey) && email.apiKey?.startsWith('re_')
-        ? 'Resend is configured; domain verification and delivery still need testing.'
-        : 'Set the Resend key before enabling email delivery.',
+      ready ? 'ready' : 'pending',
+      ready
+        ? `${email.provider.toUpperCase()} credentials are configured; delivery still needs verification.`
+        : `Configure ${email.provider.toUpperCase()} credentials before enabling delivery.`,
     )
   }
+
   const from = email.from.match(/<([^<>]+)>$/)?.[1] || email.from
   const validAddress = (value: string) =>
     /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/.test(value) && !/[\r\n]/.test(value)
   add(
     'Email addresses',
-    validAddress(from) &&
-      validAddress(email.replyTo) &&
-      !/[\r\n]/.test(email.from)
+    validAddress(from) && validAddress(email.replyTo) && !/[\r\n]/.test(email.from)
       ? 'ready'
       : 'invalid',
-    validAddress(from) &&
-      validAddress(email.replyTo) &&
-      !/[\r\n]/.test(email.from)
+    validAddress(from) && validAddress(email.replyTo) && !/[\r\n]/.test(email.from)
       ? 'Sender and reply-to addresses have valid formats.'
       : 'Check RESEND_FROM_EMAIL and RESEND_REPLY_TO_EMAIL.',
   )
@@ -104,11 +95,7 @@ export function checkSetup(
   const expected = target === 'production' ? 'sk_live_' : 'sk_test_'
   add(
     'Paystack',
-    !configured(key)
-      ? 'pending'
-      : key!.startsWith(expected)
-        ? 'ready'
-        : 'invalid',
+    !configured(key) ? 'pending' : key!.startsWith(expected) ? 'ready' : 'invalid',
     !configured(key)
       ? target === 'production'
         ? 'A live merchant key is still needed before taking payments.'

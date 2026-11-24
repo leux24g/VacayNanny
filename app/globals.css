@@ -1395,3 +1395,9 @@ footer.sec { background:#edf0e7; border-top:1px solid var(--card-border); paddin
 .care-enquiry h2 { font-family:var(--font-playfair),Georgia,serif; font-weight:550; margin:8px 0 16px; }
 .care-enquiry>p { line-height:1.7; }
 .care-enquiry .btn-coral { margin-top:20px; }
+
+.care-completion { padding:20px; margin-block:18px; background:#edf0e7; border:1px solid var(--card-border); border-radius:12px; }
+.care-completion p { line-height:1.7; margin-block:10px; font-size:.87rem; }
+.care-completion input,.otp-code { width:100%; min-height:48px; padding:12px; border:1px solid var(--input-border); border-radius:8px; color:var(--deep); background:#fffdfa; font-size:1.3rem; letter-spacing:.25em; }
+.care-completion form { display:grid; gap:12px; }
+.otp-actions { display:flex; flex-wrap:wrap; gap:12px; }

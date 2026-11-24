@@ -12,7 +12,7 @@ npm run setup:local
 npm run dev:review
 ```
 
-Open `http://localhost:3101`. Sign in with `operator@example.test`, `family@example.test` or `nanny@example.test`, using `local-review`, to explore the sample operations, family and nanny workspaces. This server uses a local fixture, disables database writes, email and payment calls, and never connects to the real Supabase project. The accounts exist only in the fixture server, which binds to loopback. Stop it with Ctrl+C.
+Open `http://localhost:3101`. Sign in with `operator@example.test`, `family@example.test` or `nanny@example.test`, using an email verification code, to explore the sample operations, family and nanny workspaces. This server uses a local fixture, disables application-data writes and payment calls, and captures synthetic email locally, and never connects to the real Supabase project. The accounts exist only in the fixture server, which binds to loopback. Read a sample code at `http://127.0.0.1:4748/__otp?email=operator@example.test` (replace the email for other sample accounts). No message leaves the local SMTP sink. Stop it with Ctrl+C.
 
 `setup:local` preserves existing `.env.local` values and adds missing local defaults: a localhost site URL, disabled email delivery and a random cron secret. It does not overwrite credentials in `.env`. Use `npm run setup:check` to inspect configuration without contacting any external service. `npm run email:preview` saves the supplied application email templates to `artifacts/email-previews/index.html` without sending them.
 
@@ -93,7 +93,7 @@ Guest request confirmation includes a private tracking link and optional signup.
 
 ### Application emails and signed agreements
 
-The received and approved emails use the supplied templates. To send approval emails, upload the final **blank agreement PDF** to the private `nanny-documents` bucket and set `NANNY_AGREEMENT_STORAGE_PATH` to its path. Resend must be configured with the verified sending domain and `EMAIL_DELIVERY_MODE=send`. `RESEND_FROM_EMAIL` selects the verified sender and `RESEND_REPLY_TO_EMAIL` configures the default reply address. Approval emails attach the PDF and set Reply-To to `hello@vacaynanny.net` so the nanny can return the signed copy.
+The received and approved emails use the supplied templates. To send approval emails, upload the final **blank agreement PDF** to the private `nanny-documents` bucket and set `NANNY_AGREEMENT_STORAGE_PATH` to its path. Enable `EMAIL_DELIVERY_MODE=send` and configure either SMTP (`EMAIL_PROVIDER=smtp`, `EMAIL`, `EMAIL_APP_PASSWORD`) or Resend (`EMAIL_PROVIDER=resend` and its verified sender/key). SMTP uses the authenticated sender address; `npm run email:verify` checks SMTP authentication without sending a message. `RESEND_FROM_EMAIL` selects the verified sender and `RESEND_REPLY_TO_EMAIL` configures the default reply address. Approval emails attach the PDF and set Reply-To to `hello@vacaynanny.net` so the nanny can return the signed copy.
 
 Approval no longer publishes a profile. An administrator opens the application, uploads the returned signed PDF, confirms they have reviewed it, then activates the profile. Reviewer and timestamp are recorded; the database prevents publication without this review. Existing active profiles are preserved. A review draft has now been authored in PDF and editable DOCX form under `artifacts/agreements/`, with source in `docs/legal/`. It proposes commercial terms and keeps actual registration/insurance details open. It is not configured as the official attachment; complete business/legal review before issuing an approved PDF and enabling approval-email delivery.
 
@@ -111,3 +111,9 @@ Before deployment, complete Paystack sandbox M-Pesa and card transactions, an en
 GitHub Actions runs lint, type checks, unit/database tests, the production build and browser tests without production credentials. It saves email previews, screenshots and failure traces as review artifacts. The workflow has been prepared locally; it will run on GitHub after the changes are pushed.
 
 Payment implementation follows Paystack’s [transaction API](https://paystack.com/docs/api/transaction/) and [webhook verification documentation](https://paystack.com/docs/payments/webhooks/). International cards require [international payments activation](https://support.paystack.com/en/articles/2130690).
+
+### Email OTPs and care completion
+
+Apply `supabase/migrations/20261124050934_email_otps_and_care_completion.sql` with this application version. Sign-in/signup use immediate email codes; successful verification creates the Supabase session securely on the server. Codes expire in ten minutes, cannot be reused, have five failed attempts, and use a one-minute resend cooldown plus database rate limits. They are stored as keyed hashes; internal Auth token payloads are encrypted.
+
+An assigned nanny requests a separate care completion code for their own work. It is emailed to the family, who shares it after the agreed care is finished. Each nanny enters their code in the portal, and all requested assignments must be confirmed before the booking becomes completed. Elapsed dates and admin status edits cannot skip confirmation. Ordinary notification mail remains queued with retries; OTP mail sends immediately. See [deployment instructions](docs/deployment.md) for credentials, sequencing and the local email sink.

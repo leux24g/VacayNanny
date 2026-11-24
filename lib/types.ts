@@ -104,6 +104,7 @@ export type Booking = {
   match_expires_at?: string | null
   booking_assignments?: BookingAssignment[]
   my_response?: NannyResponse | null
+  my_completed_at?: string | null
   id: string
   parent_id: string | null
   nanny_id: string | null
@@ -156,6 +157,7 @@ export type BookingAssignment = {
   slot: number
   nanny_id: string
   response: 'pending' | 'accepted'
+  completed_at?: string | null
   responded_at?: string | null
   nannies?: Pick<Nanny, 'id' | 'display_name' | 'slug' | 'photo_url' | 'tier'> | null
 }

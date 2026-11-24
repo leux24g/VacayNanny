@@ -164,6 +164,12 @@ export default function FamilyBookings({
                 {statusLabel(b.status)}
               </span>
             </div>
+            {b.status === 'in_progress' && (
+              <p className="trip-prompt">
+                When care ends, your nanny will request a completion code by email. Share
+                it with that nanny only after their agreed care is complete.
+              </p>
+            )}
             <dl className="trip-facts">
               <div>
                 <dt>Nanny</dt>

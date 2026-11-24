@@ -81,7 +81,7 @@ export type BookingMutation =
   | { action: 'auto_match' }
 
 const NANNY_EMBED =
-  'nannies!bookings_nanny_id_fkey(id, display_name, slug, photo_url, tier, daily_rate_kes, safeguarding_completed_at), booking_assignments(slot,nanny_id,response,responded_at,nannies(id,display_name,slug,photo_url,tier))'
+  'nannies!bookings_nanny_id_fkey(id, display_name, slug, photo_url, tier, daily_rate_kes, safeguarding_completed_at), booking_assignments(slot,nanny_id,response,responded_at,completed_at,nannies(id,display_name,slug,photo_url,tier))'
 
 export async function loadBooking(
   supabase: SupabaseClient,

@@ -13,7 +13,7 @@ npm run email:preview
 npm run dev:review
 ```
 
-Review the public site at `http://localhost:3101`. Sign in to `/login?next=/admin` with the local sample credentials `operator@example.test` / `local-review`. This fixture server binds to `127.0.0.1`, uses dummy keys and sample data, rejects writes, and disables email and payments. It is never used by `npm run build` or a deployed app. `npm run dev` uses the configured database instead; use the review command for sample data, or the isolated database workflow below for real service integration.
+Review the public site at `http://localhost:3101`. Sign in to `/login?next=/admin` with the local sample credentials `operator@example.test` and its emailed verification code. This fixture server binds to `127.0.0.1`, uses dummy keys and sample data, rejects application-data writes, captures synthetic email in a loopback-only SMTP sink, and disables payments. Read the sample account code at `http://127.0.0.1:4748/__otp?email=operator@example.test`. The sink never forwards mail. It is never used by `npm run build` or a deployed app. `npm run dev` uses the configured database instead; use the review command for sample data, or the isolated database workflow below for real service integration.
 
 Email previews are saved under `artifacts/email-previews/`. They use the supplied wording and a sample name. The agreement attachment itself is pending the final document.
 
@@ -27,6 +27,7 @@ The user selected the existing Supabase project for the eventual database rollou
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Isolated local stack or controlled existing-project tests         | Existing production project                                                   |
 | `SUPABASE_SERVICE_ROLE_KEY`                                 | Corresponding server-only key                                     | Production server-only key                                                    |
 | `EMAIL_DELIVERY_MODE`                                       | `disabled`; explicitly enable for controlled delivery checks      | `send` after sender verification                                              |
+| `EMAIL_PROVIDER`, `EMAIL`, `EMAIL_APP_PASSWORD` | `smtp` with test mailbox credentials | `smtp` with the intended private sending credentials |
 | `RESEND_API_KEY`                                            | Test sender key if checking delivery                              | Key for verified domain                                                       |
 | `RESEND_FROM_EMAIL`                                         | Verified staging sender                                           | `VacayNanny <noreply@vacaynanny.net>` after verification                      |
 | `RESEND_REPLY_TO_EMAIL`                                     | Monitored staging inbox                                           | `hello@vacaynanny.net`                                                        |
@@ -58,7 +59,7 @@ npm run dev:database
 npm run db:stop
 ```
 
-The app uses port 3102; the API uses 56321, PostgreSQL uses 56322 and the local mail viewer uses 56324. The Docker network binds published services to loopback. Other Docker projects are left alone. Outgoing application email is disabled. The app launcher accepts only a Paystack test key if one is configured, and overrides the project's Supabase values with the local credentials in memory.
+The app uses port 3102; the API uses 56321, PostgreSQL uses 56322 and the local mail viewer uses 56324. The Docker network binds published services to loopback. Other Docker projects are left alone. Outgoing application email is disabled by default. To try the configured mailbox against local data, run `npm run dev:database -- --email`; messages are sent only when requested by that local app or its explicitly invoked workers. The app launcher accepts only a Paystack test key if one is configured, and overrides the project's Supabase values with the local credentials in memory.
 
 `db:start` assembles the existing SQL sources into one generated bootstrap migration. It deliberately disables the legacy sample nanny seed, which contains invented ratings. `db:reset` rebuilds this disposable local database when SQL sources change. It removes local test data; it does not reset any hosted project. Stop local review processes before resetting. Starting an already running stack does not reapply changed SQL.
 
@@ -80,7 +81,8 @@ For a fresh project, compare the existing schema against the migrations. Do not 
 6. `supabase/security_hardening.sql`
 7. `supabase/payment_cutover.sql` at the coordinated application/payment release
 8. `supabase/migrations/20261119075620_workflow_integrity.sql` with the refreshed workflow application
-9. `supabase/workflow_schedule.sql` after the refreshed endpoint and Vault settings are ready
+9. `supabase/migrations/20261124050934_email_otps_and_care_completion.sql` with the OTP application release
+10. `supabase/workflow_schedule.sql` after the refreshed endpoint and Vault settings are ready
 
 `supabase/seed.sql` is optional sample/bootstrap data for a new development project. Existing bookings retain historical `not_required` payment status. Review their real balances separately. New bookings require payment after the family and nanny accept the match and before the date-only start boundary.
 
@@ -98,7 +100,7 @@ In Paystack, configure the staging and production webhook endpoints separately a
 
 Complete test-mode M-Pesa and card payments, failure/cancellation, retries and duplicate/delayed webhooks against staging. Confirm strict reference, amount and currency verification, and check the payment ledger and booking state. Account-enabled international cards also need verification before launch. Refund execution and nanny payouts remain manual; the app records refund review status without claiming a transfer occurred.
 
-Verify the Resend domain and deliver both application templates to a controlled inbox. Confirm the approval message carries the actual PDF, replies reach the monitored inbox, and the profile remains unpublished until the signed agreement has been reviewed.
+Select SMTP or Resend and deliver both application templates to a controlled inbox. For SMTP, set `EMAIL_PROVIDER=smtp`, `EMAIL`, `EMAIL_APP_PASSWORD` and `EMAIL_DELIVERY_MODE=send`; Gmail uses `smtp.gmail.com:465` with TLS. Optional `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD` and `EMAIL_REPLY_TO` override those defaults. Gmail sends from the authenticated account. For Resend, select `EMAIL_PROVIDER=resend` and configure the existing verified domain/key. Run `npm run email:verify` to authenticate to SMTP without sending a message. Confirm the approval message carries the actual PDF, replies reach the monitored inbox, and the profile remains unpublished until the signed agreement has been reviewed.
 
 ## Booking scheduler
 
@@ -138,3 +140,13 @@ artifacts/agreement-tools/bin/python scripts/generate-agreement.py
 ```
 
 The draft proposes a 20% platform allocation within the family care charge, 80% nanny compensation, full approved-expense reimbursement and payout within two Kenyan business days after care, with weekly settlement for longer bookings. These proposals have not been implemented as fee deductions or automated payouts. Actual legal identity, address, verified insurance details and legal classification require completion and review. No registration details or insurance coverage have been fabricated. Do not configure the draft as the approval attachment; issue an approved version after review.
+
+## Email verification and care completion — 24 November 2026
+
+Sign-in and signup now use email codes without passwords. The server generates six-digit codes, stores keyed hashes, encrypts the internal Supabase token, and delivers codes immediately through the selected provider. Codes expire after ten minutes, are single-use and allow five failed guesses. Resends wait one minute and replace earlier codes. Shared database rate limits fail closed. Browser responses contain neither codes nor Supabase session tokens; successful verification establishes the normal server-managed Auth cookies. Unknown sign-in emails receive the same response without creating an account. Signup choices never grant administrator or approved-nanny permissions. A successful OTP login replaces any pre-existing password with an unknown random credential and establishes a fresh session afterwards, preventing a pre-registered password from becoming usable when the real email owner verifies. This can end older sessions; the code flow is the supported sign-in path.
+
+Deploy the OTP migration with the application. The app delivers these codes directly through SMTP/Resend, so these flows do not require changing the hosted Supabase SMTP templates. Keep the notification encryption key stable and private. For the existing Gmail setup, credentials were verified by SMTP authentication; inbox delivery and production runtime configuration remain separate checks. No actual credentials are checked into the repository.
+
+During care, the assigned nanny selects **Send completion code to family**. The client receives the code at the booking email (or their canonical Auth email for an owned booking), and shares it only after that nanny's agreed work is complete. The nanny enters it in their placement. Codes are bound to the booking, assignment and booking revision; expiry, rescheduling/reassignment, use and failed-attempt limits prevent reuse. Each requested nanny must be confirmed before the booking closes. Dates and an admin status change can no longer complete a placement without these confirmations. Historical completed bookings stay unchanged. Ordinary notifications still use the scheduled durable queue; OTP delivery is immediate. SMTP reuses a stable Message-ID, but cannot promise provider-level deduplication after an ambiguous connection failure; operators must check delivery before manually retrying queued mail.
+
+References: [Supabase custom email token generation](https://supabase.com/docs/reference/javascript/auth-admin-generatelink), [Nodemailer Gmail app passwords](https://nodemailer.com/guides/using-gmail), [SMTP verification](https://nodemailer.com/smtp).

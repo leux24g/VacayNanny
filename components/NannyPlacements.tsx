@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import CareCompletion from '@/components/CareCompletion'
 import BookingCalendar from '@/components/BookingCalendar'
 import BookingThread from '@/components/BookingThread'
 import {
@@ -94,6 +95,9 @@ export default function NannyPlacements({ bookings }: { bookings: Booking[] }) {
                     Decline
                   </button>
                 </div>
+              )}
+              {b.status === 'in_progress' && (
+                <CareCompletion bookingId={b.id} completedAt={b.my_completed_at} />
               )}
               {bookingHasThread(b) && (
                 <BookingThread

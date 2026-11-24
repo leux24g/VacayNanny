@@ -32,7 +32,7 @@ export default async function NannyDash() {
     if (nanny) {
       const { data: assigned } = await supabase
         .from('booking_assignments')
-        .select('booking_id,response')
+        .select('booking_id,response,completed_at')
         .eq('nanny_id', nanny.id)
       if (assigned?.length) {
         const { data: rows } = await supabase
@@ -48,6 +48,7 @@ export default async function NannyDash() {
         bookings = ((rows || []) as Booking[]).map((b) => ({
           ...b,
           my_response: assigned.find((a) => a.booking_id === b.id)?.response,
+          my_completed_at: assigned.find((a) => a.booking_id === b.id)?.completed_at,
         }))
       }
     }

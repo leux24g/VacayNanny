@@ -223,15 +223,11 @@ export function dueBookingStatus(
         !['paid', 'not_required'].includes(booking.payment_status)
       )
         return null
-      if (now.getTime() >= placementEndAt(booking.check_in, booking.check_out).getTime())
-        return 'completed'
       if (now.getTime() >= placementStartAt(booking.check_in).getTime())
         return 'in_progress'
       return null
     }
     case 'in_progress': {
-      if (now.getTime() >= placementEndAt(booking.check_in, booking.check_out).getTime())
-        return 'completed'
       return null
     }
     case 'pending':

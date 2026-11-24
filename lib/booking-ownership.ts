@@ -4,7 +4,7 @@ export type AuthIdentity = {
   email_confirmed_at?: string | null
   confirmation_sent_at?: string | null
   created_at: string
-  app_metadata?: { provider?: string }
+  app_metadata?: { provider?: string; email_otp_verified?: string }
   user_metadata?: { full_name?: string }
 }
 
@@ -16,6 +16,8 @@ export type AuthIdentity = {
  */
 export function emailOwnershipProven(user: AuthIdentity): boolean {
   if (!user.email || !user.email_confirmed_at) return false
+  if (user.app_metadata?.email_otp_verified?.toLowerCase() === user.email.toLowerCase())
+    return true
   const provider = user.app_metadata?.provider
   if (typeof provider === 'string' && provider !== 'email') return true
   return Boolean(user.confirmation_sent_at)

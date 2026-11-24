@@ -755,7 +755,13 @@ export default function AdminClient({
                           }}
                         >
                           {BOOK_STATUSES.map((status) => (
-                            <option key={status} value={status}>
+                            <option
+                              key={status}
+                              value={status}
+                              disabled={
+                                status === 'completed' && b.status !== 'completed'
+                              }
+                            >
                               {statusLabel(status)}
                             </option>
                           ))}

@@ -1,3 +1,4 @@
+import { enterEmailCode } from './auth'
 import { test, expect } from '@playwright/test'
 const enquiryId = '88888888-8888-4888-8888-888888888888'
 test('private specialist quote hides team notes and reports a changed quote without accepting it', async ({
@@ -44,9 +45,7 @@ test('operations exposes follow-ups and sends complete specialist assessment wit
   page,
 }, testInfo) => {
   await page.goto('/login')
-  await page.getByLabel('Email', { exact: true }).fill('operator@example.test')
-  await page.getByLabel('Password', { exact: true }).fill('local-review')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await enterEmailCode(page, 'operator@example.test')
   await expect(page).toHaveURL('/admin')
   const nav = page.getByRole('navigation', { name: 'Operations' })
   await nav.getByRole('button', { name: /Follow-ups/ }).click()
@@ -123,9 +122,7 @@ test('verified Auth identity prevents access through a tampered profile email', 
   page,
 }) => {
   await page.goto('/login')
-  await page.getByLabel('Email', { exact: true }).fill('family@example.test')
-  await page.getByLabel('Password', { exact: true }).fill('local-review')
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+  await enterEmailCode(page, 'family@example.test')
   await expect(page).toHaveURL('/account')
   await expect(
     page.getByRole('heading', { name: 'Professional Nursing Care' }),

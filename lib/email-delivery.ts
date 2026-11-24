@@ -5,6 +5,7 @@ import { Resend } from 'resend'
 import { createServerClient } from './supabase'
 import { emailSettings } from './email-settings'
 import { sealWorkflow } from './workflow-secrets'
+import { smtpTransport } from './smtp'
 
 export type EmailMessage = {
   from?: string
@@ -46,10 +47,29 @@ export async function sendEmail(message: EmailMessage) {
 }
 export async function deliverEmail(stored: StoredEmail, idempotencyKey: string) {
   const settings = emailSettings()
-  if (settings.mode !== 'send' || !settings.apiKey)
+  if (settings.mode !== 'send' || (settings.provider === 'resend' && !settings.apiKey))
     throw new Error('Email delivery is not configured.')
   const { applicationApprovalId: _approval, ...message } = stored
   void _approval
+  if (settings.provider === 'smtp') {
+    try {
+      const result = await smtpTransport().sendMail({
+        ...message,
+        from: settings.from,
+        replyTo: message.replyTo || settings.replyTo,
+        messageId: `<vacaynanny-${createHash('sha256').update(idempotencyKey).digest('hex')}@vacaynanny.net>`,
+        attachments: message.attachments?.map((file) => ({
+          ...file,
+          content: Buffer.from(file.content, 'base64'),
+        })),
+      })
+      if (!result.accepted?.length || result.rejected?.length)
+        throw new Error('Email not accepted')
+      return
+    } catch {
+      throw new Error('SMTP provider did not accept the notification.')
+    }
+  }
   const { error } = await new Resend(settings.apiKey).emails.send(
     {
       ...message,
