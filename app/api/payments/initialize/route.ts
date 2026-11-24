@@ -5,14 +5,18 @@ import { loadBooking } from '@/lib/booking-ops'
 import { validGuestToken } from '@/lib/guest-access'
 import { initializePayment } from '@/lib/paystack'
 import { limitRoute } from '@/lib/rate-limit'
+import { paystackSettings } from '@/lib/paystack-settings'
 
 export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
-  if (!process.env.PAYSTACK_SECRET_KEY)
+  try {
+    if (!paystackSettings().secretKey) throw new Error('Missing payment credentials.')
+  } catch {
     return NextResponse.json(
       { error: 'Online payments are being set up. Please contact VacayNanny.' },
       { status: 503 },
     )
+  }
   try {
     const body = await request.json()
     if (

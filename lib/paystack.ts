@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { paymentMatches, kesToSubunits } from '@/lib/payment-rules'
 import { siteUrl } from '@/lib/constants'
+import { paystackSettings } from '@/lib/paystack-settings'
 
 export type PaymentAttempt = {
   id: string
@@ -21,7 +22,7 @@ async function paystack<T>(
   path: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
-  const key = process.env.PAYSTACK_SECRET_KEY
+  const key = paystackSettings().secretKey
   if (!key)
     throw new Error(
       'Payments are not configured yet. Please contact VacayNanny.',
@@ -79,8 +80,8 @@ export async function initializePayment(
       currency: 'KES',
       reference: attempt.reference,
       channels: ['card', 'mobile_money'],
-      callback_url: siteUrl(`/payments/return`),
-      metadata: JSON.stringify({ booking_id: bookingId }),
+      callback_url: siteUrl(paystackSettings().callbackPath),
+      metadata: JSON.stringify({ booking_id: bookingId, payment_environment: paystackSettings().environment }),
     })
     if (
       new URL(initialized.authorization_url).origin !==
@@ -125,7 +126,10 @@ export async function reconcilePayment(
     status: string
     channel: string
     paid_at: string | null
+    domain: string
   }>(`/transaction/verify/${encodeURIComponent(reference)}`)
+  if (transaction.domain !== paystackSettings().domain)
+    throw new Error('Payment verification failed: payment environment mismatch.')
   if (transaction.status !== 'success') {
     if (['failed', 'abandoned', 'reversed'].includes(transaction.status)) {
       const { error: updateError } = await supabase

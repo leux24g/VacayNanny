@@ -20,6 +20,8 @@ test('database readiness uses only read requests and downloads zero records', as
             '/rpc/settle_booking_payment': {},
             ...Object.fromEntries(
               [
+                'record_email_otp_session',
+                'has_email_otp_session',
                 'issue_otp_challenge',
                 'consume_otp_challenge',
                 'otp_email_user',

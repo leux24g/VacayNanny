@@ -3,16 +3,16 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PROTECTED: Record<string, string[]> = {
   '/account': ['parent', 'admin'],
-  '/nanny': ['nanny', 'admin'],
+  '/nanny': ['parent', 'nanny', 'admin'],
   '/admin': ['admin'],
 }
 
 const AUTH_MS = 1500
 
 function hasAuthCookie(request: NextRequest) {
-  return request.cookies.getAll().some(c =>
-    c.name.includes('auth-token') || c.name.startsWith('sb-'),
-  )
+  return request.cookies
+    .getAll()
+    .some((c) => c.name.includes('auth-token') || c.name.startsWith('sb-'))
 }
 
 async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | null> {
@@ -20,7 +20,7 @@ async function withTimeout<T>(promise: PromiseLike<T>, ms: number): Promise<T | 
   try {
     return await Promise.race([
       Promise.resolve(promise),
-      new Promise<null>(resolve => {
+      new Promise<null>((resolve) => {
         timer = setTimeout(() => resolve(null), ms)
       }),
     ])
@@ -37,7 +37,8 @@ export async function proxy(request: NextRequest) {
   if (!url || !key) return NextResponse.next()
 
   const path = request.nextUrl.pathname
-  const isAuthPage = path === '/login' || path === '/signup' || path === '/forgot-password'
+  const isAuthPage =
+    path === '/login' || path === '/signup' || path === '/forgot-password'
   const gate = Object.entries(PROTECTED).find(
     ([prefix]) => path === prefix || path.startsWith(prefix + '/'),
   )
@@ -70,7 +71,11 @@ export async function proxy(request: NextRequest) {
   })
 
   const authResult = await withTimeout(supabase.auth.getUser(), AUTH_MS)
-  const user = authResult?.data?.user ?? null
+  const identity = authResult?.data?.user ?? null
+  const proof = identity
+    ? await withTimeout(supabase.rpc('has_email_otp_session'), AUTH_MS)
+    : null
+  const user = proof?.data === true && !proof.error ? identity : null
 
   if (gate) {
     if (!user) {
@@ -97,5 +102,12 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/account/:path*', '/nanny/:path*', '/admin/:path*', '/login', '/signup', '/forgot-password'],
+  matcher: [
+    '/account/:path*',
+    '/nanny/:path*',
+    '/admin/:path*',
+    '/login',
+    '/signup',
+    '/forgot-password',
+  ],
 }

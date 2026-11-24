@@ -80,7 +80,8 @@ export async function GET(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (user && emailOwnershipProven(user)) {
+  const proof = user ? await supabase.rpc('has_email_otp_session') : null
+  if (user && emailOwnershipProven(user) && proof?.data === true && !proof.error) {
     try {
       await createServerClient().rpc('claim_nanny_applications', {
         p_actor: user.id,

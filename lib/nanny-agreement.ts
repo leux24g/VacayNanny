@@ -5,9 +5,12 @@ import { createServerClient } from '@/lib/supabase'
 export async function loadNannyAgreement() {
   const path = process.env.NANNY_AGREEMENT_STORAGE_PATH
   const delivery = emailSettings()
-  if (!path || !delivery.apiKey || delivery.mode !== 'send')
+  const providerReady = delivery.provider === 'smtp'
+    ? Boolean(delivery.smtp.user && delivery.smtp.password)
+    : Boolean(delivery.apiKey)
+  if (!path || !providerReady || delivery.mode !== 'send')
     throw new Error(
-      'Configure the official agreement PDF and Resend before sending approval emails.',
+      'Configure the official agreement PDF and email delivery before sending approval emails.',
     )
   const { data, error } = await createServerClient()
     .storage.from('nanny-documents')

@@ -21,7 +21,8 @@
     "dev:database": "tsx scripts/dev-database.mts",
     "test:integration": "tsx --conditions=react-server --test tests/*.integration.mts",
     "db:backup": "tsx scripts/backup-data.mts",
-    "email:verify": "tsx scripts/verify-email.mts"
+    "email:verify": "tsx scripts/verify-email.mts",
+    "test:payments:sandbox": "tsx --conditions=react-server scripts/test-payments-sandbox.mts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.4",

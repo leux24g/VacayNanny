@@ -1,4 +1,5 @@
 import { emailSettings } from './email-settings'
+import { paystackSettings } from './paystack-settings'
 
 export type SetupTarget = 'local' | 'staging' | 'production'
 export type SetupCheck = {
@@ -91,7 +92,8 @@ export function checkSetup(
       : 'Check RESEND_FROM_EMAIL and RESEND_REPLY_TO_EMAIL.',
   )
 
-  const key = env.PAYSTACK_SECRET_KEY
+  const productionPayments = target === 'production'
+  const key = productionPayments ? env.PROD_PAYSTACK_SECRET_KEY : env.PAYSTACK_SECRET_KEY
   const expected = target === 'production' ? 'sk_live_' : 'sk_test_'
   add(
     'Paystack',
@@ -101,20 +103,31 @@ export function checkSetup(
         ? 'A live merchant key is still needed before taking payments.'
         : 'A merchant test key is still needed for payment sandbox checks.'
       : key!.startsWith(expected)
-        ? `A ${target === 'production' ? 'live' : 'test'} key is configured; no payment was attempted.`
-        : `Use a ${expected} key for ${target}.`,
+        ? `A ${productionPayments ? 'PROD_ live' : 'UAT test'} key is configured; no payment was attempted.`
+        : `Use a ${expected} key in ${productionPayments ? 'PROD_PAYSTACK_SECRET_KEY' : 'PAYSTACK_SECRET_KEY'} for ${target}.`,
   )
+  const webhookSecret = productionPayments ? env.PROD_PAYSTACK_WEBHOOK_SECRET : env.PAYSTACK_WEBHOOK_SECRET
   add(
     'Paystack webhook',
-    configured(env.PAYSTACK_WEBHOOK_SECRET) &&
-      env.PAYSTACK_WEBHOOK_SECRET?.startsWith('whsec_')
+    configured(webhookSecret) &&
+      webhookSecret?.startsWith('whsec_')
       ? 'ready'
       : 'pending',
-    configured(env.PAYSTACK_WEBHOOK_SECRET) &&
-      env.PAYSTACK_WEBHOOK_SECRET?.startsWith('whsec_')
+    configured(webhookSecret) &&
+      webhookSecret?.startsWith('whsec_')
       ? 'Timestamped signature verification is configured.'
       : 'Configure the webhook signing secret in Paystack when available; legacy signature validation remains supported.',
   )
+  try {
+    const settings = paystackSettings(env)
+    const expectedEnvironment = productionPayments ? 'prod' : 'uat'
+    add('Payment environment', settings.environment === expectedEnvironment ? 'ready' : 'invalid',
+      settings.environment === expectedEnvironment
+        ? `${settings.environment.toUpperCase()} selected; callback ${settings.callbackPath}, webhook ${settings.webhookPath}.`
+        : `Set PAYSTACK_MODE=${expectedEnvironment} for ${target}.`)
+  } catch {
+    add('Payment environment', 'invalid', 'Check PAYSTACK_MODE and the key prefixes for its selected environment.')
+  }
   add(
     'Agreement PDF',
     configured(env.NANNY_AGREEMENT_STORAGE_PATH) ? 'ready' : 'pending',

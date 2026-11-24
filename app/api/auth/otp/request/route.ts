@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
-import { requestAuthOtp } from '@/lib/auth-otp'
+import { requestAuthOtp, AuthOtpError } from '@/lib/auth-otp'
 import { emailReady, limitOtp, OTP_SECONDS, OTP_RESEND_SECONDS } from '@/lib/otp'
 export const runtime = 'nodejs'
 export async function POST(request: NextRequest) {
@@ -15,11 +15,26 @@ export async function POST(request: NextRequest) {
     if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
       email.length > 200 ||
-      !['login', 'signup'].includes(purpose) ||
+      !['login', 'signup', 'reset'].includes(purpose) ||
       (purpose === 'signup' && (!name || name.length > 120))
     )
       return NextResponse.json(
         { error: 'Enter a valid email and your name when signing up.' },
+        { status: 400 },
+      )
+    const password = typeof body.password === 'string' ? body.password : ''
+    if (
+      (purpose !== 'reset' && !password) ||
+      password.length > 256 ||
+      (purpose === 'signup' && password.length < 12)
+    )
+      return NextResponse.json(
+        {
+          error:
+            purpose === 'signup'
+              ? 'Use a password of 12 to 256 characters.'
+              : 'Enter your password.',
+        },
         { status: 400 },
       )
     if (!emailReady())
@@ -39,7 +54,7 @@ export async function POST(request: NextRequest) {
         { error: 'Too many codes requested. Please try again later.' },
         { status: 429 },
       )
-    const challengeId = await requestAuthOtp(db, email, purpose, name, role)
+    const challengeId = await requestAuthOtp(db, email, purpose, name, role, password)
     return NextResponse.json(
       {
         challengeId,
@@ -55,7 +70,7 @@ export async function POST(request: NextRequest) {
         error:
           error instanceof Error ? error.message : 'Could not send a verification code.',
       },
-      { status: 503 },
+      { status: error instanceof AuthOtpError ? error.status : 503 },
     )
   }
 }

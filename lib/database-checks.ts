@@ -90,6 +90,8 @@ export async function checkDatabase(
       schema?.paths?.['/rpc/create_booking_payment'] &&
       schema?.paths?.['/rpc/settle_booking_payment']
     const workflows = [
+      'record_email_otp_session',
+      'has_email_otp_session',
       'issue_otp_challenge',
       'consume_otp_challenge',
       'otp_email_user',

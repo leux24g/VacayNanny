@@ -21,6 +21,7 @@ const child = spawn(
       SUPABASE_SERVICE_ROLE_KEY: database.serviceKey,
       NEXT_PUBLIC_SITE_URL: 'http://localhost:3102',
       EMAIL_DELIVERY_MODE: emailEnabled ? 'send' : 'disabled',
+      PAYSTACK_MODE: 'uat',
       RESEND_API_KEY: '',
       PAYSTACK_SECRET_KEY: paymentKey,
       CRON_SECRET: '',

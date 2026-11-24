@@ -54,7 +54,18 @@ before(async () => {
     if (role === 'admin') operator = id
     if (role === 'parent') {
       family = id
-      assert.ifError((await client.auth.signInWithPassword({ email, password })).error)
+      const login = await client.auth.signInWithPassword({ email, password })
+      assert.ifError(login.error)
+      const sessionId = JSON.parse(
+        Buffer.from(
+          login.data.session!.access_token.split('.')[1],
+          'base64url',
+        ).toString(),
+      ).session_id
+      assert.ifError(
+        (await db.rpc('record_email_otp_session', { p_session: sessionId, p_user: id }))
+          .error,
+      )
     }
     if (role === 'nanny') nannyUser = id
   }
@@ -555,23 +566,28 @@ test('complete application save is atomic and duplicate submission keys do not c
   })
   assert.ok(premature.error)
 })
-test('notification claims use leases and recover from stale workers without losing the job', async () => {
+test('notification claims use leases and recover from stale workers without losing the job', async (context) => {
   const key = `lease-test:${randomUUID()}`
+  // Claim only this run's queue so old jobs cannot consume the batch or be leased.
+  const kind = key
   const queued = await db.rpc('enqueue_workflow_job', {
-    p_kind: 'ops_notice',
+    p_kind: kind,
     p_payload: { summary: 'Synthetic lease recovery test' },
     p_key: key,
   })
   assert.ifError(queued.error)
+  context.after(async () => {
+    assert.ifError((await db.from('workflow_jobs').delete().eq('id', queued.data)).error)
+  })
   const duplicate = await db.rpc('enqueue_workflow_job', {
-    p_kind: 'ops_notice',
+    p_kind: kind,
     p_payload: { summary: 'Duplicate' },
     p_key: key,
   })
   assert.equal(duplicate.data, queued.data)
   const claims = await Promise.all([
-    db.rpc('claim_workflow_jobs', { p_limit: 100 }),
-    db.rpc('claim_workflow_jobs', { p_limit: 100 }),
+    db.rpc('claim_workflow_jobs', { p_limit: 100, p_kinds: [kind] }),
+    db.rpc('claim_workflow_jobs', { p_limit: 100, p_kinds: [kind] }),
   ])
   claims.forEach((r) => assert.ifError(r.error))
   const matching = claims
@@ -593,7 +609,7 @@ test('notification claims use leases and recover from stale workers without losi
     .from('workflow_jobs')
     .update({ locked_at: new Date(Date.now() - 16 * 60000).toISOString() })
     .eq('id', job.id)
-  const reclaimed = await db.rpc('claim_workflow_jobs', { p_limit: 100 })
+  const reclaimed = await db.rpc('claim_workflow_jobs', { p_limit: 100, p_kinds: [kind] })
   assert.ifError(reclaimed.error)
   const next = reclaimed.data!.find(
     (j: { id: string; lease_token: string }) => j.id === job.id,
@@ -620,7 +636,6 @@ test('notification claims use leases and recover from stale workers without losi
   ).data
   assert.equal(pending!.status, 'pending')
   assert.ok(Date.parse(pending!.available_at) > Date.now())
-  await db.from('workflow_jobs').delete().eq('id', job.id)
 })
 
 test('abandoned upload cleanup preserves committed documents and runs while email is disabled', async () => {

@@ -1,4 +1,4 @@
-import { test, mock } from 'node:test'
+import { test, mock, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import {
@@ -6,6 +6,13 @@ import {
   reconcilePayment,
   type PaymentAttempt,
 } from '../lib/paystack'
+
+const previous = { ...process.env }
+before(() => {
+  process.env.PAYSTACK_MODE = 'uat'
+  process.env.PAYSTACK_SECRET_KEY = 'sk_test_fixture'
+})
+after(() => { process.env = previous })
 
 const attempt = {
   id: 'attempt',
@@ -60,6 +67,8 @@ test('checkout sends the stored total in KES and enables card and M-Pesa channel
       assert.deepEqual(body.channels, ['card', 'mobile_money'])
       assert.equal(body.reference, 'VN-test')
       assert.equal(body.email, 'family@example.test')
+      assert.equal(new URL(body.callback_url).pathname, '/payments/return/uat')
+      assert.equal(JSON.parse(body.metadata).payment_environment, 'uat')
       return Response.json({
         status: true,
         data: {
@@ -87,7 +96,7 @@ test('duplicate in-flight initialization never creates a second provider request
     'fetch',
     async (_input: RequestInfo | URL, init?: RequestInit) => {
       assert.ok(!init?.method || init.method === 'GET')
-      return Response.json({ status: true, data: { status: 'pending' } })
+      return Response.json({ status: true, data: { status: 'pending', domain: 'test' } })
     },
   )
   try {
@@ -111,6 +120,7 @@ test('successful provider responses with the wrong amount cannot mark the bookin
         reference: 'VN-test',
         amount: 1,
         currency: 'KES',
+        domain: 'test',
       },
     }),
   )
@@ -132,6 +142,7 @@ test('verified success persists through the atomic settlement RPC', async () => 
         reference: 'VN-test',
         amount: 640000,
         currency: 'KES',
+        domain: 'test',
         channel: 'mobile_money',
         paid_at: '2026-11-18T10:00:00Z',
       },
@@ -150,7 +161,7 @@ test('verified success persists through the atomic settlement RPC', async () => 
 
 test('pending payments stay pending and previously settled payments are idempotent', async () => {
   const fetch = mock.method(globalThis, 'fetch', async () =>
-    Response.json({ status: true, data: { status: 'pending' } }),
+    Response.json({ status: true, data: { status: 'pending', domain: 'test' } }),
   )
   try {
     const db = database()
@@ -165,6 +176,41 @@ test('pending payments stay pending and previously settled payments are idempote
       'success',
     )
     assert.equal(fetch.mock.callCount(), 1)
+  } finally {
+    fetch.mock.restore()
+  }
+})
+
+test('PROD checkout uses only the PROD_ live secret and its production callback', async () => {
+  process.env.PAYSTACK_MODE = 'prod'
+  process.env.PROD_PAYSTACK_SECRET_KEY = 'sk_live_fixture'
+  const db = database()
+  const fetch = mock.method(globalThis, 'fetch', async (_input: RequestInfo | URL, init?: RequestInit) => {
+    assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer sk_live_fixture')
+    const body = JSON.parse(String(init?.body))
+    assert.equal(new URL(body.callback_url).pathname, '/payments/return/prod')
+    assert.equal(JSON.parse(body.metadata).payment_environment, 'prod')
+    return Response.json({ status: true, data: { authorization_url: 'https://checkout.paystack.com/fixture', reference: 'VN-test' } })
+  })
+  try {
+    await initializePayment(db.client, 'booking', 'family@example.test')
+    assert.equal(fetch.mock.callCount(), 1)
+  } finally {
+    fetch.mock.restore()
+    process.env.PAYSTACK_MODE = 'uat'
+    delete process.env.PROD_PAYSTACK_SECRET_KEY
+  }
+})
+
+test('a transaction from the other payment environment cannot settle a booking', async () => {
+  const db = database()
+  const fetch = mock.method(globalThis, 'fetch', async () => Response.json({
+    status: true,
+    data: { status: 'success', reference: 'VN-test', amount: 640000, currency: 'KES', domain: 'live' },
+  }))
+  try {
+    await assert.rejects(reconcilePayment(db.client, 'VN-test'), /environment mismatch/)
+    assert.equal(db.calls.length, 0)
   } finally {
     fetch.mock.restore()
   }

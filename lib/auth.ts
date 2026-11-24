@@ -4,7 +4,7 @@ import { withTimeout } from '@/lib/withTimeout'
 import type { Profile, UserRole } from '@/lib/types'
 import { redirect } from 'next/navigation'
 
-const AUTH_MS = 2000
+const AUTH_MS = 4000
 
 export type CurrentProfile = Profile & { emailConfirmed: boolean }
 
@@ -20,7 +20,9 @@ export async function getSessionUser() {
         const {
           data: { user },
         } = await supabase.auth.getUser()
-        return user
+        if (!user) return null
+        const proof = await supabase.rpc('has_email_otp_session')
+        return proof.data === true && !proof.error ? user : null
       } catch {
         return null
       }
@@ -40,6 +42,8 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
           data: { user },
         } = await supabase.auth.getUser()
         if (!user) return null
+        const proof = await supabase.rpc('has_email_otp_session')
+        if (proof.error || proof.data !== true) return null
         const identity = user as AuthIdentity
         const { data } = await supabase
           .from('profiles')

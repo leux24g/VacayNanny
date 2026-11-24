@@ -92,7 +92,7 @@ test('production setup reports blocked configuration without exposing credential
     'production',
   )
   assert.equal(checks.find((c) => c.name === 'Site URL')?.status, 'invalid')
-  assert.equal(checks.find((c) => c.name === 'Paystack')?.status, 'invalid')
+  assert.equal(checks.find((c) => c.name === 'Paystack')?.status, 'pending')
   assert.equal(
     checks.find((c) => c.name === 'Email delivery')?.status,
     'pending',
@@ -115,7 +115,7 @@ test('staging accepts test credentials but rejects unsafe origins and malformed 
   )
   assert.deepEqual(
     checks.filter((c) => c.name !== 'Supabase').map((c) => c.status),
-    Array(7).fill('ready'),
+    Array(8).fill('ready'),
   )
   for (const origin of [
     'https://localhost',

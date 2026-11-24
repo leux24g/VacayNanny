@@ -15,7 +15,11 @@ function LoginForm() {
           <EmailOtpForm
             purpose="login"
             next={params.get('next') || '/account'}
-            initialMessage={params.get('message') || ''}
+            initialMessage={
+              params.get('password') === 'reset'
+                ? 'Your password has been updated. Sign in with your new password.'
+                : params.get('message') || ''
+            }
           />
         </div>
       </main>

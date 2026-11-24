@@ -63,14 +63,6 @@ export default function BookingPayment({
       } catch {
         /* The confirmation email also contains the guest link. */
       }
-      try {
-        sessionStorage.setItem(
-          'vacaynanny:booking-return',
-          token ? `/booking/${booking.id}?token=${token}` : '/account',
-        )
-      } catch {
-        /* The guest confirmation email also contains the secure link. */
-      }
       window.location.assign(url.href)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Payment unavailable.')

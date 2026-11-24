@@ -11,10 +11,19 @@ export async function POST(request: NextRequest) {
     if (
       !/^[0-9a-f-]{36}$/i.test(challengeId || '') ||
       !/^\d{6}$/.test(code || '') ||
-      !['login', 'signup'].includes(purpose)
+      !['login', 'signup', 'reset'].includes(purpose)
     )
       return NextResponse.json(
         { error: 'Enter the six-digit code from your email.' },
+        { status: 400 },
+      )
+    const password = typeof body.password === 'string' ? body.password : ''
+    if (
+      (purpose === 'signup' || purpose === 'reset') &&
+      (password.length < 12 || password.length > 256)
+    )
+      return NextResponse.json(
+        { error: 'Use a password of 12 to 256 characters.' },
         { status: 400 },
       )
     const db = createServerClient()
@@ -40,7 +49,12 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     const auth = await createSupabaseServer()
-    const user = await establishOtpSession(db, auth, payload)
+    const user = await establishOtpSession(db, auth, payload, password)
+    if (!user)
+      return NextResponse.json(
+        { success: true, next: '/login?password=reset' },
+        { headers: { 'Cache-Control': 'no-store' } },
+      )
     await db.rpc('claim_nanny_applications', {
       p_actor: user.id,
       p_verified_email: payload.email,

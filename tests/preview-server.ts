@@ -1,12 +1,13 @@
 // An isolated Supabase fixture: browser tests never read or mutate production data.
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { smtpFixture } from './smtp-fixture'
 import { demoCatalog } from '../lib/catalog-data'
 
 async function main() {
   const smtp = await smtpFixture()
+  const verifiedSessions = new Set<string>()
   const otpChallenges = new Map<string, Record<string, unknown>>()
   const reviewMode = process.argv.includes('--review')
   const adminId = '33333333-3333-4333-8333-333333333333'
@@ -367,9 +368,10 @@ async function main() {
     })),
     homepage_steps: [],
   }
-  function fixtureSession(identity = user) {
+  function fixtureSession(identity = user, sessionId: string = randomUUID()) {
     const payload = {
       sub: identity.id,
+      session_id: sessionId,
       aud: 'authenticated',
       role: 'authenticated',
       exp: Math.floor(Date.now() / 1000) + 3600,
@@ -377,11 +379,11 @@ async function main() {
     const token = [
       Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
       Buffer.from(JSON.stringify(payload)).toString('base64url'),
-      'fixture-signature',
+      Buffer.from('synthetic-fixture-signature-bytes').toString('base64url'),
     ].join('.')
     return {
       access_token: token,
-      refresh_token: `fixture-refresh-${identity.id}`,
+      refresh_token: `fixture-refresh-${sessionId}:${identity.id}`,
       expires_at: payload.exp,
       expires_in: 3600,
       token_type: 'bearer',
@@ -409,9 +411,11 @@ async function main() {
         return
       }
       if (url.searchParams.get('grant_type') === 'refresh_token') {
-        const id = String(credentials.refresh_token || '').replace('fixture-refresh-', '')
+        const [sessionId, id] = String(credentials.refresh_token || '')
+          .replace('fixture-refresh-', '')
+          .split(':')
         const identity = users.find((u) => u.id === id)
-        res.end(JSON.stringify(fixtureSession(identity || user)))
+        res.end(JSON.stringify(fixtureSession(identity || user, sessionId)))
         return
       }
       const identity = users.find((candidate) => candidate.email === credentials.email)
@@ -521,6 +525,26 @@ async function main() {
       res.end(JSON.stringify({ users, aud: 'authenticated' }))
       return
     }
+    if (url.pathname === '/rest/v1/rpc/record_email_otp_session') {
+      let raw = ''
+      for await (const chunk of req) raw += chunk.toString()
+      const body = JSON.parse(raw)
+      verifiedSessions.add(body.p_session)
+      res.end('true')
+      return
+    }
+    if (url.pathname === '/rest/v1/rpc/has_email_otp_session') {
+      try {
+        const token = String(req.headers.authorization || '').replace(/^Bearer /, '')
+        const claims = JSON.parse(
+          Buffer.from(token.split('.')[1], 'base64url').toString(),
+        )
+        res.end(JSON.stringify(verifiedSessions.has(claims.session_id)))
+      } catch {
+        res.end('false')
+      }
+      return
+    }
     if (url.pathname === '/rest/v1/rpc/consume_rate_limit') {
       res.end('true')
       return
@@ -592,6 +616,7 @@ async function main() {
           SUPABASE_SERVICE_ROLE_KEY: 'test-service-key',
           NEXT_PUBLIC_SITE_URL: 'http://localhost:3101',
           PAYSTACK_SECRET_KEY: '',
+          PAYSTACK_MODE: 'uat',
           PAYSTACK_WEBHOOK_SECRET: '',
           RESEND_API_KEY: '',
           EMAIL_DELIVERY_MODE: 'send',

@@ -25,16 +25,18 @@ export async function sendOtp(
   email: string,
   code: string,
   id: string,
-  purpose: 'login' | 'signup' | 'care',
+  purpose: 'login' | 'signup' | 'reset' | 'care',
   detail = '',
 ) {
   if (!emailReady()) throw new Error('Email delivery is not configured.')
   const subject =
-    purpose === 'care'
-      ? 'Confirm your VacayNanny care is complete'
-      : purpose === 'signup'
-        ? 'Verify your VacayNanny email'
-        : 'Your VacayNanny sign-in code'
+    purpose === 'reset'
+      ? 'Reset your VacayNanny password'
+      : purpose === 'care'
+        ? 'Confirm your VacayNanny care is complete'
+        : purpose === 'signup'
+          ? 'Verify your VacayNanny email'
+          : 'Your VacayNanny sign-in code'
   const introduction =
     purpose === 'care'
       ? `${detail}\nShare this code with the named nanny only after their agreed care is complete. Each nanny has a separate code.`

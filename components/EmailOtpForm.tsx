@@ -7,14 +7,17 @@ export default function EmailOtpForm({
   next = '/account',
   initialMessage = '',
 }: {
-  purpose: 'login' | 'signup'
+  purpose: 'login' | 'signup' | 'reset'
   next?: string
   initialMessage?: string
 }) {
   const signup = purpose === 'signup',
+    reset = purpose === 'reset',
     router = useRouter()
   const [email, setEmail] = useState(''),
     [fullName, setFullName] = useState(''),
+    [password, setPassword] = useState(''),
+    [showPassword, setShowPassword] = useState(false),
     [role, setRole] = useState('parent'),
     [challenge, setChallenge] = useState(''),
     [code, setCode] = useState(''),
@@ -33,7 +36,7 @@ export default function EmailOtpForm({
       const res = await fetch('/api/auth/otp/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purpose, email, fullName, role }),
+        body: JSON.stringify({ purpose, email, fullName, role, password }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -56,7 +59,13 @@ export default function EmailOtpForm({
       const res = await fetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ purpose, challengeId: challenge, code, next }),
+        body: JSON.stringify({
+          purpose,
+          challengeId: challenge,
+          code,
+          next,
+          password: signup || reset ? password : undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -91,6 +100,10 @@ export default function EmailOtpForm({
             <>
               Create your <em>account</em>
             </>
+          ) : reset ? (
+            <>
+              Reset your <em>password</em>
+            </>
           ) : (
             <>
               Sign <em>in</em>
@@ -101,8 +114,10 @@ export default function EmailOtpForm({
           {challenge
             ? `Enter the six-digit code sent to ${email}. It expires in 10 minutes.`
             : signup
-              ? 'Create your account with an email verification code.'
-              : 'Enter your email and we’ll send a code to sign you in.'}
+              ? 'Choose your password, then verify your email to create your account.'
+              : reset
+                ? 'Choose a new password and verify it with the code sent to your email.'
+                : 'Enter your email and password. We’ll then email a verification code.'}
         </p>
       </div>
       {!challenge ? (
@@ -133,6 +148,38 @@ export default function EmailOtpForm({
               maxLength={200}
               required
             />
+          </div>
+          <div className="field">
+            <div className="login-label-row">
+              <label htmlFor="auth-password">
+                {signup || reset ? 'New password' : 'Password'}
+              </label>
+              {!signup && !reset && <Link href="/forgot-password">Forgot password?</Link>}
+            </div>
+            <div className="login-password">
+              <input
+                id="auth-password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete={signup || reset ? 'new-password' : 'current-password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                minLength={signup || reset ? 12 : 1}
+                maxLength={256}
+                required
+              />
+              <button
+                type="button"
+                className="login-reveal"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {(signup || reset) && (
+              <p className="field-hint">Use at least 12 characters.</p>
+            )}
           </div>
           {signup && (
             <fieldset className="signup-roles">
@@ -193,7 +240,9 @@ export default function EmailOtpForm({
             ? 'Verify and continue'
             : signup
               ? 'Create account'
-              : 'Send sign-in code'}
+              : reset
+                ? 'Send reset code'
+                : 'Send sign-in code'}
       </button>
       {challenge && (
         <div className="otp-actions">
@@ -219,9 +268,9 @@ export default function EmailOtpForm({
         </div>
       )}
       <p className="auth-switch">
-        {signup ? 'Already have an account?' : 'New here?'}{' '}
-        <Link href={signup ? '/login' : '/signup'}>
-          {signup ? 'Sign in' : 'Create an account'}
+        {signup || reset ? 'Already have an account?' : 'New here?'}{' '}
+        <Link href={signup || reset ? '/login' : '/signup'}>
+          {signup || reset ? 'Sign in' : 'Create an account'}
         </Link>
       </p>
     </form>

@@ -39,6 +39,17 @@ before(async () => {
   userId = created.data.user!.id
   const login = await signedIn.auth.signInWithPassword({ email, password })
   assert.ifError(login.error)
+  const sessionId = JSON.parse(
+    Buffer.from(login.data.session!.access_token.split('.')[1], 'base64url').toString(),
+  ).session_id
+  assert.ifError(
+    (
+      await admin.rpc('record_email_otp_session', {
+        p_session: sessionId,
+        p_user: userId,
+      })
+    ).error,
+  )
 })
 
 after(async () => {
@@ -313,6 +324,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
     env: {
       ...process.env,
       PAYSTACK_SECRET_KEY: '',
+      PAYSTACK_MODE: 'uat',
       PAYSTACK_WEBHOOK_SECRET: '',
       RESEND_API_KEY: '',
       EMAIL_DELIVERY_MODE: 'disabled',
@@ -343,6 +355,11 @@ test('real application routes save specialist enquiries, waitlist entries and se
   }
   assert.ok(ready, 'The local app server should become ready.')
   const email = `route-${randomUUID()}@example.test`
+  // Each run represents a different visitor, including when the local stack is reused.
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-nf-client-connection-ip': `2001:db8:${randomBytes(6).toString('hex').match(/.{4}/g)!.join(':')}::1`,
+  }
   let submittedApplication: string | undefined
   let uploadedEntries: Array<{ bucket: string; path: string }> = []
   try {
@@ -361,7 +378,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
     assert.equal(legacy.data?.payment_status, 'not_required')
     const contact = await fetch(`${base}/api/contact`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         name: 'Local test family',
         email,
@@ -373,13 +390,13 @@ test('real application routes save specialist enquiries, waitlist entries and se
     assert.equal(contact.status, 200)
     const waitlist = await fetch(`${base}/api/waitlist`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ email, region: 'Local test' }),
     })
     assert.equal(waitlist.status, 200)
     const booking = await fetch(`${base}/api/booking`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         parentName: 'Local test family',
         email,
@@ -417,7 +434,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
     const payload = { ...completeApplication, email, submissionKey: randomUUID() }
     const prepared = await fetch(`${base}/api/apply/uploads`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         payload,
         files: ['photo', 'id_front', 'id_back', 'selfie'].map((key) => ({
@@ -438,7 +455,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
     }
     const finalized = await fetch(`${base}/api/apply`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ manifest: staged.manifest }),
     })
     assert.equal(finalized.status, 200)
