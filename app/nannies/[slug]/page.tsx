@@ -7,7 +7,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const nanny = await getNannyBySlug(slug)
   return {
-    title: nanny ? `${nanny.display_name} — VacayNanny` : 'Nanny — VacayNanny',
+    title: nanny ? `${nanny.display_name} | VacayNanny` : 'Nanny | VacayNanny',
     description: nanny?.bio || 'Vetted holiday nanny on VacayNanny.',
   }
 }

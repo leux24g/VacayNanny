@@ -6,6 +6,7 @@ import { useState } from 'react'
 import AdminAgreementEvidence from '@/components/AdminAgreementEvidence'
 import type { AgreementSummary } from '@/lib/nanny-onboarding'
 import MediaImage from '@/components/MediaImage'
+import DatePicker from '@/components/DatePicker'
 import { useRouter } from 'next/navigation'
 import {
   cogcLabel,
@@ -14,6 +15,7 @@ import {
   isPdf,
   isPreviewableImage,
   joinList,
+  multipleChildrenLabel,
   toNairobiDatetimeLocal,
   travelLabel,
 } from '@/lib/application-docs'
@@ -41,7 +43,7 @@ function Row({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="review-row">
       <span className="review-key">{label}</span>
-      <span className="review-val">{value || '—'}</span>
+      <span className="review-val">{value || 'Not provided'}</span>
     </div>
   )
 }
@@ -187,7 +189,7 @@ export default function AdminApplicationReview({
           </div>
           <div className="review-row" style={{ marginTop: 16 }}>
             <span className="review-key">National ID</span>
-            <span className="review-val">{application.national_id_number || '—'}</span>
+            <span className="review-val">{application.national_id_number || 'Not provided'}</span>
           </div>
           <Row label="KRA PIN" value={application.kra_pin} />
           <Row
@@ -236,7 +238,7 @@ export default function AdminApplicationReview({
                   {ref.email && (
                     <a
                       className="btn-ghost"
-                      href={`mailto:${ref.email}?subject=${encodeURIComponent(`VacayNanny reference — ${application.full_name}`)}`}
+                      href={`mailto:${ref.email}?subject=${encodeURIComponent(`VacayNanny reference: ${application.full_name}`)}`}
                     >
                       Email
                     </a>
@@ -269,7 +271,7 @@ export default function AdminApplicationReview({
             value={
               application.experience_years
                 ? `${application.experience_years} year(s)`
-                : '—'
+                : 'Not provided'
             }
           />
           <Row label="Age groups" value={joinList(application.age_groups)} />
@@ -285,7 +287,7 @@ export default function AdminApplicationReview({
             label="Hours"
             value={[application.earliest_start, application.latest_end]
               .filter(Boolean)
-              .join(' – ')}
+              .join(' to ')}
           />
           <Row label="Travel" value={travelLabel(application.willing_to_travel)} />
           <Row
@@ -293,7 +295,7 @@ export default function AdminApplicationReview({
             value={joinList(application.preferred_locations)}
           />
           <Row label="Pets" value={application.comfortable_pets} />
-          <Row label="Multiple children" value={application.comfortable_multiple} />
+          <Row label="Multiple children" value={multipleChildrenLabel(application.comfortable_multiple)} />
           {application.bio && (
             <p
               style={{
@@ -449,11 +451,12 @@ export default function AdminApplicationReview({
           )}
           <div className="field">
             <label htmlFor="interview-at">Date & time (EAT)</label>
-            <input
+            <DatePicker
               id="interview-at"
               type="datetime-local"
+              calendarLabel="interview date and time"
               value={interviewAt}
-              onChange={(e) => setInterviewAt(e.target.value)}
+              onValueChange={setInterviewAt}
             />
           </div>
           <div className="booking-actions">
@@ -509,10 +512,10 @@ export default function AdminApplicationReview({
             <h3>Consents</h3>
             <Row
               label="Background check"
-              value={application.consent_background ? 'Yes' : '—'}
+              value={application.consent_background ? 'Yes' : 'Not provided'}
             />
-            <Row label="Terms" value={application.consent_terms ? 'Yes' : '—'} />
-            <Row label="Accuracy" value={application.consent_accuracy ? 'Yes' : '—'} />
+            <Row label="Terms" value={application.consent_terms ? 'Yes' : 'Not provided'} />
+            <Row label="Accuracy" value={application.consent_accuracy ? 'Yes' : 'Not provided'} />
           </div>
         )}
       </aside>

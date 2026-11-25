@@ -5,7 +5,7 @@ import { destinationNames } from '@/lib/destinations'
 import NanniesBrowser from '@/components/NanniesBrowser'
 
 export const metadata = {
-  title: 'Find a Nanny — VacayNanny',
+  title: 'Find a Nanny | VacayNanny',
   description: 'Browse vetted holiday nannies across Kenya and beyond. Filter by infant care, first aid, and dates.',
 }
 

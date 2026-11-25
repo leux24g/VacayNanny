@@ -18,7 +18,7 @@ import type {
   WaitlistEntry,
 } from '@/lib/types'
 
-export const metadata = { title: 'Admin — VacayNanny' }
+export const metadata = { title: 'Admin | VacayNanny' }
 
 export default async function AdminPage() {
   const admin = await requireProfile(['admin'])

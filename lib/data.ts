@@ -225,7 +225,7 @@ export const FALLBACK_REVIEWS: Review[] = [
     parent_name: 'Christine O.',
     trip_label: 'Watamu, April 2025',
     rating: 5,
-    body: 'As a solo mum travelling with 3 kids, I was nervous. Amara was a godsend — professional, warm, and my kids adored her. The booking process was seamless and customer support was always available.',
+    body: 'As a solo mum travelling with 3 kids, I was nervous. Amara was a godsend. She was professional and warm, and my kids adored her. The booking process was seamless and customer support was always available.',
     avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&auto=format&fit=crop',
     created_at: '2025-04-04',
     is_published: true,

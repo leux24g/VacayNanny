@@ -138,10 +138,13 @@
   align-items: end;
 }
 .search label {
+  display:block;
   font-size: 0.72rem;
   font-weight: 600;
   color: var(--text-muted);
 }
+.search > div { min-width:0; }
+.search > div > label { margin-bottom:8px; }
 .search input,
 .search select {
   display: block;

@@ -110,7 +110,7 @@ export default function BookingThread({
           <p className="booking-thread-empty">Loading thread…</p>
         )}
         {!loading && messages.length === 0 && (
-          <p className="booking-thread-empty">No messages yet. Share logistics, allergies, or gate codes here — not on WhatsApp.</p>
+          <p className="booking-thread-empty">No messages yet. Share logistics, allergies and gate codes in this booking thread.</p>
         )}
         {messages.map(message => {
           const mine = message.sender_role === viewerRole

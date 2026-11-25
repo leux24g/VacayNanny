@@ -1,7 +1,7 @@
 import PageShell from '@/components/PageShell'
 import Link from 'next/link'
 
-export const metadata = { title: 'About — VacayNanny' }
+export const metadata = { title: 'About | VacayNanny' }
 
 export default function AboutPage() {
   return (
@@ -14,7 +14,7 @@ export default function AboutPage() {
       <div className="sec-inner legal-copy">
         <div className="form-card">
           <h3>Why we exist</h3>
-          <p>Parents travelling with children should not have to choose between safety and rest. We built VacayNanny so families can book ID-verified, reference-checked carers at the destinations they already love — Diani, Watamu, the Mara, Nairobi, and beyond.</p>
+          <p>Parents travelling with children should not have to choose between safety and rest. We built VacayNanny so families can book ID-verified, reference-checked carers at the destinations they already love, including Diani, Watamu, the Mara, Nairobi, and beyond.</p>
         </div>
         <div className="form-card">
           <h3>How nannies are vetted</h3>

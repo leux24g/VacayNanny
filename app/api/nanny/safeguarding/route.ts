@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const result = scoreSafeguardingQuiz(body.answers)
     if (!result.passed) {
       return NextResponse.json({
-        error: `Score ${result.score}/5 — you need ${SAFEGUARDING_PASS_MARK}/5 to pass. Review the modules and try again.`,
+        error: `Score ${result.score}/5: you need ${SAFEGUARDING_PASS_MARK}/5 to pass. Review the modules and try again.`,
         score: result.score,
         passed: false,
       }, { status: 422 })

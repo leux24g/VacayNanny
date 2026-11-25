@@ -144,8 +144,8 @@ export default function NannyProfileEditor({
         <span className={`consent-box${isActive ? ' checked' : ''}`}>{isActive ? '✓' : ''}</span>
         <span className="consent-text">
           {isActive
-            ? 'Live — families can find and book you.'
-            : 'Hidden — your profile is off the public list. Assigned bookings stay in your dashboard.'}
+            ? 'Your profile is live. Families can find and book you.'
+            : 'Your profile is hidden from the public list. Assigned bookings stay in your dashboard.'}
         </span>
       </label>
 

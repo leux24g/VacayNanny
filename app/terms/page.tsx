@@ -1,6 +1,6 @@
 import PageShell from '@/components/PageShell'
 
-export const metadata = { title: 'Terms of Service — VacayNanny' }
+export const metadata = { title: 'Terms of Service | VacayNanny' }
 
 export default function TermsPage() {
   return (

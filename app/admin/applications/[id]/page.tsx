@@ -9,7 +9,7 @@ import type { NannyApplication, NannyDocument, NannyReference } from '@/lib/type
 import { loadAgreementSummary, type AgreementSummary } from '@/lib/nanny-onboarding'
 import PortalLoadError from '@/components/PortalLoadError'
 
-export const metadata = { title: 'Review application — VacayNanny' }
+export const metadata = { title: 'Review application | VacayNanny' }
 
 export default async function AdminApplicationPage({
   params,

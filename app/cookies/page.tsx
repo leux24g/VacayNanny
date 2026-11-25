@@ -1,6 +1,6 @@
 import PageShell from '@/components/PageShell'
 
-export const metadata = { title: 'Cookie Policy — VacayNanny' }
+export const metadata = { title: 'Cookie Policy | VacayNanny' }
 
 export default function CookiesPage() {
   return (

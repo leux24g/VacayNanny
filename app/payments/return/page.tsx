@@ -5,7 +5,7 @@ import { reconcilePayment } from '@/lib/paystack'
 import { createServerClient } from '@/lib/supabase/service'
 
 export const metadata = {
-  title: 'Payment update — VacayNanny',
+  title: 'Payment update | VacayNanny',
   robots: { index: false, follow: false },
 }
 export default async function PaymentReturn({

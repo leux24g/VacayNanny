@@ -7,7 +7,7 @@ import { loadBooking } from '@/lib/booking-ops'
 import { validGuestToken } from '@/lib/guest-access'
 
 export const metadata = {
-  title: 'Your booking — VacayNanny',
+  title: 'Your booking | VacayNanny',
   robots: { index: false, follow: false },
   referrer: 'no-referrer' as const,
 }

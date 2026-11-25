@@ -64,7 +64,7 @@ function badge(label: string, color: string): string {
 function row(label: string, value: string, markup = false): string {
   return `<tr>
     <td style="padding:8px 0;border-bottom:1px solid rgba(23,50,77,0.05);font-size:13px;color:rgba(23,50,77,0.45);width:40%;vertical-align:top;">${label}</td>
-    <td style="padding:8px 0 8px 16px;border-bottom:1px solid rgba(23,50,77,0.05);font-size:13px;color:#17324D;vertical-align:top;">${markup ? value : escapeHtml(value || '—')}</td>
+    <td style="padding:8px 0 8px 16px;border-bottom:1px solid rgba(23,50,77,0.05);font-size:13px;color:#17324D;vertical-align:top;">${markup ? value : escapeHtml(value || 'Not provided')}</td>
   </tr>`
 }
 
@@ -135,7 +135,7 @@ export async function sendBookingEmails(data: {
     <h2 style="margin:0 0 4px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#17324D;">
       New Booking Request
     </h2>
-    <p style="margin:0 0 28px;font-size:13px;color:rgba(23,50,77,0.45);">Submitted just now — action required.</p>
+    <p style="margin:0 0 28px;font-size:13px;color:rgba(23,50,77,0.45);">Submitted just now: action required.</p>
 
     ${section(
       'Parent details',
@@ -165,7 +165,7 @@ export async function sendBookingEmails(data: {
     sendOrSkip({
       from: FROM_ADDRESS,
       to: data.email,
-      subject: `Your VacayNanny booking request — ${data.destination}`,
+      subject: `Your VacayNanny booking request: ${data.destination}`,
       html: parentHtml,
     }),
     sendOrSkip({
@@ -219,7 +219,7 @@ export async function sendApplicationEmails(data: {
     <h2 style="margin:0 0 4px;font-family:Georgia,serif;font-size:22px;font-weight:700;color:#17324D;">
       New Nanny Application
     </h2>
-    <p style="margin:0 0 28px;font-size:13px;color:rgba(23,50,77,0.45);">Submitted just now — review required.</p>
+    <p style="margin:0 0 28px;font-size:13px;color:rgba(23,50,77,0.45);">Submitted just now: review required.</p>
 
     ${section(
       'Personal details',
@@ -263,7 +263,7 @@ export async function sendApplicationEmails(data: {
     sendOrSkip({
       from: FROM_ADDRESS,
       to: ADMIN_EMAIL,
-      subject: `[Application] ${data.fullName} — ${data.county}`,
+      subject: `[Application] ${data.fullName}: ${data.county}`,
       html: adminHtml,
     }),
   ])
@@ -299,7 +299,7 @@ export async function sendApplicationStatusEmail(data: {
     to: data.email,
     replyTo: ADMIN_EMAIL,
     subject: approved
-      ? 'Your VacayNanny application is approved — agreement to sign'
+      ? 'Your VacayNanny application is approved: agreement to sign'
       : 'Update on your VacayNanny application',
     ...content,
     attachments,
@@ -350,7 +350,7 @@ export async function sendInterviewInviteEmail(data: {
   const result = await sendOrSkip({
     from: FROM_ADDRESS,
     to: data.email,
-    subject: `VacayNanny interview — ${data.whenLabel}`,
+    subject: `VacayNanny interview: ${data.whenLabel}`,
     html,
   })
   if (result.error) console.error('Interview invite email error:', result.error)
@@ -419,7 +419,7 @@ function adminNannyWhatsAppCta(ctx: BookingMailContext): string {
     checkOut: ctx.checkOut,
   })
   if (!href) {
-    return `<p style="margin:0 0 16px;font-size:13px;color:rgba(23,50,77,0.45);">No nanny phone on file — email only. ${ctx.nannyEmail ? `Emailed ${ctx.nannyEmail}.` : 'No nanny email either.'}</p>`
+    return `<p style="margin:0 0 16px;font-size:13px;color:rgba(23,50,77,0.45);">No nanny phone is on file. Use email only. ${ctx.nannyEmail ? `Emailed ${ctx.nannyEmail}.` : 'No nanny email either.'}</p>`
   }
   return `<p style="margin:0 0 16px;"><a href="${href}" style="display:inline-block;background:#25D366;color:#17324D;border-radius:50px;padding:12px 24px;font-size:14px;font-weight:600;text-decoration:none;">WhatsApp ${ctx.nannyName || 'nanny'} →</a></p>`
 }
@@ -445,12 +445,12 @@ function eventCopy(
   switch (event) {
     case 'matched':
       return {
-        parentSubject: `We've received your request — ${ctx.nannyName || 'a nanny'} proposed for ${ctx.destination}`,
+        parentSubject: `We've received your request: ${ctx.nannyName || 'a nanny'} proposed for ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Request received</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Hi ${ctx.parentName}, we've received your booking request and proposed ${ctx.nannyName || 'a VacayNanny'} for your trip. Open your account to confirm the match.</p>
           ${details}
           <p><a href="${familyLink}" style="color:#E8714A;">Confirm in your account →</a></p>`,
-        nannySubject: `New placement proposed — ${ctx.destination}`,
+        nannySubject: `New placement proposed: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">You've been assigned</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Hi ${ctx.nannyName || 'there'}, please accept or decline this placement in your dashboard.</p>
           ${details}
@@ -462,7 +462,7 @@ function eventCopy(
       }
     case 'nanny_accepted':
       return {
-        parentSubject: `${ctx.nannyName || 'Your nanny'} accepted — confirm to lock the dates`,
+        parentSubject: `${ctx.nannyName || 'Your nanny'} accepted: confirm to lock the dates`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Nanny accepted</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">${ctx.nannyName || 'Your nanny'} accepted the placement. Confirm in your account to lock it in.</p>
           ${details}
@@ -478,21 +478,21 @@ function eventCopy(
         parentSubject: `We're rematching your ${ctx.destination} booking`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Rematching</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">The proposed nanny isn't available. Our team is matching someone else and will update you shortly.</p>${details}`,
-        nannySubject: `Assignment declined — ${ctx.destination}`,
+        nannySubject: `Assignment declined: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Declined</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">We recorded that you declined this placement.</p>${details}`,
         adminSubject: `[Declined] Rematch needed for ${ctx.parentName}`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Nanny declined</h2>${details}<p><a href="${adminLink}" style="color:#E8714A;">Rematch in admin →</a></p>`,
-        extraSubject: `Assignment declined — ${ctx.destination}`,
+        extraSubject: `Assignment declined: ${ctx.destination}`,
         extraBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Declined</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">We recorded that you declined this placement.</p>${details}`,
       }
     case 'parent_confirmed':
       return {
-        parentSubject: `You confirmed ${ctx.nannyName || 'your nanny'} — waiting on acceptance`,
+        parentSubject: `You confirmed ${ctx.nannyName || 'your nanny'}: waiting on acceptance`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">You confirmed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">We'll lock the booking as soon as ${ctx.nannyName || 'your nanny'} accepts.</p>${details}`,
-        nannySubject: `Family confirmed — please accept ${ctx.destination}`,
+        nannySubject: `Family confirmed: please accept ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Family confirmed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">${ctx.parentName} confirmed this match. Accept in your dashboard to lock it in.</p>
           ${details}${nannyActionCta(nannyLink)}`,
@@ -501,11 +501,11 @@ function eventCopy(
       }
     case 'confirmed':
       return {
-        parentSubject: `Booking confirmed — ${ctx.destination}`,
+        parentSubject: `Booking confirmed: ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">You're booked</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">${ctx.nannyName || 'Your nanny'} is confirmed for your trip.</p>${details}
           <p><a href="${familyLink}" style="color:#E8714A;">View booking →</a></p>`,
-        nannySubject: `Placement confirmed — ${ctx.destination}`,
+        nannySubject: `Placement confirmed: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Confirmed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">This placement is locked in. See dates on your dashboard calendar.</p>${details}`,
         adminSubject: `[Confirmed] ${ctx.parentName} × ${ctx.nannyName || 'nanny'}`,
@@ -513,24 +513,24 @@ function eventCopy(
       }
     case 'rescheduled':
       return {
-        parentSubject: `Dates updated — ${ctx.destination}`,
+        parentSubject: `Dates updated: ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Rescheduled</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Your booking dates were updated.</p>${details}`,
-        nannySubject: `Dates changed — ${ctx.destination}`,
+        nannySubject: `Dates changed: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Dates changed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Please check the new dates on your calendar.</p>${details}`,
-        adminSubject: `[Rescheduled] ${ctx.parentName} — ${ctx.checkIn} → ${ctx.checkOut}`,
+        adminSubject: `[Rescheduled] ${ctx.parentName}: ${ctx.checkIn} → ${ctx.checkOut}`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Rescheduled</h2>${details}`,
       }
     case 'cancelled':
       return {
-        parentSubject: `Booking cancelled — ${ctx.destination}`,
+        parentSubject: `Booking cancelled: ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Cancelled</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Your booking was cancelled. Refund: ${ctx.refundPercent ?? 0}% of the booking fee per our policy.</p>${details}`,
-        nannySubject: `Placement cancelled — ${ctx.destination}`,
+        nannySubject: `Placement cancelled: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Cancelled</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">This placement is no longer on your calendar.</p>${details}`,
-        adminSubject: `[Cancelled] ${ctx.parentName} — ${ctx.refundPercent ?? 0}% refund`,
+        adminSubject: `[Cancelled] ${ctx.parentName}: ${ctx.refundPercent ?? 0}% refund`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Cancelled</h2>${details}`,
       }
     case 'replacement_started':
@@ -541,7 +541,7 @@ function eventCopy(
         nannySubject: `You've been taken off ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Replacement started</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">This placement was released from your calendar.</p>${details}`,
-        adminSubject: `[Replacement SLA] ${ctx.parentName} — 2 hours`,
+        adminSubject: `[Replacement SLA] ${ctx.parentName}: 2 hours`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Replacement clock started</h2>
           <p style="color:rgba(23,50,77,0.65);">Assign a new nanny within 2 hours or refund the booking fee.</p>${details}
           <p><a href="${adminLink}" style="color:#E8714A;">Assign replacement →</a></p>`,
@@ -551,48 +551,48 @@ function eventCopy(
       }
     case 'replacement_assigned':
       return {
-        parentSubject: `Replacement nanny proposed — ${ctx.nannyName || 'VacayNanny'}`,
+        parentSubject: `Replacement nanny proposed: ${ctx.nannyName || 'VacayNanny'}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Replacement proposed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Please confirm ${ctx.nannyName || 'your new nanny'} in your account.</p>
           ${details}<p><a href="${familyLink}" style="color:#E8714A;">Confirm replacement →</a></p>`,
-        nannySubject: `Replacement placement — ${ctx.destination}`,
+        nannySubject: `Replacement placement: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Replacement assignment</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Please accept or decline this coverage placement.</p>
           ${details}${nannyActionCta(nannyLink)}`,
         adminSubject: `[Ping replacement] ${ctx.nannyName || 'nanny'} → ${ctx.parentName}`,
-        adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Replacement assigned — WhatsApp them</h2>
+        adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Replacement assigned: WhatsApp them</h2>
           ${adminNannyWhatsAppCta(ctx)}${details}<p><a href="${adminLink}" style="color:#E8714A;">Open admin →</a></p>`,
       }
     case 'replacement_refunded':
       return {
-        parentSubject: `Booking fee refunded — ${ctx.destination}`,
+        parentSubject: `Booking fee refunded: ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Guarantee applied</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">We couldn't place a replacement nanny in time. Your booking fee is refunded in full.</p>${details}`,
-        nannySubject: `Placement closed — ${ctx.destination}`,
+        nannySubject: `Placement closed: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Closed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">This placement was closed under the replacement guarantee.</p>${details}`,
-        adminSubject: `[Guarantee refund] ${ctx.parentName} — 100%`,
+        adminSubject: `[Guarantee refund] ${ctx.parentName}: 100%`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Replacement guarantee refunded</h2>${details}`,
       }
     case 'in_progress':
       return {
-        parentSubject: `Your nanny placement has started — ${ctx.destination}`,
+        parentSubject: `Your nanny placement has started: ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Placement started</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">${ctx.nannyName || 'Your nanny'} is now on assignment. Message them in your <a href="${familyLink}" style="color:#E8714A;">booking thread</a> if you need anything, or request a replacement from your account.</p>${details}`,
-        nannySubject: `Placement in progress — ${ctx.destination}`,
+        nannySubject: `Placement in progress: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">In progress</h2>${details}`,
-        adminSubject: `[In progress] ${ctx.parentName} — ${ctx.destination}`,
+        adminSubject: `[In progress] ${ctx.parentName}: ${ctx.destination}`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">In progress</h2>${details}`,
       }
     case 'completed':
       return {
-        parentSubject: `Thanks for booking VacayNanny — ${ctx.destination}`,
+        parentSubject: `Thanks for booking VacayNanny: ${ctx.destination}`,
         parentBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Completed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">We hope the placement went smoothly. You can leave a review and keep using the booking thread from <a href="${familyLink}" style="color:#E8714A;">your account</a>.</p>${details}`,
-        nannySubject: `Placement completed — ${ctx.destination}`,
+        nannySubject: `Placement completed: ${ctx.destination}`,
         nannyBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">Completed</h2>
           <p style="color:rgba(23,50,77,0.65);line-height:1.6;">This placement is complete. Payouts are processed by VacayNanny after completed bookings.</p>${details}`,
-        adminSubject: `[Completed] ${ctx.parentName} — ${ctx.destination}`,
+        adminSubject: `[Completed] ${ctx.parentName}: ${ctx.destination}`,
         adminBody: `<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:22px;color:#17324D;">Completed</h2>${details}`,
       }
     default: {
@@ -664,7 +664,7 @@ export async function notifyBookingEvent(
     )
   } else if (NANNY_ACTION_EVENTS.has(event)) {
     console.warn(
-      `No nanny email for ${event} — ${ctx.nannyName || 'unassigned'} / ${ctx.destination}`,
+      `No nanny email for ${event}: ${ctx.nannyName || 'unassigned'} / ${ctx.destination}`,
     )
   }
   if (
@@ -710,7 +710,7 @@ export async function sendBookingMessageEmail(data: {
   inboxPath: '/account' | '/nanny' | '/admin'
 }) {
   const html = htmlWrapper(`
-    <h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">New message — ${escapeHtml(data.destination)}</h2>
+    <h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;color:#17324D;">New message: ${escapeHtml(data.destination)}</h2>
     <p style="color:rgba(23,50,77,0.65);line-height:1.6;">Hi ${escapeHtml(data.recipientName)}, ${data.senderLabel} wrote in your VacayNanny booking thread:</p>
     <p style="margin:16px 0;padding:16px;background:rgba(23,50,77,0.05);border-radius:12px;color:#17324D;line-height:1.6;">${escapeHtml(data.preview)}</p>
     <p><a href="${siteUrl(data.inboxPath)}" style="color:#E8714A;">Open the thread →</a></p>
@@ -718,7 +718,7 @@ export async function sendBookingMessageEmail(data: {
   const result = await sendOrSkip({
     from: FROM_ADDRESS,
     to: data.to,
-    subject: `New booking message — ${data.destination}`,
+    subject: `New booking message: ${data.destination}`,
     html,
   })
   if (result.error) console.error('Booking message email failed:', result.error)

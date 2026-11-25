@@ -1,5 +1,8 @@
 'use client'
 
+import DatePicker from './DatePicker'
+import { todayInNairobi } from '@/lib/booking-validation'
+
 import {clientFetch} from '@/lib/client-request'
 
 import { useState } from 'react'
@@ -58,7 +61,7 @@ function formatTripRange(checkIn: string, checkOut: string) {
     month: 'short',
     year: 'numeric',
   })
-  return `${startLabel} – ${endLabel}`
+  return `${startLabel} to ${endLabel}`
 }
 
 function tripNights(checkIn: string, checkOut: string) {
@@ -192,7 +195,7 @@ export default function FamilyBookings({
               <div>
                 <dt>Estimate</dt>
                 <dd className="trip-price">
-                  {b.total_amount_kes != null ? formatKes(b.total_amount_kes) : '—'}
+                  {b.total_amount_kes != null ? formatKes(b.total_amount_kes) : 'Not provided'}
                 </dd>
               </div>
             </dl>
@@ -286,25 +289,25 @@ export default function FamilyBookings({
               >
                 <div className="mrow">
                   <div className="mfield">
-                    <label>Check-in</label>
-                    <input
-                      type="date"
+                    <label htmlFor={`reschedule-${b.id}-start`}>Check-in</label>
+                    <DatePicker
+                      id={`reschedule-${b.id}-start`}
+                      calendarLabel="new check-in date"
+                      min={todayInNairobi()}
                       required
                       value={dates.checkIn}
-                      onChange={(e) =>
-                        setDates((d) => ({ ...d, checkIn: e.target.value }))
-                      }
+                      onValueChange={checkIn => setDates(current => ({...current, checkIn, checkOut: current.checkOut < checkIn ? '' : current.checkOut}))}
                     />
                   </div>
                   <div className="mfield">
-                    <label>Check-out</label>
-                    <input
-                      type="date"
+                    <label htmlFor={`reschedule-${b.id}-end`}>Check-out</label>
+                    <DatePicker
+                      id={`reschedule-${b.id}-end`}
+                      calendarLabel="new check-out date"
+                      min={dates.checkIn || todayInNairobi()}
                       required
                       value={dates.checkOut}
-                      onChange={(e) =>
-                        setDates((d) => ({ ...d, checkOut: e.target.value }))
-                      }
+                      onValueChange={checkOut => setDates(current => ({...current, checkOut}))}
                     />
                   </div>
                 </div>
@@ -324,7 +327,7 @@ export default function FamilyBookings({
                 <p className={`review-mod-status${b.review.is_published ? ' live' : ''}`}>
                   {b.review.is_published
                     ? 'Live on the nanny profile'
-                    : 'Submitted — waiting for VacayNanny to publish'}
+                    : 'Submitted: waiting for VacayNanny to publish'}
                 </p>
               </div>
             )}

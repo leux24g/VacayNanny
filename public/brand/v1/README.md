@@ -1,21 +1,21 @@
-# VacayNanny — Sunshine & Care
+# VacayNanny: Sunshine & Care
 
 The coral sun represents holidays and warmth. Two navy figures represent a caregiver and child. Their shared cradle forms a soft V, connecting the symbol to VacayNanny. The abstract figures are deliberately inclusive and have no facial or clothing details.
 
 ## Files
 
-- `vacaynanny-logo.svg` — primary horizontal logo, transparent, with outlined lettering.
-- `vacaynanny-logo.png` — transparent primary logo, 2400 pixels wide.
-- `vacaynanny-logo-reversed.svg` / `.png` — cream lettering and figures for navy or other dark backgrounds; the sun stays coral.
-- `vacaynanny-logo-monochrome.svg` / `.png` — one-colour navy logo for simple printing.
-- `vacaynanny-mark.svg` / `.png` — standalone symbol, with a 1024 × 1024 transparent PNG.
-- `vacaynanny-mark-reversed.svg` / `vacaynanny-mark-monochrome.svg` — alternate symbol colours.
-- `favicon.svg` — compact symbol on a cream tile, suitable for light and dark browser tabs. Tiny rays are omitted to keep the small icon clear.
-- `favicon.ico` — embedded 16, 32, 48 and 64 pixel versions.
-- `favicon-16.png`, `favicon-32.png`, `favicon-48.png`, `favicon-64.png` — individual favicon sizes.
-- `apple-touch-icon.png` — opaque 180 × 180 home-screen icon.
-- `app-icon-192.png`, `app-icon-512.png` — opaque square app/profile icons.
-- `brand-preview.png` — presentation showing the logo, symbol and actual favicon sizes.
+- `vacaynanny-logo.svg`: primary horizontal logo, transparent, with outlined lettering.
+- `vacaynanny-logo.png`: transparent primary logo, 2400 pixels wide.
+- `vacaynanny-logo-reversed.svg` / `.png`: cream lettering and figures for navy or other dark backgrounds; the sun stays coral.
+- `vacaynanny-logo-monochrome.svg` / `.png`: one-colour navy logo for simple printing.
+- `vacaynanny-mark.svg` / `.png`: standalone symbol, with a 1024 × 1024 transparent PNG.
+- `vacaynanny-mark-reversed.svg` / `vacaynanny-mark-monochrome.svg`: alternate symbol colours.
+- `favicon.svg`: compact symbol on a cream tile, suitable for light and dark browser tabs. Tiny rays are omitted to keep the small icon clear.
+- `favicon.ico`: embedded 16, 32, 48 and 64 pixel versions.
+- `favicon-16.png`, `favicon-32.png`, `favicon-48.png`, `favicon-64.png`: individual favicon sizes.
+- `apple-touch-icon.png`: opaque 180 × 180 home-screen icon.
+- `app-icon-192.png`, `app-icon-512.png`: opaque square app/profile icons.
+- `brand-preview.png`: presentation showing the logo, symbol and actual favicon sizes.
 
 ## Use
 

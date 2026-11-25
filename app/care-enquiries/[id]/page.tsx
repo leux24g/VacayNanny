@@ -6,7 +6,7 @@ import { createServerClient } from '@/lib/supabase/service'
 import { validGuestToken } from '@/lib/guest-access'
 import { familyCareEnquiry, type CareEnquiry } from '@/lib/care-enquiries'
 export const metadata = {
-  title: 'Your specialist care enquiry — VacayNanny',
+  title: 'Your specialist care enquiry | VacayNanny',
   robots: { index: false, follow: false },
   referrer: 'no-referrer' as const,
 }

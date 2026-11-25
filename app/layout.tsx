@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import { SITE_URL } from '@/lib/constants'
 import { SiteCatalogProvider } from '@/components/SiteCatalogProvider'
 import { getSiteCatalog } from '@/lib/catalog-data'
+import '@daypicker/react/style.css'
 import './globals.css'
 import './auth.css'
 import './responsive.css'
@@ -36,11 +37,11 @@ const playfair = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'VacayNanny — A holiday that feels like a holiday',
+  title: 'VacayNanny | A holiday that feels like a holiday',
   description:
     'Professional, vetted nannies for your family vacations in Kenya and beyond.',
   openGraph: {
-    title: 'VacayNanny — A holiday that feels like a holiday',
+    title: 'VacayNanny | A holiday that feels like a holiday',
     description: 'Thoughtful childcare for your family’s time away.',
     siteName: 'VacayNanny',
     type: 'website',
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'VacayNanny — A holiday that feels like a holiday',
+    title: 'VacayNanny | A holiday that feels like a holiday',
     images: ['/images/holiday-coast.jpg'],
   },
 }

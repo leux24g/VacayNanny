@@ -2,7 +2,7 @@ import PageShell from '@/components/PageShell'
 import agreement from '@/lib/nanny-agreement-content.json'
 import { NANNY_AGREEMENT_PDF, NANNY_AGREEMENT_VERSION } from '@/lib/nanny-agreement-rules'
 
-export const metadata = { title: 'Nanny participation agreement — VacayNanny' }
+export const metadata = { title: 'Nanny participation agreement | VacayNanny' }
 
 export default function NannyAgreementPage() {
   return <PageShell><main className="agreement-page sec-inner">

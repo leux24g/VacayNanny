@@ -187,7 +187,7 @@ export default function AdminInbox({
                   className="btn-coral"
                   href={mailto(
                     row.email,
-                    `VacayNanny — ${row.region || 'expansion'} waitlist`,
+                    `VacayNanny: ${row.region || 'expansion'} waitlist`,
                   )}
                 >
                   Email

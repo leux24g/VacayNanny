@@ -4,9 +4,13 @@ import {clientFetch} from '@/lib/client-request'
 
 import { createSupabaseBrowser } from '@/lib/supabase/browser'
 import { validateApplication } from '@/lib/application-validation'
+import { multipleChildrenLabel } from '@/lib/application-docs'
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import BrandLogo from '@/components/BrandLogo'
+import DatePicker from '@/components/DatePicker'
+import { birthDateLimit } from '@/lib/date-fields'
+import { todayInNairobi } from '@/lib/booking-validation'
 import ImageSlideshow from '@/components/ImageSlideshow'
 import { applicationSlides } from '@/lib/marketing-slides'
 import CareIcon from '@/components/CareIcon'
@@ -813,12 +817,13 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                         <label htmlFor="app-dob">
                           Date of Birth <span className="req">*</span>
                         </label>
-                        <input
+                        <DatePicker
                           id="app-dob"
                           autoComplete="bday"
-                          type="date"
+                          calendarLabel="date of birth"
+                          max={birthDateLimit()}
                           value={dob}
-                          onChange={(e) => setDob(e.target.value)}
+                          onValueChange={setDob}
                         />
                         <span className="field-hint">Must be 21 years or older.</span>
                       </div>
@@ -1169,7 +1174,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                         onClick={() => setCogcStatus('yes')}
                       />
                       <RadioCard
-                        label="Mine is expired — I'm in the process of renewing"
+                        label="Mine is expired and I am renewing it"
                         selected={cogcStatus === 'renewing'}
                         onClick={() => setCogcStatus('renewing')}
                       />
@@ -1182,10 +1187,11 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     {cogcStatus === 'yes' && (
                       <div className="field" style={{ marginTop: '16px' }}>
                         <label htmlFor="application-detail-4">CoGC Issue Date</label>
-                        <input id="application-detail-4"
-                          type="date"
+                        <DatePicker id="application-detail-4"
+                          calendarLabel="CoGC issue date"
+                          max={todayInNairobi()}
                           value={cogcDate}
-                          onChange={(e) => setCogcDate(e.target.value)}
+                          onValueChange={setCogcDate}
                         />
                       </div>
                     )}
@@ -1202,7 +1208,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     {cogcStatus === 'no' && (
                       <div className="info-note" style={{ marginTop: '16px' }}>
                         <span className="icon">ℹ️</span>
-                        You can still apply — however you must obtain your CoGC before
+                        You can still apply, but you must obtain your CoGC before
                         your first placement. We recommend applying via eCitizen
                         immediately. Cost is approximately KES 1,050.
                       </div>
@@ -1239,7 +1245,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     <div className="step-num">Step 4 of 8</div>
                     <h2 tabIndex={-1}>Experience & Qualifications</h2>
                     <p>
-                      Your experience shapes which tier you qualify for. Be accurate — we
+                      Your experience shapes which tier you qualify for. Be accurate, as we
                       verify with your references.
                     </p>
                   </div>
@@ -1451,7 +1457,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                         onClick={() => setSwimming('basic')}
                       />
                       <RadioCard
-                        label="Strong swimmer — comfortable supervising children in pools/ocean"
+                        label="Strong swimmer, comfortable supervising children in pools or the ocean"
                         selected={swimming === 'strong'}
                         onClick={() => setSwimming('strong')}
                       />
@@ -1472,12 +1478,12 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                         onClick={() => setCooking('basic')}
                       />
                       <RadioCard
-                        label="Good cook — can prepare balanced children's meals"
+                        label="Good cook, able to prepare balanced children's meals"
                         selected={cooking === 'good'}
                         onClick={() => setCooking('good')}
                       />
                       <RadioCard
-                        label="Experienced — including dietary restrictions &amp; allergies"
+                        label="Experienced with dietary restrictions and allergies"
                         selected={cooking === 'experienced'}
                         onClick={() => setCooking('experienced')}
                       />
@@ -1545,7 +1551,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                         onClick={() => setSpecialNeeds('some')}
                       />
                       <RadioCard
-                        label="Trained — worked with children with disabilities"
+                        label="Trained and experienced in caring for children with disabilities"
                         selected={specialNeeds === 'trained'}
                         onClick={() => setSpecialNeeds('trained')}
                       />
@@ -1878,17 +1884,17 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     </h3>
                     <div className="radio-cards">
                       <RadioCard
-                        label="Local only — within my county"
+                        label="Local only, within my county"
                         selected={willingTravel === 'local'}
                         onClick={() => setWillingTravel('local')}
                       />
                       <RadioCard
-                        label="Countrywide — anywhere in Kenya"
+                        label="Countrywide, anywhere in Kenya"
                         selected={willingTravel === 'kenya'}
                         onClick={() => setWillingTravel('kenya')}
                       />
                       <RadioCard
-                        label="International — willing to travel abroad with families"
+                        label="International, willing to travel abroad with families"
                         selected={willingTravel === 'international'}
                         onClick={() => setWillingTravel('international')}
                       />
@@ -1981,7 +1987,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                             >
                               {comfortMultiple === opt ? '✓' : ''}
                             </div>
-                            <span className="check-label">{opt}</span>
+                            <span className="check-label">{multipleChildrenLabel(opt)}</span>
                           </div>
                         ))}
                       </div>
@@ -2057,7 +2063,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     </div>
                     <div className="review-row">
                       <span className="review-key">Languages</span>
-                      <span className="review-val">{languages.join(', ') || '—'}</span>
+                      <span className="review-val">{languages.join(', ') || 'Not provided'}</span>
                     </div>
                   </div>
 
@@ -2065,11 +2071,11 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     <h4>Identity & Background</h4>
                     <div className="review-row">
                       <span className="review-key">National ID</span>
-                      <span className="review-val">{idNumber || '—'}</span>
+                      <span className="review-val">{idNumber || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">KRA PIN</span>
-                      <span className="review-val">{kraPin || '—'}</span>
+                      <span className="review-val">{kraPin || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Police Clearance</span>
@@ -2088,20 +2094,20 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     <div className="review-row">
                       <span className="review-key">Years Experience</span>
                       <span className="review-val">
-                        {expYears ? `${expYears} year(s)` : '—'}
+                        {expYears ? `${expYears} year(s)` : 'Not provided'}
                       </span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Age Groups</span>
-                      <span className="review-val">{ageGroups.join(', ') || '—'}</span>
+                      <span className="review-val">{ageGroups.join(', ') || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Services</span>
-                      <span className="review-val">{services.join(', ') || '—'}</span>
+                      <span className="review-val">{services.join(', ') || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Swimming</span>
-                      <span className="review-val">{swimming || '—'}</span>
+                      <span className="review-val">{swimming || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Certifications</span>
@@ -2143,17 +2149,17 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
                     <h4>Availability</h4>
                     <div className="review-row">
                       <span className="review-key">Available Days</span>
-                      <span className="review-val">{availDays.join(', ') || '—'}</span>
+                      <span className="review-val">{availDays.join(', ') || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Working Hours</span>
                       <span className="review-val">
-                        {earliestStart || '—'} – {latestEnd || '—'}
+                        {[earliestStart, latestEnd].filter(Boolean).join(' to ') || 'Not provided'}
                       </span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Travel Willingness</span>
-                      <span className="review-val">{willingTravel || '—'}</span>
+                      <span className="review-val">{willingTravel || 'Not provided'}</span>
                     </div>
                     <div className="review-row">
                       <span className="review-key">Preferred Locations</span>

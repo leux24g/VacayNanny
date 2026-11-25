@@ -401,10 +401,10 @@ export function matchRequestFromBooking(
 export function matchLabel(result: MatchResult): string {
   const tier = publicTier(result.nanny)
   if (!result.eligible) {
-    return `${result.nanny.display_name} (${tier}) — ${result.blockers[0] || 'not a match'}`
+    return `${result.nanny.display_name} (${tier}): ${result.blockers[0] || 'not a match'}`
   }
   const extra = result.reasons.slice(0, 3).join(' · ')
   return extra
-    ? `${result.nanny.display_name} (${tier}) — ${extra}`
+    ? `${result.nanny.display_name} (${tier}): ${extra}`
     : `${result.nanny.display_name} (${tier})`
 }

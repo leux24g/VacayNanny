@@ -19,7 +19,7 @@ import { ownNannyApplication, loadAgreementSummary, type AgreementSummary } from
 import type { DocumentKind } from '@/lib/types'
 import portal from '@/components/Portal.module.css'
 
-export const metadata = { title: 'Nanny portal — VacayNanny' }
+export const metadata = { title: 'Nanny portal | VacayNanny' }
 
 export default async function NannyDash() {
   const profile = await requireProfile(['parent', 'nanny', 'admin'])

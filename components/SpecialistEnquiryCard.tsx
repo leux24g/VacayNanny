@@ -3,6 +3,7 @@
 import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import DatePicker from './DatePicker'
 import type { CareEnquiry } from '@/lib/care-enquiries'
 export default function SpecialistEnquiryCard({
   enquiry,
@@ -16,6 +17,8 @@ export default function SpecialistEnquiryCard({
   const router = useRouter(),
     [busy, setBusy] = useState(false),
     [error, setError] = useState('')
+  const [serviceStart,setServiceStart] = useState(enquiry.service_start || '')
+  const [serviceEnd,setServiceEnd] = useState(enquiry.service_end || '')
   async function save(form: HTMLFormElement, status: string) {
     setBusy(true)
     setError('')
@@ -77,7 +80,7 @@ export default function SpecialistEnquiryCard({
       <p>
         {enquiry.assigned_to
           ? 'Assigned to an operator'
-          : 'Unassigned — saving the assessment assigns it to you'}
+          : 'Unassigned: saving the assessment assigns it to you'}
       </p>
       <fieldset disabled={busy || locked} style={{ border: 0, padding: 0, minWidth: 0 }}>
         <label className="field">
@@ -119,22 +122,27 @@ export default function SpecialistEnquiryCard({
           />
         </label>
         <div className="field-row">
-          <label className="field">
-            Service starts
-            <input
+          <div className="field">
+            <label htmlFor={`care-${enquiry.id}-start`}>Service starts</label>
+            <DatePicker
+              id={`care-${enquiry.id}-start`}
+              calendarLabel="service start date"
               name="service_start"
-              type="date"
-              defaultValue={enquiry.service_start || ''}
+              value={serviceStart}
+              onValueChange={next => {setServiceStart(next);if(serviceEnd < next)setServiceEnd('')}}
             />
-          </label>
-          <label className="field">
-            Service ends
-            <input
+          </div>
+          <div className="field">
+            <label htmlFor={`care-${enquiry.id}-end`}>Service ends</label>
+            <DatePicker
+              id={`care-${enquiry.id}-end`}
+              calendarLabel="service end date"
               name="service_end"
-              type="date"
-              defaultValue={enquiry.service_end || ''}
+              min={serviceStart || undefined}
+              value={serviceEnd}
+              onValueChange={setServiceEnd}
             />
-          </label>
+          </div>
         </div>
         <div className="field-row">
           <label className="field">
@@ -147,14 +155,15 @@ export default function SpecialistEnquiryCard({
               defaultValue={enquiry.quote_amount_kes || ''}
             />
           </label>
-          <label className="field">
-            Quote valid through (EAT)
-            <input
+          <div className="field">
+            <label htmlFor={`care-${enquiry.id}-expiry`}>Quote valid through (EAT)</label>
+            <DatePicker
+              id={`care-${enquiry.id}-expiry`}
+              calendarLabel="quote expiry date"
               name="quote_expires_at"
-              type="date"
               defaultValue={enquiry.quote_expires_at?.slice(0, 10) || ''}
             />
-          </label>
+          </div>
         </div>
         <div className="booking-actions">
           <button className="btn-ghost" type="submit">

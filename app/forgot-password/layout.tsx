@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Reset password — VacayNanny',
+  title: 'Reset password | VacayNanny',
 }
 
 export default function ForgotPasswordLayout({ children }: { children: React.ReactNode }) {

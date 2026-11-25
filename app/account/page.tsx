@@ -15,7 +15,7 @@ import AccountProfileForm from '@/components/AccountProfileForm'
 import MediaImage from '@/components/MediaImage'
 import { advanceDueBookings } from '@/lib/booking-ops'
 
-export const metadata = { title: 'Client portal — VacayNanny' }
+export const metadata = { title: 'Client portal | VacayNanny' }
 
 function escapeIlikeExact(value: string) {
   return value.replace(/[\\%_]/g, (char) => `\\${char}`)

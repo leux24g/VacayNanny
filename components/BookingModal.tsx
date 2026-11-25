@@ -4,6 +4,8 @@ import {clientFetch} from '@/lib/client-request'
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import DatePicker from './DatePicker'
+import { todayInNairobi } from '@/lib/booking-validation'
 import { createSupabaseBrowser } from '@/lib/supabase/browser'
 import { parseCareType, quoteBooking, quoteSummary } from '@/lib/booking'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
@@ -341,25 +343,26 @@ export default function BookingModal({
               <div className="mrow">
                 <div className="mfield">
                   <label htmlFor="booking-checkIn">Check-in Date</label>
-                  <input
+                  <DatePicker
                     id="booking-checkIn"
                     name="checkIn"
-                    type="date"
+                    calendarLabel="check-in date"
+                    min={todayInNairobi()}
                     required
                     value={form.checkIn}
-                    onChange={change}
+                    onValueChange={checkIn => setForm(current => ({...current, checkIn, checkOut: current.checkOut < checkIn ? '' : current.checkOut}))}
                   />
                 </div>
                 <div className="mfield">
                   <label htmlFor="booking-checkOut">Check-out Date</label>
-                  <input
+                  <DatePicker
                     id="booking-checkOut"
                     name="checkOut"
-                    type="date"
+                    calendarLabel="check-out date"
                     required
-                    min={form.checkIn || undefined}
+                    min={form.checkIn || todayInNairobi()}
                     value={form.checkOut}
-                    onChange={change}
+                    onValueChange={checkOut => setForm(current => ({...current, checkOut}))}
                   />
                 </div>
               </div>

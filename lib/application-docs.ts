@@ -71,7 +71,12 @@ export function sortDocuments(docs: NannyDocument[]): NannyDocument[] {
 }
 
 export function joinList(values?: string[] | null): string {
-  return (values || []).filter(Boolean).join(', ') || '—'
+  return (values || []).filter(Boolean).join(', ') || 'Not provided'
+}
+
+/** Keep saved application choices intact while using plain punctuation in labels. */
+export function multipleChildrenLabel(value?: string | null): string {
+  return value?.replace(/^Yes — /, 'Yes, ') || 'Not provided'
 }
 
 export function cogcLabel(status?: string | null): string {
@@ -80,7 +85,7 @@ export function cogcLabel(status?: string | null): string {
   if (s === 'renewing') return 'Renewing'
   if (s === 'applied' || s === 'pending') return 'Applied / pending'
   if (s === 'no' || s === 'none') return 'Not obtained'
-  return status || '—'
+  return status || 'Not provided'
 }
 
 export function travelLabel(value?: string | null): string {
@@ -94,7 +99,7 @@ export function travelLabel(value?: string | null): string {
     case 'local':
       return 'Local only'
     default:
-      return value || '—'
+      return value || 'Not provided'
   }
 }
 

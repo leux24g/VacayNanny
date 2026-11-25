@@ -5,7 +5,7 @@ import SafeguardingModule from '@/components/SafeguardingModule'
 import Link from 'next/link'
 import type { Nanny } from '@/lib/types'
 
-export const metadata = { title: 'Safeguarding training — VacayNanny' }
+export const metadata = { title: 'Safeguarding training | VacayNanny' }
 
 export default async function SafeguardingPage() {
   const profile = await requireProfile(['nanny', 'admin'])

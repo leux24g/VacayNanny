@@ -22,7 +22,7 @@ export const SAFEGUARDING_MODULES = [
   {
     id: 'reporting',
     title: 'If something feels wrong',
-    body: 'If a child is hurt, missing, or at risk — or if a parent asks you to do something unsafe — stop, keep the child safe, and report to VacayNanny immediately through the booking thread or +254 796 930 612. You will never be penalised for raising a genuine safeguarding concern.',
+    body: 'If a child is hurt, missing or at risk, or if a parent asks you to do something unsafe, stop, keep the child safe, and report to VacayNanny immediately through the booking thread or +254 796 930 612. You will never be penalised for raising a genuine safeguarding concern.',
   },
 ] as const
 
@@ -58,7 +58,7 @@ export const SAFEGUARDING_QUIZ: Array<{
     id: 'q3',
     prompt: 'The family asks you to post cute photos of their toddler on your Instagram. What is correct?',
     options: [
-      'Never post family photos publicly, even if asked in passing — only share privately if they requested it in the booking.',
+      'Never post family photos publicly, even if asked in passing. Only share privately if they requested it in the booking.',
       'Post if you hide the child’s face.',
       'Post if you do not tag the location.',
       'Post after the placement ends.',

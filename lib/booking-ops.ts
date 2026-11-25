@@ -659,7 +659,7 @@ async function applyBookingMutationOnce(
       updates.status = 'cancelled'
       updates.cancelled_at = new Date().toISOString()
       updates.refund_percent = 100
-      updates.cancellation_reason = 'Replacement guarantee — refund review requested'
+      updates.cancellation_reason = 'Replacement guarantee: refund review requested'
       updates.nanny_id = null
       event = 'replacement_refunded'
 

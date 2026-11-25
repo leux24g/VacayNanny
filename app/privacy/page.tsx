@@ -1,6 +1,6 @@
 import PageShell from '@/components/PageShell'
 
-export const metadata = { title: 'Privacy Policy — VacayNanny' }
+export const metadata = { title: 'Privacy Policy | VacayNanny' }
 
 export default function PrivacyPage() {
   return (

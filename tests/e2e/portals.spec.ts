@@ -6,7 +6,7 @@ test('a complete nanny application requires explicit agreement acceptance and pr
  await page.goto('/become-a-nanny')
  const panel=page.getByRole('region',{name:'Nanny application form'})
  await panel.getByLabel('First Name').fill('Test');await panel.getByLabel('Last Name').fill('Applicant')
- await panel.getByLabel('Date of Birth').fill('1990-01-01');await panel.getByLabel('Gender').selectOption('Female')
+ await panel.getByLabel(/^Date of Birth/).fill('1990-01-01');await panel.getByLabel('Gender').selectOption('Female')
  await panel.getByLabel('Phone Number').fill('712345678');await panel.getByLabel('Email Address').fill('applicant@example.test')
  await panel.getByRole('combobox',{name:/^County/}).selectOption('Kwale');await panel.getByLabel('Town / City').fill('Diani');await panel.getByLabel('English',{exact:true}).check()
  await panel.getByRole('button',{name:'Next: Identity →'}).click()
@@ -16,7 +16,7 @@ test('a complete nanny application requires explicit agreement acceptance and pr
  await panel.locator('.form-step select').selectOption('4');await panel.getByLabel('Toddlers (1–3 years)',{exact:true}).check();await panel.getByLabel('General childcare',{exact:true}).check()
  await panel.getByRole('button',{name:'Next: Skills →'}).click();await panel.getByRole('button',{name:'Next: References →'}).click()
  for(const [i,name]of ['Reference One','Reference Two'].entries()){const block=panel.locator('.reference-block').nth(i);await block.locator('input[type=text]').first().fill(name);await block.locator('select').first().selectOption('Former Employer');await block.locator('input[type=tel]').fill(i?'722222222':'711111111')}
- await panel.getByRole('button',{name:'Next: Availability →'}).click();await panel.getByLabel('Monday',{exact:true}).check();await panel.getByRole('button',{name:'Local only — within my county'}).click();await panel.getByRole('button',{name:/Review.*Application/}).click()
+ await panel.getByRole('button',{name:'Next: Availability →'}).click();await panel.getByLabel('Monday',{exact:true}).check();await panel.getByRole('button',{name:'Local only, within my county'}).click();await panel.getByRole('button',{name:/Review.*Application/}).click()
  let preparations=0
  await page.route('**/api/apply/uploads',async route=>{preparations++;expect(route.request().postDataJSON().payload.agreementAccepted).toBe(true);await route.fulfill({status:503,json:{error:'Temporary upload outage. Please retry.'}})})
  await panel.getByRole('button',{name:'Submit Application →'}).click()

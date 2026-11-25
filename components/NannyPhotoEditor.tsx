@@ -65,7 +65,7 @@ export default function NannyPhotoEditor({initialUrl,endpoint,name}:{initialUrl:
       {shown&&<button type="button" className="btn-ghost" disabled={busy} onClick={()=>{setFile(null);setPreview('');setRemove(true);setSaved(false);setError('')}}>Remove photo</button>}
     </div></div>
     <p className="field-hint">JPEG, PNG or WebP. Phone photos are resized if needed. Take photo opens the camera on supported phones; your device may show a file picker instead.</p>
-    {file&&<p>{file.name} — ready to save</p>}{remove&&<p>The current photo will be removed when you save.</p>}
+    {file&&<p>{file.name} is ready to save.</p>}{remove&&<p>The current photo will be removed when you save.</p>}
     {preparing&&<p role="status">Preparing your photo…</p>}{error&&<p role="alert" className="field-error-msg">{error}</p>}{saved&&<p role="status">Profile photo updated. Families will see the saved photo.</p>}
     <button className="btn-coral" type="submit" disabled={busy||(!file&&!remove)}>{saving?'Saving photo…':'Save photo'}</button>
   </form>

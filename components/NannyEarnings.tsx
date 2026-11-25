@@ -11,7 +11,7 @@ export default function NannyEarnings({ bookings }: { bookings: Booking[] }) {
     <div className="form-card">
       <h3>Booking values &amp; payout terms</h3>
       <p className="field-hint" style={{ marginBottom: 16 }}>
-        Quoted family totals for your placements. Payouts are processed by VacayNanny after a booking is completed — this is not a wallet balance.
+        Quoted family totals for your placements. Payouts are processed by VacayNanny after a booking is completed. These totals are not a wallet balance.
       </p>
       <details className="agreement-commercial"><summary>Current agreement commission and payout process</summary><ul>{Object.entries(TIER_COMMISSION).map(([tier,rate]) => <li key={tier}>{tier[0].toUpperCase()+tier.slice(1)}: {rate.commission} platform commission · {rate.payout} nanny share of agreed service charges.</li>)}</ul><p>Approved pass-through expenses and taxes collected for remittance are treated as stated in your agreement. Your individual share and any adjustment are checked against the booking record. Historical bookings keep their agreed terms.</p><p>Complete your booking report and obtain the client completion confirmation. Once these are received and checked, payout is processed to your verified details within three business days, subject to a documented dispute or legal restriction. Contact the team for your payout statement; the amounts below are family totals and do not show money already transferred to you.</p></details>
       <div className="earnings-grid">
@@ -34,7 +34,7 @@ export default function NannyEarnings({ bookings }: { bookings: Booking[] }) {
             <br />
             <small>{b.parent_name} · {statusLabel(b.status)}</small>
           </span>
-          <span className="review-val">{b.total_amount_kes != null ? formatKes(b.total_amount_kes) : '—'}</span>
+          <span className="review-val">{b.total_amount_kes != null ? formatKes(b.total_amount_kes) : 'Not provided'}</span>
         </div>
       ))}
     </div>

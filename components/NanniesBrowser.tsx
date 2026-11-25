@@ -8,6 +8,8 @@ import NannyCard from '@/components/NannyCard'
 import BookingModal, { type BookingDefaults } from '@/components/BookingModal'
 import CareIcon from '@/components/CareIcon'
 import Reveal from '@/components/Reveal'
+import DatePicker from '@/components/DatePicker'
+import { todayInNairobi } from '@/lib/booking-validation'
 import { CERTIFICATION_FILTERS, filterNannies } from '@/lib/match'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
 import { tierOptionLabel, tierRateMap } from '@/lib/catalog'
@@ -161,23 +163,26 @@ export default function NanniesBrowser({
             </label>
             <p className="field-hint">Higher-tier nannies also qualify for lower care categories. Gold work requires completed safeguarding.</p>
             <div className={styles.dates}>
-              <label>
-                <span>Check-in</span>
-                <input
-                  type="date"
+              <div>
+                <label htmlFor="filter-check-in">Check-in</label>
+                <DatePicker
+                  id="filter-check-in"
+                  calendarLabel="check-in date"
+                  min={todayInNairobi()}
                   value={checkIn}
-                  onChange={(event) => setCheckIn(event.target.value)}
+                  onValueChange={next => {setCheckIn(next);if(checkOut < next)setCheckOut('')}}
                 />
-              </label>
-              <label>
-                <span>Check-out</span>
-                <input
-                  type="date"
-                  min={checkIn || undefined}
+              </div>
+              <div>
+                <label htmlFor="filter-check-out">Check-out</label>
+                <DatePicker
+                  id="filter-check-out"
+                  calendarLabel="check-out date"
+                  min={checkIn || todayInNairobi()}
                   value={checkOut}
-                  onChange={(event) => setCheckOut(event.target.value)}
+                  onValueChange={setCheckOut}
                 />
-              </label>
+              </div>
             </div>
             <label>
               <span>Care tier</span>
@@ -265,7 +270,7 @@ export default function NanniesBrowser({
                       : '',
                     params.get('q'),
                     appliedCheckIn && appliedCheckOut
-                      ? `${appliedCheckIn} – ${appliedCheckOut}`
+                      ? `${appliedCheckIn} to ${appliedCheckOut}`
                       : '',
                   ]
                     .filter(Boolean)

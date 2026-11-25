@@ -1,0 +1,69 @@
+.field { position:relative; min-width:0; width:100%; }
+.field input.input[type] {
+  display:block; box-sizing:border-box; width:100%; min-width:0; min-height:48px;
+  padding:11px 46px 11px 12px; border:1px solid #bdc9bd; border-radius:8px;
+  background:#fffdf8; color:#17324d; font:inherit; font-size:.88rem;
+  line-height:1.5; color-scheme:light; transition:border-color .15s,box-shadow .15s;
+}
+.field input.input:hover:not(:disabled) { border-color:#476b54; }
+.field input.input:focus-visible { outline:2px solid #476b54; outline-offset:2px; }
+.input::-webkit-calendar-picker-indicator { display:none; }
+.input::-webkit-date-and-time-value { text-align:left; }
+.field button.trigger {
+  position:absolute; right:4px; top:50%; transform:translateY(-50%); display:grid;
+  place-items:center; width:40px; height:40px; min-height:40px; padding:0;
+  border:0; border-radius:6px; background:transparent; color:#476b54; cursor:pointer;
+}
+.field button.trigger:hover:not(:disabled), .field button.trigger[aria-expanded=true] { background:#e5ece2; color:#17324d; }
+.field button.trigger:focus-visible { outline:2px solid #476b54; outline-offset:0; }
+.popover {
+  position:fixed; inset:auto; top:0; left:0; margin:0; width:344px; padding:14px;
+  max-width:calc(100vw - 24px); max-height:calc(100dvh - 24px); overflow:auto;
+  border:1px solid #cbd5c7; border-radius:16px; background:#fffcf7; color:#17324d;
+  box-shadow:0 16px 50px #17324d30; font-family:var(--font-dm-sans),Arial,sans-serif;
+  font-size:14px; line-height:1.5; color-scheme:light;
+}
+.popover::backdrop { background:transparent; }
+.heading { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:10px; }
+.popover .title { font:650 .95rem/1.4 var(--font-dm-sans),Arial,sans-serif; letter-spacing:0; margin:0; color:#17324d; }
+.popover button.close { width:36px; height:36px; min-height:36px; border:0; border-radius:8px; font-size:25px; padding:0; background:transparent; color:#476b54; cursor:pointer; }
+.popover button.close:hover { background:#e5ece2; color:#17324d; }
+.calendar {
+  width:100%; --rdp-accent-color:#476b54; --rdp-accent-background-color:#e5ece2;
+  --rdp-day-width:40px; --rdp-day-height:42px; --rdp-day_button-width:100%;
+  --rdp-day_button-height:40px; --rdp-day_button-border-radius:9px;
+  --rdp-selected-border:2px solid #17324d; --rdp-outside-opacity:.6;
+  --rdp-disabled-opacity:1; --rdp-today-color:#476b54; --rdp-months-gap:0;
+}
+.popover .calendar :global(.rdp-months), .popover .calendar :global(.rdp-month) { width:100%; max-width:none; }
+.popover .calendar :global(.rdp-month_grid) { width:100%; table-layout:fixed; border-collapse:collapse; }
+.popover .calendar :global(.rdp-day) { width:auto; height:42px; padding:1px; }
+.popover .calendar :global(.rdp-weekday) { padding:10px 0; color:#596a77; font-size:.73rem; font-weight:600; }
+.popover .calendar :global(.rdp-day_button) { width:100%; height:40px; min-height:40px; padding:0; font:500 .88rem/1 var(--font-dm-sans),Arial,sans-serif; color:#17324d; background:transparent; }
+.popover .calendar :global(.rdp-day_button):hover:not(:disabled) { background:#e5ece2; border-color:#8fa48d; color:#17324d; }
+.popover .calendar :global(.rdp-selected) :global(.rdp-day_button) { background:#17324d; border-color:#17324d; color:#fff8ef; font-weight:650; }
+.popover .calendar :global(.rdp-selected) :global(.rdp-day_button):hover { background:#294d65; border-color:#294d65; color:white; }
+.popover .calendar :global(.rdp-disabled) :global(.rdp-day_button) { color:#9baba3; background:transparent; cursor:not-allowed; }
+.popover .calendar :global(.rdp-today):not(:global(.rdp-selected)) :global(.rdp-day_button) { box-shadow:inset 0 0 0 1px #6d8a70; color:#345a42; }
+.popover .calendar :global(.rdp-month_caption) { height:42px; padding:0; font-size:.9rem; }
+.popover .calendar :global(.rdp-dropdowns) { gap:4px; font:600 .9rem/1.4 var(--font-dm-sans),Arial,sans-serif; }
+.popover .calendar :global(.rdp-dropdown_root) { padding:5px 7px; border:1px solid transparent; border-radius:7px; }
+.popover .calendar :global(.rdp-dropdown_root):hover { background:#e5ece2; }
+.popover .calendar :global(.rdp-dropdown) { margin:0; min-height:0; border:0; padding:0; color:#17324d; background:#fffcf7; font:inherit; }
+.popover .calendar :global(.rdp-chevron) { fill:#476b54; width:18px; height:18px; }
+.popover .calendar :global(.rdp-button_previous), .popover .calendar :global(.rdp-button_next) { width:36px; height:38px; min-height:38px; padding:0; background:transparent; border:0; border-radius:8px; }
+.popover .calendar :global(.rdp-button_previous):hover:not(:disabled), .popover .calendar :global(.rdp-button_next):hover:not(:disabled) { background:#e5ece2; }
+.popover .calendar :global(.rdp-footer) { margin-top:8px; min-height:23px; color:#596a77; font-size:.78rem; }
+.popover .timeRow { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; margin-top:12px; border-top:1px solid #dce3d7; }
+.popover .timeRow label { margin:0; font-size:.85rem; color:#17324d; }
+.popover .timeRow input { width:140px; min-height:42px; min-width:0; padding:8px; border:1px solid #bdc9bd; border-radius:8px; background:#fffdf8; color:#17324d; font-size:.95rem; }
+.popover .actions { display:flex; gap:10px; justify-content:space-between; padding-top:12px; margin-top:12px; border-top:1px solid #dce3d7; }
+.popover .actions button { min-height:40px; padding:8px 12px; border:0; border-radius:8px; background:transparent; color:#345a42; font:600 .82rem/1.4 var(--font-dm-sans),Arial,sans-serif; cursor:pointer; }
+.popover .actions button:hover:not(:disabled) { background:#e5ece2; color:#17324d; }
+.popover .actions button.apply { background:#476b54; color:white; }
+.popover .actions button.apply:hover:not(:disabled) { background:#345a42; color:white; }
+.popover :is(button,select,input):focus-visible { outline:2px solid #476b54; outline-offset:2px; }
+.popover button:disabled { cursor:not-allowed; opacity:.45; }
+.popover .hint { margin-top:8px; font-size:.78rem; color:#9c3b31; }
+.srOnly { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@media (max-width:420px) { .popover { padding:12px; } }

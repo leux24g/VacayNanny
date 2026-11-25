@@ -81,7 +81,7 @@ type Desk =
 
 function slaLabel(requestedAt: string, slaMs: number) {
   const ms = replacementDeadline(requestedAt, slaMs).getTime() - Date.now()
-  if (ms <= 0) return 'OVERDUE — refund the booking fee'
+  if (ms <= 0) return 'OVERDUE: refund the booking fee'
   const mins = Math.max(1, Math.ceil(ms / 60_000))
   if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m left on replacement SLA`
   return `${mins}m left on replacement SLA`
@@ -486,9 +486,9 @@ export default function AdminClient({
                     <span className="ops-pill">{a.status}</span>
                   </header>
                   <p className="ops-meta">
-                    {a.estimated_tier} tier · {a.experience_years || '—'} yrs ·{' '}
+                    {a.estimated_tier} tier · {a.experience_years ? `${a.experience_years} yrs` : 'Experience not provided'} ·{' '}
                     {a.languages.join(', ') || 'No languages'} · CoGC:{' '}
-                    {a.cogc_status || '—'}
+                    {a.cogc_status || 'Not provided'}
                   </p>
                   {errors[a.id] && <p className="field-error-msg">{errors[a.id]}</p>}
                   <div className="ops-card-actions">
@@ -606,7 +606,7 @@ export default function AdminClient({
                     </header>
                     <p className="ops-meta">
                       {b.destination} · {b.check_in} → {b.check_out} ·{' '}
-                      {b.children_count || '—'} children · {b.tier || 'any tier'} ·{' '}
+                      {b.children_count ? `${b.children_count} children` : 'Child count not provided'} · {b.tier || 'any tier'} ·{' '}
                       {careTypeLabel(parseCareType(b.care_type))}
                     </p>
                     <p className="ops-meta">
@@ -628,14 +628,14 @@ export default function AdminClient({
                       <p className="match-hint">
                         Suggested: <strong>{best.nanny.display_name}</strong>
                         {best.reasons.length
-                          ? ` — ${best.reasons.slice(0, 3).join(' · ')}`
+                          ? `: ${best.reasons.slice(0, 3).join(' · ')}`
                           : ''}
                       </p>
                     )}
                     {!best &&
                       (b.status === 'pending' || openReplacement || !b.nanny_id) && (
                         <p className="match-hint">
-                          No auto-match — nobody is free for these dates, destination, and
+                          No auto-match: nobody is free for these dates, destination, and
                           care needs.
                         </p>
                       )}

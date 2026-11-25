@@ -35,8 +35,8 @@ test('nanny search applies filters, recovers from an empty result and preserves 
   await page.getByRole('button', { name: 'Request care', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Request a nanny' })
   await expect(dialog.getByLabel('Destination', { exact: true })).toHaveValue('Diani')
-  await expect(dialog.getByLabel('Check-in Date')).toHaveValue('2027-06-10')
-  await expect(dialog.getByLabel('Check-out Date')).toHaveValue('2027-06-12')
+  await expect(dialog.getByLabel('Check-in Date', { exact: true })).toHaveValue('2027-06-10')
+  await expect(dialog.getByLabel('Check-out Date', { exact: true })).toHaveValue('2027-06-12')
 })
 
 test('application keeps the image fixed while the desktop form scrolls and changes steps', async ({ page }, testInfo) => {
@@ -51,7 +51,7 @@ test('application keeps the image fixed while the desktop form scrolls and chang
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight)).toBe(true)
   await panel.getByLabel('First Name').fill('Test')
   await panel.getByLabel('Last Name').fill('Applicant')
-  await panel.getByLabel('Date of Birth').fill('1990-01-01')
+  await panel.getByLabel(/^Date of Birth/).fill('1990-01-01')
   await panel.getByLabel('Gender').selectOption('Female')
   await panel.getByLabel('Phone Number').fill('712345678')
   await panel.getByLabel('Email Address').fill('applicant@example.test')

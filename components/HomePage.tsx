@@ -13,6 +13,8 @@ import NannyCard from './NannyCard'
 import Reveal from './Reveal'
 import CareIcon from './CareIcon'
 import DestinationExplorer from './DestinationExplorer'
+import DatePicker from './DatePicker'
+import { todayInNairobi } from '@/lib/booking-validation'
 import { useSiteCatalog } from './SiteCatalogProvider'
 import {
   applyPolicyTokens,
@@ -159,27 +161,26 @@ export default function HomePage({
                 ))}
               </select>
             </label>
-            <label>
-              Arrival
-              <input
-                type="date"
+            <div>
+              <label htmlFor="trip-arrival">Arrival</label>
+              <DatePicker
+                id="trip-arrival"
+                calendarLabel="arrival date"
+                min={todayInNairobi()}
                 value={search.checkIn}
-                onChange={(e) =>
-                  setSearch({ ...search, checkIn: e.target.value })
-                }
+                onValueChange={checkIn => setSearch(current => ({...current, checkIn, checkOut: current.checkOut < checkIn ? '' : current.checkOut}))}
               />
-            </label>
-            <label>
-              Departure
-              <input
-                type="date"
-                min={search.checkIn || undefined}
+            </div>
+            <div>
+              <label htmlFor="trip-departure">Departure</label>
+              <DatePicker
+                id="trip-departure"
+                calendarLabel="departure date"
+                min={search.checkIn || todayInNairobi()}
                 value={search.checkOut}
-                onChange={(e) =>
-                  setSearch({ ...search, checkOut: e.target.value })
-                }
+                onValueChange={checkOut => setSearch(current => ({...current, checkOut}))}
               />
-            </label>
+            </div>
             <button className="btn-coral" type="submit">
               Find a nanny <span aria-hidden="true">→</span>
             </button>
