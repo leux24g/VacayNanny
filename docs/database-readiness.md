@@ -1,6 +1,18 @@
 # Database readiness — 25 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `2b6a960911c92afce3a38a9482493c5797e5164c` was deployed to Vercel production as `dpl_FxQD3q8UAm7RSk2uMkrx28myagVc`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `96e16c0e1e234e2039af76516d71650a7ee112e9` was deployed to Vercel production as `dpl_A2kizUWBMLxpHZaBTqiKxUn4inpT`.
+
+## Existing onboarding, destinations and recovery — 25 November
+
+The owner-confirmed destination catalog now contains Nairobi, Naivasha, Nakuru, Mombasa, Diani, Malindi, Watamu, Maasai Mara and Nanyuki. Individual nanny coverage was not inferred or assigned. Five existing nannies now have linked draft application records and can complete their details and agreement acceptance through their current accounts. No acceptance was fabricated; counts remain 12 Auth users, 8 profiles, 5 nannies and 1 booking, with zero agreement acceptances. Operations must obtain and review the actual submissions.
+
+Migration `20261125171933_existing_nanny_onboarding_and_operations_health.sql` was applied as hosted migration `20261125173954_vacaynanny_existing_nanny_onboarding_and_operations_health`. All three new RPCs are service-only. The security advisor reports no errors and the same seven pre-existing warnings. Authorised readiness checks show a recent worker heartbeat and zero failed, ready, processing or stale jobs.
+
+The release passed 65 unit tests, 39 real local Supabase integration tests and 55 browser tests, plus lint, type checks and local/Vercel production builds. The independent [GitHub verification run](https://github.com/leux24g/VacayNanny/actions/runs/45667553627) also passed both jobs, including the same 65 unit, 39 integration and 55 browser tests. Sixteen live HTTP checks passed for public pages, all nine destinations, portal redirects, protected writes and private monitoring. Production was not used for customer submissions, acceptance, photo uploads or payment charges.
+
+Before migration, a complete encrypted production backup was created and restored to a separate local database: all 66 archived tables matched their snapshot counts, and the one Storage file passed upload/download SHA-256 verification. The archive includes Auth users, identities and sessions, application tables, schema/roles, Auth settings, migration history, real Storage bytes and encrypted recovery secrets. The restored database and temporary private bucket were removed; production jobs were not enabled in the test. See [operations and recovery](operations-recovery.md) for schedules, key custody and restoration limits. Release evidence is under ignored `artifacts/operations-release/` and `artifacts/restore-checks/`.
+
+The owner-controlled `leux24g/VacayNanny` fork's default branch was fast-forwarded to the released source to host the independent workflows. The [first complete backup run](https://github.com/leux24g/VacayNanny/actions/runs/45667577738) succeeded and uploaded only encrypted files with 30-day retention. The downloaded artifact's checksum passed and its schema/data and Storage file passed a second isolated restore check. No restore databases or buckets remain. The [independent monitor run](https://github.com/leux24g/VacayNanny/actions/runs/45668008653) reported healthy application/queue/backup checks, authenticated SMTP successfully and sent no test message. Both schedules are active: daily backup at 05:17 EAT and a five-minute monitor schedule. The upstream application PR remains open; this manual production deployment does not merge it.
 
 ## Photo updates and tier eligibility — 25 November
 
@@ -63,7 +75,7 @@ The following sequence records dependencies for future environments. The product
 
 ## Remaining dependencies
 
-The existing production destination catalog has no rows. Destination filters will populate after an administrator publishes the operating destinations; the booking form retains its Other option. Existing catalog content was not replaced with sample seed data.
+The nine owner-confirmed destinations are published. Existing nannies still need to confirm their actual coverage and supply missing biographies, photos and onboarding details. No sample service areas were assigned to their records.
 
 The revised PDF supplied by the user is configured as the private approval attachment and public readable agreement. The historical draft is superseded. Acceptance and activation requirements are documented in [portal operations](portal-operations.md). SMTP authentication passed, and OTP/application mail delivery was tested through a local SMTP sink; external inbox delivery has not been asserted.
 

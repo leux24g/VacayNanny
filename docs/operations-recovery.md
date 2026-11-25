@@ -20,11 +20,15 @@ Browser form requests have a 30-second deadline, retain current form state on tr
 
 The workflow runs only in the repository selected by `OPERATIONS_REPOSITORY`. Alert address is set through `OPERATIONS_ALERT_EMAIL`. SMTP authentication can be checked through manual dispatch with `verify_mail=true`, without a test message. The database queue worker remains minute-level Supabase Cron with its Vercel fallback.
 
+Initial independent verification passed in [monitor run 45668008653](https://github.com/leux24g/VacayNanny/actions/runs/45668008653): healthy dependencies, current backup, SMTP authenticated and no test notification sent. The enabled workflows run from the default branch of the owner-controlled `leux24g/VacayNanny` fork.
+
 ## Encrypted complete backups
 
 `.github/workflows/backup.yml` runs daily at 02:17 UTC / 05:17 EAT. It exports schema, table data, roles, Auth records, Storage metadata and actual file bytes, Auth configuration and migration history. It also escrows the application encryption key and the scheduler's two Vault values inside the encrypted archive. Production provider credentials and hosting configuration remain separately managed in their services and must be supplied during a rebuild.
 
 The archive uses AES-256-GCM with a separate recovery key and authenticated encryption. File checksums and a stable Storage inventory are checked before publication. The database data export is a pg_dump snapshot; cross-service writes during a backup can require application-level reconciliation. A changed Storage inventory makes the backup fail. Only encrypted `.vnbak` files and their checksums are uploaded to GitHub artifacts, retained for 30 days. The monitor flags a missing successful artifact older than 27 hours.
+
+The [initial GitHub backup run](https://github.com/leux24g/VacayNanny/actions/runs/45667577738) succeeded. Its downloaded encrypted artifact passed checksum validation and isolated restoration of all 66 tables and the agreement Storage file.
 
 Required workflow secrets are `BACKUP_SUPABASE_ACCESS_TOKEN`, `BACKUP_SUPABASE_SERVICE_ROLE_KEY`, `BACKUP_ENCRYPTION_KEY` and `BACKUP_APP_ENCRYPTION_KEY`. The management token needs the documented CLI temporary-login and metadata permissions. No database password is reset. Keep the application encryption key stable so existing queued payloads and private agreement details remain readable.
 

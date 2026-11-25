@@ -28,6 +28,10 @@ The email delivery journal records delivery start and provider acceptance. Accep
 
 Private upload cleanup runs after three hours and checks application/document references before deletion. Public photo cleanup checks all catalog/profile references and retains files still in use. The administrator Follow-ups panel exposes queue counts, expired leases, failed jobs and recent worker status. A failed job needs attention; it is not described as successful processing.
 
+## Existing accounts and independent recovery
+
+Existing nanny onboarding, the nine owner-confirmed destinations, bounded browser requests, readiness checks, external alerts and encrypted complete backups are described in [operations and recovery](operations-recovery.md). Existing nannies complete the full linked application through their current account; their coverage and agreement acceptance are not filled in for them.
+
 ## Release checks
 
 The coordinated schema additions are `20261124163614_nanny_agreement_acceptance.sql`, `20261124164634_bounded_queue_workers.sql` and `20261124165435_care_completion_reports.sql`. Apply them after the existing payment/workflow/auth release. Do not replay the earlier production bundles.
