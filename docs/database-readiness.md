@@ -1,6 +1,12 @@
 # Database readiness — 25 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `96e16c0e1e234e2039af76516d71650a7ee112e9` was deployed to Vercel production as `dpl_A2kizUWBMLxpHZaBTqiKxUn4inpT`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `950aa5c34cfd48ec0777345a0dc76c582b3962ff` was deployed to Vercel production as `dpl_AXWmdpofS8jEyZqJ4RCzN4c4Tdn7`.
+
+## Metallic pricing cards — 25 November
+
+Bronze, Silver and Gold now have distinct metallic gradients, brushed highlights and matching buttons. A single brief shiver and light sweep respond to pointer hover or visible keyboard focus. Motion is disabled for reduced-motion users; touch layouts do not require hover. Card headings have accessible names and buttons have clear focus rings.
+
+Lint, type checks and the production build passed. Local and live browser review checked the three finishes, one-shot hover and keyboard effects, reduced-motion behavior, each button's care-tier selection, widths from 320 to 2560 pixels and absence of JavaScript errors or horizontal overflow. Text/background gradient stops and button colours meet a minimum 4.5:1 contrast ratio. Evidence and screenshots are under ignored `artifacts/metallic-pricing-release/`. This presentation change needs no database migration.
 
 ## Existing onboarding, destinations and recovery — 25 November
 
@@ -8,7 +14,7 @@ The owner-confirmed destination catalog now contains Nairobi, Naivasha, Nakuru, 
 
 Migration `20261125171933_existing_nanny_onboarding_and_operations_health.sql` was applied as hosted migration `20261125173954_vacaynanny_existing_nanny_onboarding_and_operations_health`. All three new RPCs are service-only. The security advisor reports no errors and the same seven pre-existing warnings. Authorised readiness checks show a recent worker heartbeat and zero failed, ready, processing or stale jobs.
 
-The release passed 65 unit tests, 39 real local Supabase integration tests and 55 browser tests, plus lint, type checks and local/Vercel production builds. The independent [GitHub verification run](https://github.com/leux24g/VacayNanny/actions/runs/45667553627) also passed both jobs, including the same 65 unit, 39 integration and 55 browser tests. Sixteen live HTTP checks passed for public pages, all nine destinations, portal redirects, protected writes and private monitoring. Production was not used for customer submissions, acceptance, photo uploads or payment charges.
+The preceding onboarding release passed 65 unit tests, 39 real local Supabase integration tests and 55 browser tests, plus lint, type checks and local/Vercel production builds. The independent [GitHub verification run](https://github.com/leux24g/VacayNanny/actions/runs/45667553627) also passed both jobs, including the same 65 unit, 39 integration and 55 browser tests. Sixteen live HTTP checks passed for public pages, all nine destinations, portal redirects, protected writes and private monitoring. Production was not used for customer submissions, acceptance, photo uploads or payment charges.
 
 Before migration, a complete encrypted production backup was created and restored to a separate local database: all 66 archived tables matched their snapshot counts, and the one Storage file passed upload/download SHA-256 verification. The archive includes Auth users, identities and sessions, application tables, schema/roles, Auth settings, migration history, real Storage bytes and encrypted recovery secrets. The restored database and temporary private bucket were removed; production jobs were not enabled in the test. See [operations and recovery](operations-recovery.md) for schedules, key custody and restoration limits. Release evidence is under ignored `artifacts/operations-release/` and `artifacts/restore-checks/`.
 
