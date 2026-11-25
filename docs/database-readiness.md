@@ -1,6 +1,18 @@
-# Database readiness — 25 November 2026
+# Database readiness | 26 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `58eb87d1233071663052299d1f0762e7e8a2f6fd` was deployed to Vercel production as `dpl_FwBWtMuHYbgeYU9XbadGqSJHka35`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `f425f508e624e75be2535b47c9f7cf69a7cad61f` was deployed to Vercel production as `dpl_5avfc17ACrfdGNxu2axHXP9Sb9ZF`.
+
+## Shared date picker and punctuation cleanup | 26 November
+
+All fourteen editable date fields use the same styled calendar: homepage arrival/departure, nanny search, the booking dialog, family rescheduling, nanny birth/clearance dates, admin interviews and specialist service/quote dates. Month/year jumps, keyboard selection, touch, inclusive bounds, clear/today controls and dark selected states work across scrolling panels and nested dialogs. Interview date/time edits require an explicit apply; existing EAT conversions and native FormData values are preserved. Selecting a calendar date never sends a save request by itself.
+
+Site-owned visible prose, statuses, titles and email subjects use plain punctuation. Existing saved multiple-child application answers retain their stored values and render with updated labels. Numeric age ranges, supplied agreement text and technical CSS/CLI syntax are preserved.
+
+Local validation passed lint, TypeScript, the production build, 68 unit tests and 62 browser tests. Seven new browser cases cover desktop hover contrast, mobile touch/viewport bounds, keyboard/Escape handling inside the booking dialog, birth-year navigation, same-day rescheduling, EAT interview drafts and specialist quote expiry/FormData. Date round-trips also pass across Nairobi, Los Angeles and Kiritimati time zones. Email previews were generated without sending mail. No database migration or credential change is needed. Evidence is under ignored `artifacts/copy-punctuation-release/`.
+
+Live verification passed on the production custom domain: ten public routes have clean site-owned copy and titles; calendars fit widths of 320, 390, 768, 1024, 1440 and 2560px with same-day selection and dark selected states. Public search, birth-year navigation and nested booking Escape behavior work without JavaScript errors. Readiness reports healthy database, worker, queue and email configuration. These checks did not submit customer forms or change production records.
+
+The [independent verification run](https://github.com/leux24g/VacayNanny/actions/runs/45704926018) passed on the deployed application commit: 68 unit tests, 39 real database integration tests and 62 browser tests, plus lint, TypeScript and the production build.
 
 ## Approved logo rollout — 25 November
 
