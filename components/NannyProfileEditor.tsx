@@ -1,5 +1,9 @@
 'use client'
 
+import FormError from './FormError'
+
+import {clientFetch} from '@/lib/client-request'
+
 import { useMemo, useState } from 'react'
 import NannyPhotoEditor from './NannyPhotoEditor'
 import {eligibleWorkTiers} from '@/lib/safeguarding'
@@ -68,7 +72,7 @@ export default function NannyProfileEditor({
       body.set('isActive', isActive ? 'true' : 'false')
       body.set('availableDays', JSON.stringify(days))
       body.set('destinations', JSON.stringify(destinations))
-      const res = await fetch('/api/nanny/profile', { method: 'PATCH', body })
+      const res = await clientFetch('/api/nanny/profile', { method: 'PATCH', body })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(json.error || 'Could not save your profile.')
@@ -145,7 +149,7 @@ export default function NannyProfileEditor({
         </span>
       </label>
 
-      {error && <p className="field-error-msg" role="alert">{error}</p>}
+      <FormError message={error}/>
       {saved && <p role="status" className="field-hint" style={{ color: '#5ec9b6' }}>Saved. {isActive ? 'You are live.' : 'You are hidden from search.'}</p>}
       <button className="btn-coral" type="submit" disabled={busy} style={{ marginTop: 12 }}>
         {busy ? 'Saving…' : 'Save profile'}

@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
@@ -23,7 +25,7 @@ export default function BookingReviewForm({
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/reviews', {
+      const res = await clientFetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingId, rating, body }),

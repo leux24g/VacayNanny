@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 export type OpsTask = {
@@ -43,7 +45,7 @@ export default function AdminWorkflowTasks({
     setBusy(id)
     setError('')
     try {
-      const response = await fetch(`/api/admin/workflow/${id}`, {
+      const response = await clientFetch(`/api/admin/workflow/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

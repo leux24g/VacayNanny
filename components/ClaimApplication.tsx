@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 export default function ClaimApplication() {
@@ -8,7 +10,7 @@ export default function ClaimApplication() {
   async function claim() {
     setBusy(true)
     try {
-      const response = await fetch('/api/account/claim-application', { method: 'POST' })
+      const response = await clientFetch('/api/account/claim-application', { method: 'POST' })
       const data = await response.json()
       setMessage(
         response.ok

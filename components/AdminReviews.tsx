@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Review } from '@/lib/types'
@@ -14,7 +16,7 @@ export default function AdminReviews({ reviews }: { reviews: Review[] }) {
     setBusy(id)
     setError('')
     try {
-      const res = await fetch(`/api/admin/reviews/${id}`, {
+      const res = await clientFetch(`/api/admin/reviews/${id}`, {
         method: action === 'delete' ? 'DELETE' : 'PATCH',
         headers: action === 'delete' ? undefined : { 'Content-Type': 'application/json' },
         body: action === 'delete' ? undefined : JSON.stringify({ action }),
@@ -25,6 +27,8 @@ export default function AdminReviews({ reviews }: { reviews: Review[] }) {
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }

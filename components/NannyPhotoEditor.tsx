@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useEffect, useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import MediaImage from './MediaImage'
@@ -48,7 +50,7 @@ export default function NannyPhotoEditor({initialUrl,endpoint,name}:{initialUrl:
     setSaving(true);setError('');setSaved(false)
     try {
       const body=new FormData();if(file)body.set('photo',file);if(remove)body.set('removePhoto','true')
-      const response=await fetch(endpoint,{method:'POST',body,signal:AbortSignal.timeout(45000)}),result=await response.json().catch(()=>({}))
+      const response=await clientFetch(endpoint,{method:'POST',body,signal:AbortSignal.timeout(45000)}),result=await response.json().catch(()=>({}))
       if(!response.ok)throw new Error(result.error||'Could not save the photo. Please retry.')
       setCurrentUrl(result.photoUrl || '');setFile(null);setPreview('');setRemove(false);setSaved(true);router.refresh()
     }catch(error){setError(error instanceof Error&&error.name!=='TimeoutError'?error.message:'The save could not be confirmed. Refresh to check the photo before retrying.')}

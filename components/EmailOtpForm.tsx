@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -35,7 +37,7 @@ export default function EmailOtpForm({
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/otp/request', {
+      const res = await clientFetch('/api/auth/otp/request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ purpose, email, fullName, role, password }),
@@ -58,7 +60,7 @@ export default function EmailOtpForm({
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/auth/otp/verify', {
+      const res = await clientFetch('/api/auth/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

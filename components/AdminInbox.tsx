@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import SpecialistEnquiryCard from './SpecialistEnquiryCard'
 import type { CareEnquiry } from '@/lib/care-enquiries'
 
@@ -47,13 +49,15 @@ export default function AdminInbox({
     setBusy(id)
     setError('')
     try {
-      const res = await fetch(`/api/admin/inbox/${kind}/${id}`, { method: 'DELETE' })
+      const res = await clientFetch(`/api/admin/inbox/${kind}/${id}`, { method: 'DELETE' })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(json.error || 'Could not remove this entry.')
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }

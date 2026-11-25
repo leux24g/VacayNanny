@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -85,7 +87,7 @@ export default function FamilyBookings({
     setBusy(id)
     setError('')
     try {
-      const res = await fetch(`/api/booking/${id}`, {
+      const res = await clientFetch(`/api/booking/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

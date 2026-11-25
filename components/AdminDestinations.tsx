@@ -1,5 +1,9 @@
 'use client'
 
+import FormError from './FormError'
+
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import MediaImage from '@/components/MediaImage'
 import { useRouter } from 'next/navigation'
@@ -49,7 +53,7 @@ export default function AdminDestinations({ destinations }: { destinations: Dest
     setBusy('new')
     setError('')
     try {
-      const res = await fetch('/api/admin/destinations', {
+      const res = await clientFetch('/api/admin/destinations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(draft),
@@ -61,6 +65,8 @@ export default function AdminDestinations({ destinations }: { destinations: Dest
       }
       setDraft({ ...EMPTY, sort_order: destinations.length + 1 })
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }
@@ -70,7 +76,7 @@ export default function AdminDestinations({ destinations }: { destinations: Dest
     setBusy(id)
     setError('')
     try {
-      const res = await fetch(`/api/admin/destinations/${id}`, {
+      const res = await clientFetch(`/api/admin/destinations/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(edit(id)),
@@ -86,6 +92,8 @@ export default function AdminDestinations({ destinations }: { destinations: Dest
         return next
       })
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }
@@ -95,13 +103,15 @@ export default function AdminDestinations({ destinations }: { destinations: Dest
     setBusy(id)
     setError('')
     try {
-      const res = await fetch(`/api/admin/destinations/${id}`, { method: 'DELETE' })
+      const res = await clientFetch(`/api/admin/destinations/${id}`, { method: 'DELETE' })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(json.error || 'Could not hide this destination.')
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }
@@ -109,7 +119,7 @@ export default function AdminDestinations({ destinations }: { destinations: Dest
 
   return (
     <div className="edit-stack">
-      {error && <p className="field-error-msg">{error}</p>}
+      <FormError message={error}/>
       <header className="edit-head">
         <h2>Destinations</h2>
         <p>Live places show on the homepage, the booking form, nanny search, and the apply flow.</p>

@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { formatKes } from '@/lib/constants'
 import type { Booking } from '@/lib/types'
@@ -41,7 +43,7 @@ export default function BookingPayment({
     setBusy(true)
     setError('')
     try {
-      const response = await fetch('/api/payments/initialize', {
+      const response = await clientFetch('/api/payments/initialize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,9 @@
 'use client'
 
+import FormError from './FormError'
+
+import {clientFetch} from '@/lib/client-request'
+
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -35,7 +39,7 @@ export default function AdminNannies({
     setBusy(userId)
     setError('')
     try {
-      const res = await fetch('/api/admin/nannies/approve', {
+      const res = await clientFetch('/api/admin/nannies/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
@@ -46,9 +50,16 @@ export default function AdminNannies({
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }
+  }
+
+  async function beginOnboarding(id:string){
+    setBusy(id);setError('')
+    try{const response=await clientFetch(`/api/admin/nannies/${id}/onboarding`,{method:'POST'}),body=await response.json();if(!response.ok)throw new Error(body.error||'Could not start onboarding.');router.push(`/admin/applications/${body.id}`)}catch(error){setError(error instanceof Error?error.message:'Could not connect. Please retry.')}finally{setBusy(null)}
   }
 
   const shown = useMemo(() => {
@@ -71,7 +82,7 @@ export default function AdminNannies({
     setBusy(nanny.id)
     setError('')
     try {
-      const res = await fetch(`/api/admin/nannies/${nanny.id}`, {
+      const res = await clientFetch(`/api/admin/nannies/${nanny.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !nanny.is_active }),
@@ -82,6 +93,8 @@ export default function AdminNannies({
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }
@@ -127,7 +140,7 @@ export default function AdminNannies({
           </p>
         </div>
       )}
-      {error && <p className="field-error-msg">{error}</p>}
+      <FormError message={error}/>
       {nannies.length > 0 && (
         <>
           <div className="ops-filters">
@@ -182,6 +195,8 @@ export default function AdminNannies({
               <p>Eligible work: {eligibleWorkTiers(nanny).join(', ')}.</p>
               <details><summary>Update profile photo</summary><NannyPhotoEditor initialUrl={nanny.photo_url} name={nanny.display_name} endpoint={`/api/admin/nannies/${nanny.id}/photo`}/></details>
               <div className="ops-card-actions">
+                {nanny.application_id&&<Link className="btn-ghost" href={`/admin/applications/${nanny.application_id}`}>Review onboarding record</Link>}
+                {!nanny.application_id&&<button className="btn-ghost" disabled={busy===nanny.id} onClick={()=>void beginOnboarding(nanny.id)}>Start existing nanny onboarding</button>}
                 <Link className="btn-coral" href={`/nannies/${nanny.slug}`}>
                   Public profile
                 </Link>

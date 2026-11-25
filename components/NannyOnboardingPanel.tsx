@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,6 +16,7 @@ export type ApplicantView = {
   id: string; fullName: string; status: string; email: string; phone: string
   identityLast4: string; tier: string; submittedAt: string; interviewAt: string | null
   signedSubmitted: boolean; agreementReviewedAt: string | null; active: boolean
+  needsCompleteApplication?: boolean
 }
 export default function NannyOnboardingPanel({ application, acceptance, documents }: {
   application: ApplicantView | null
@@ -25,7 +28,7 @@ export default function NannyOnboardingPanel({ application, acceptance, document
   async function accept(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); setSaved('')
     try {
-      const response = await fetch('/api/nanny/agreement',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(agreement)})
+      const response = await clientFetch('/api/nanny/agreement',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(agreement)})
       const body = await response.json().catch(()=>({}))
       if (!response.ok) throw new Error(body.error || 'Could not save your acceptance.')
       setSaved('Your acceptance is recorded.'); router.refresh()
@@ -38,7 +41,7 @@ export default function NannyOnboardingPanel({ application, acceptance, document
     if (!(file instanceof File) || !file.size || file.size > 4 * 1024 * 1024) { setError('Choose a signed PDF up to 4 MB.'); return }
     setBusy(true)
     try {
-      const response = await fetch('/api/nanny/agreement/signed',{method:'POST',body:form}), body = await response.json().catch(()=>({}))
+      const response = await clientFetch('/api/nanny/agreement/signed',{method:'POST',body:form}), body = await response.json().catch(()=>({}))
       if (!response.ok) throw new Error(body.error || 'Could not submit your PDF.')
       setSaved('Your signed agreement is submitted for review. Your profile will be activated only after our team confirms it.'); router.refresh()
     } catch(error) { setError(error instanceof Error ? error.message : 'Could not connect. Please keep your PDF and retry.') }
@@ -54,7 +57,7 @@ export default function NannyOnboardingPanel({ application, acceptance, document
     </div>
     <div className={styles.record}>
       <h3>Your agreement</h3>
-      {acceptance?.current ? <>
+      {application.needsCompleteApplication ? <><p>Your existing profile is linked to an onboarding record. Complete your legal details, references, documents and agreement acceptance using your current account.</p><Link href="/nanny/onboarding" className="btn-coral">Complete my existing nanny onboarding</Link></> : acceptance?.current ? <>
         <p>You confirmed that you read, understood and accepted the agreement.</p>
         <dl><dt>Accepted by</dt><dd>{acceptance.signer_name}</dd><dt>Version</dt><dd>{acceptance.version}</dd><dt>Accepted on</dt><dd>{new Date(acceptance.accepted_at).toLocaleString('en-GB',{timeZone:'Africa/Nairobi'})} EAT</dd><dt>Payout method</dt><dd>{acceptance.payout.method === 'mpesa' ? 'M-Pesa' : acceptance.payout.bankName || 'Bank account'} · {acceptance.payout.maskedNumber}</dd><dt>Account holder</dt><dd>{acceptance.payout.accountName}</dd></dl>
         <p className="field-hint">Payout details remain subject to verification. Contact our team to change them; agreement acceptance is kept as a dated record.</p>

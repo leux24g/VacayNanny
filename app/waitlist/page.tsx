@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import PageShell from '@/components/PageShell'
 
@@ -11,7 +13,7 @@ export default function WaitlistPage() {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
     setStatus('loading')
-    const res = await fetch('/api/waitlist', {
+    const res = await clientFetch('/api/waitlist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: form.get('email'), region: form.get('region') }),

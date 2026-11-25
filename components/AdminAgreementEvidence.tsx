@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import {useState} from 'react'
 import type {AgreementSummary,AgreementDetails} from '@/lib/nanny-onboarding'
 
@@ -8,7 +10,7 @@ export default function AdminAgreementEvidence({acceptance,applicationId}:{accep
     if(details){setDetails(null);return}
     setBusy(true);setError('')
     try {
-      const response=await fetch(`/api/admin/applications/${applicationId}/acceptance?details=full`,{cache:'no-store'}),body=await response.json()
+      const response=await clientFetch(`/api/admin/applications/${applicationId}/acceptance?details=full`,{cache:'no-store'}),body=await response.json()
       if(!response.ok)throw new Error(body.error || 'Could not load payout details.')
       setDetails(body.details)
     }catch(error){setError(error instanceof Error?error.message:'Could not connect. Please retry.')}finally{setBusy(false)}

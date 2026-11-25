@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import {existingApplication} from '@/lib/existing-onboarding'
 import { randomUUID } from 'node:crypto'
 import { createServerClient } from '@/lib/supabase/service'
 import { validateApplication } from '@/lib/application-validation'
@@ -60,7 +61,17 @@ export async function POST(request: NextRequest) {
         email: String(payload.email),
       })
     if (blocked) return blocked
-    const applicationId = randomUUID(),
+    let existingId: string | null=null
+    if(payload.existingApplicationId){
+      const {getCurrentProfile}=await import('@/lib/auth')
+      const profile=await getCurrentProfile()
+      if(!profile)return NextResponse.json({error:'Sign in again to complete your existing onboarding.'},{status:401})
+      const app=await existingApplication(db,profile,String(payload.existingApplicationId))
+      if(app.legacy_completed_at)return NextResponse.json({error:'Your complete application is already submitted. Return to your nanny portal.'},{status:409})
+      if(String(payload.email).toLowerCase()!==profile.email?.toLowerCase())return NextResponse.json({error:'Use your verified account email.'},{status:400})
+      existingId=app.id
+    }
+    const applicationId = existingId || randomUUID(),
       entries: ApplicationUploadEntry[] = files.map((file) => ({
         key: file.key,
         kind: file.key.startsWith('certificate') ? 'certificate' : file.key,
@@ -79,7 +90,7 @@ export async function POST(request: NextRequest) {
       db,
       'application_upload_cleanup',
       { entries: entries.map(({ bucket, path }) => ({ bucket, path })) },
-      `application-upload-cleanup:${applicationId}`,
+      `application-upload-cleanup:${applicationId}:${randomUUID()}`,
     )
     const signed = []
     for (const entry of entries) {

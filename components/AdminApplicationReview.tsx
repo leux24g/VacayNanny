@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import AdminAgreementEvidence from '@/components/AdminAgreementEvidence'
 import type { AgreementSummary } from '@/lib/nanny-onboarding'
@@ -72,7 +74,7 @@ export default function AdminApplicationReview({
     setBusy('agreement')
     setError('')
     try {
-      const res = await fetch(`/api/admin/applications/${application.id}/agreement`, {
+      const res = await clientFetch(`/api/admin/applications/${application.id}/agreement`, {
         method: 'POST',
         body: new FormData(event.currentTarget),
       })
@@ -93,7 +95,7 @@ export default function AdminApplicationReview({
     setBusy(busyKey)
     setError('')
     try {
-      const res = await fetch(`/api/admin/applications/${application.id}`, {
+      const res = await clientFetch(`/api/admin/applications/${application.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -118,6 +120,7 @@ export default function AdminApplicationReview({
   return (
     <div className="profile-layout">
       <div>
+        {application.legacy_nanny_id&&<div className="ops-note"><p>This record belongs to an existing nanny profile. {application.legacy_completed_at?'The nanny has submitted their required details and agreement acceptance. Complete the normal verification and signed-document review.':'The nanny still needs to complete their legal details, references, documents and agreement acceptance in their portal.'}</p><p>Review and update the existing profile; no second account is needed.</p></div>}
         {error && (
           <p role="alert" className="field-error-msg" style={{ marginBottom: 16 }}>
             {error}

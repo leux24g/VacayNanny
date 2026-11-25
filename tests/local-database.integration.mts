@@ -348,7 +348,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
     if (child.exitCode !== null)
       throw new Error('The isolated app server stopped before becoming ready.')
     try {
-      if ((await fetch(`${base}/api/health`)).ok) {
+      if ((await fetch(`${base}/api/health/live`)).ok) {
         ready = true
         break
       }

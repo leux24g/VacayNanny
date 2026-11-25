@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest,NextResponse } from 'next/server'
 import { createServerClient } from './supabase/service'
 import { ProfileImageError,uploadPublicPhoto,validateProfileImage } from './profile-media'
+import {limitRoute} from './rate-limit'
 
 /** Both callers derive actor identity from the verified session, never the form. */
 export async function updateNannyPhoto(request:NextRequest,actor:string,nannyId?:string) {
@@ -11,6 +12,7 @@ export async function updateNannyPhoto(request:NextRequest,actor:string,nannyId?
     const loaded=await (nannyId?lookup.eq('id',nannyId):lookup.eq('user_id',actor)).maybeSingle()
     if(loaded.error)throw new Error('Profile lookup unavailable')
     if(!loaded.data)return NextResponse.json({error:'Nanny profile not found. Contact the team if your account is not linked to a profile yet.'},{status:404})
+    const blocked=await limitRoute(request,db,'profile_photo',{email:`${actor}@profile.internal`});if(blocked)return blocked
     const form=await request.formData(),photo=form.get('photo'),remove=form.get('removePhoto')==='true',file=photo instanceof File&&photo.size>0?photo:null
     if((!file&&!remove)||(file&&remove))return NextResponse.json({error:'Choose a photo to upload, or select Remove photo.'},{status:400})
     const invalid=validateProfileImage(file);if(invalid)return NextResponse.json({error:invalid},{status:400})

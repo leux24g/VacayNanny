@@ -1,5 +1,9 @@
 'use client'
 
+import FormError from './FormError'
+
+import {clientFetch} from '@/lib/client-request'
+
 import { useEffect, useState } from 'react'
 import MediaImage from '@/components/MediaImage'
 import { useRouter } from 'next/navigation'
@@ -38,7 +42,7 @@ export default function AccountProfileForm({ profile }: { profile: Profile }) {
       body.set('phone', phone)
       if (file) body.set('avatar', file)
       if (removeAvatar) body.set('removeAvatar', 'true')
-      const res = await fetch('/api/account/profile', { method: 'PATCH', body })
+      const res = await clientFetch('/api/account/profile', { method: 'PATCH', body })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(json.error || 'Could not save your profile.')
@@ -125,7 +129,7 @@ export default function AccountProfileForm({ profile }: { profile: Profile }) {
           placeholder="+254 7xx xxx xxx"
         />
       </div>
-      {error && <p className="field-error-msg" role="alert">{error}</p>}
+      <FormError message={error}/>
       {saved && <p className="account-saved" role="status">Saved. Future requests will use these details.</p>}
       <button className="btn-coral account-save" type="submit" disabled={busy}>
         {busy ? 'Saving…' : 'Save profile'}

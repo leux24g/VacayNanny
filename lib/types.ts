@@ -166,6 +166,8 @@ export type BookingAssignment = {
 }
 
 export type NannyApplication = {
+  legacy_nanny_id?: string | null
+  legacy_completed_at?: string | null
   decision_version?: number
   agreement_submitted_path?: string | null
   agreement_submitted_at?: string | null

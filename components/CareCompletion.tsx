@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { completionReportErrors, type CompletionReport } from '@/lib/completion-report'
@@ -27,7 +29,7 @@ export default function CareCompletion({
     setBusy(true)
     setError('')
     try {
-      const response = await fetch(`/api/booking/${bookingId}/completion`, {
+      const response = await clientFetch(`/api/booking/${bookingId}/completion`, {
         method: verify ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(verify ? { challengeId: challenge, code } : {report}),

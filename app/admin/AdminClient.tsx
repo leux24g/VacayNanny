@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminCompletionReports from '@/components/AdminCompletionReports'
@@ -192,7 +194,7 @@ export default function AdminClient({
     setBusy(id)
     setErrors((e) => ({ ...e, [id]: '' }))
     try {
-      const res = await fetch(`/api/admin/bookings/${id}`, {
+      const res = await clientFetch(`/api/admin/bookings/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -224,7 +226,7 @@ export default function AdminClient({
     setBusy(id)
     setErrors((e) => ({ ...e, [id]: '' }))
     try {
-      const res = await fetch(`/api/admin/applications/${id}`, {
+      const res = await clientFetch(`/api/admin/applications/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),

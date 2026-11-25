@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
     if(blocked)return blocked
     const app = await ownNannyApplication(db, profile)
     if (!app) return NextResponse.json({ error: 'Complete your nanny application first.' }, { status: 404 })
+    if(app.legacy_nanny_id&&!app.legacy_completed_at)return NextResponse.json({error:'Complete your existing nanny onboarding, documents and references before recording agreement acceptance.'},{status:409})
     if (!app.national_id_number || !app.phone || !app.email) return NextResponse.json({ error: 'Your identity and contact details must be completed before acceptance. Contact our team.' }, { status: 409 })
     const errors = validateAgreement(body, app.full_name)
     if (errors.length) return NextResponse.json({ error: errors[0], errors }, { status: 400 })

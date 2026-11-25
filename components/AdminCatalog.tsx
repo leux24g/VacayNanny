@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { BusinessPolicies, CareOffering, FaqEntry, HomepageStep, PricingAddon, PricingTier, SiteCatalog } from '@/lib/catalog'
@@ -9,7 +11,7 @@ const EMPTY_FAQ = { question: '', answer: '', sortOrder: 1 }
 const EMPTY_STEP = { stepLabel: '', title: '', imageUrl: '', imageAlt: '', sortOrder: 1 }
 
 async function send(method: 'POST' | 'PATCH' | 'DELETE', body?: Record<string, unknown>, query = '') {
-  const res = await fetch(`/api/admin/catalog${query}`, {
+  const res = await clientFetch(`/api/admin/catalog${query}`, {
     method,
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,

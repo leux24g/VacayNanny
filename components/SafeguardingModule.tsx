@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -28,7 +30,7 @@ export default function SafeguardingModule({ alreadyComplete }: { alreadyComplet
     setBusy(true)
     setError('')
     try {
-      const res = await fetch('/api/nanny/safeguarding', {
+      const res = await clientFetch('/api/nanny/safeguarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers }),

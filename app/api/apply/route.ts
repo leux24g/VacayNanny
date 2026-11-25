@@ -16,6 +16,7 @@ import {
   type ApplicationUploadManifest,
 } from '@/lib/application-uploads'
 import type { NannyTier } from '@/lib/types'
+import {existingApplication} from '@/lib/existing-onboarding'
 import { applicationAcceptance } from '@/lib/nanny-onboarding'
 
 function estimateTier(body: Record<string, unknown>): NannyTier {
@@ -124,8 +125,18 @@ export async function POST(request: NextRequest) {
     )
     if (errors.length)
       return NextResponse.json({ error: errors[0], errors }, { status: 400 })
+    let legacyId:string|null=null
+    if(body.existingApplicationId){
+      const {getCurrentProfile}=await import('@/lib/auth')
+      const profile=await getCurrentProfile()
+      if(!profile)return NextResponse.json({error:'Sign in again to complete your onboarding.'},{status:401})
+      const app=await existingApplication(supabase,profile,String(body.existingApplicationId))
+      if(profile.email?.toLowerCase()!==email.toLowerCase())return NextResponse.json({error:'Use your verified account email.'},{status:400})
+      if(manifest&&manifest.applicationId!==app.id)return NextResponse.json({error:'The upload belongs to a different application.'},{status:400})
+      legacyId=app.id;userId=profile.id
+    }
     const estimated = estimateTier(body)
-    const applicationId = manifest?.applicationId || randomUUID()
+    const applicationId = legacyId || manifest?.applicationId || randomUUID()
     const submissionKey =
       typeof body.submissionKey === 'string' &&
       /^[0-9a-f-]{36}$/i.test(body.submissionKey)
@@ -244,7 +255,8 @@ export async function POST(request: NextRequest) {
           mime_type: file.contentType,
         })
       }
-      const { data, error } = await supabase.rpc('save_complete_application', {
+      const { data, error } = await supabase.rpc(legacyId?'complete_existing_application':'save_complete_application', {
+        ...(legacyId?{p_id:legacyId,p_actor:userId}:{}),
         p_row: row,
         p_references: refs,
         p_documents: documents,

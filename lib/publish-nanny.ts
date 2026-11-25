@@ -151,10 +151,12 @@ export async function publishApprovedApplication(
         'This profile is suspended. Restore it from the Nannies workspace after review.',
     }
   if (existing) {
-    if (!existing.is_active) {
+    if (!existing.is_active || app.legacy_nanny_id) {
       const { error: updateError } = await supabase
         .from('nannies')
-        .update({ is_active: true })
+        .update({ is_active: true, ...(app.legacy_nanny_id?{
+          tier:asTier(app.estimated_tier),daily_rate_kes:await tierDailyRate(supabase,asTier(app.estimated_tier)),bio:app.bio,county:app.county,town:app.town,languages:app.languages||[],age_groups:app.age_groups||[],services:app.services||[],certifications:app.certifications||[],available_days:app.available_days||[],destinations:app.preferred_locations?.length?app.preferred_locations:[app.town].filter(Boolean),willing_to_travel:app.willing_to_travel,
+        }:{}) })
         .eq('id', existing.id)
       if (updateError) return { ok: false, status: 500, error: updateError.message }
     }

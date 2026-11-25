@@ -557,6 +557,15 @@ async function main() {
       }
       return
     }
+    if(url.pathname==='/__legacy-fixture') {
+      const app=(tables.nanny_applications as Array<Record<string,unknown>>).find(a=>a.id===ownApplicationId)!
+      app.legacy_nanny_id=url.searchParams.get('enabled')==='1'?nannyId:null
+      app.legacy_completed_at=null
+      res.end('{}');return
+    }
+    if(url.pathname==='/rest/v1/rpc/operations_health') {
+      res.end(JSON.stringify({database:true,workerObserved:true,queue:{ready:0,scheduled:0,processing:0,stale:0,failed:0,oldestReadyAt:null,lastSuccessAt:new Date().toISOString(),lastRun:{status:'completed'}}}));return
+    }
     if(url.pathname==='/__tier-fixtures') {
       const list=tables.nannies as Array<Record<string,unknown>>
       tables.nannies=list.filter(n=>!String(n.slug).startsWith('qualification-fixture-'))

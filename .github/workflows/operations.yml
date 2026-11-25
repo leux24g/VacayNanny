@@ -1,0 +1,51 @@
+name: Independent operations monitor
+on:
+  schedule:
+    - cron: '2-59/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      verify_mail:
+        description: Authenticate alert SMTP without sending a test message
+        type: boolean
+        default: false
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: vacaynanny-independent-monitor
+  cancel-in-progress: false
+jobs:
+  monitor:
+    if: github.repository == vars.OPERATIONS_REPOSITORY
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      OPERATIONS_SITE_URL: https://www.vacaynanny.net
+      MONITOR_SECRET: ${{ secrets.MONITOR_SECRET }}
+      OPERATIONS_ALERT_EMAIL: ${{ vars.OPERATIONS_ALERT_EMAIL }}
+      EMAIL_DELIVERY_MODE: send
+      EMAIL_PROVIDER: smtp
+      SMTP_USER: ${{ secrets.OPERATIONS_SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.OPERATIONS_SMTP_PASSWORD }}
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: '465'
+      VERIFY_ALERT_TRANSPORT: ${{ inputs.verify_mail }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache/restore@v6.1.0
+        with:
+          path: artifacts/watchdog-state.json
+          key: operations-health-${{ github.run_id }}
+          restore-keys: operations-health-
+      - run: npm run operations:watch
+      - uses: actions/cache/save@v6.1.0
+        if: always()
+        with:
+          path: artifacts/watchdog-state.json
+          key: operations-health-${{ github.run_id }}

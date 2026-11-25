@@ -46,6 +46,7 @@ export default async function NannyDash() {
         tier:app.estimated_tier,submittedAt:app.created_at,interviewAt:app.interview_at,
         signedSubmitted:Boolean(app.agreement_submitted_path),agreementReviewedAt:app.agreement_reviewed_at || null,
         active:Boolean(nanny?.is_active && !nanny?.is_suspended),
+        needsCompleteApplication:Boolean(app.legacy_nanny_id&&!app.legacy_completed_at),
       }
     }
     if (nanny) {

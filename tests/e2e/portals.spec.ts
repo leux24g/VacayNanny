@@ -61,6 +61,7 @@ test('client portal exposes its workflows and own payment records while handling
  await page.getByLabel('Full name',{exact:true}).fill('Preserved edit')
  await page.getByRole('button',{name:'Save profile',exact:true}).click()
  await expect(page.getByRole('alert').filter({hasText:'Could not connect'})).toBeVisible()
+ await expect(page.getByRole('alert').filter({hasText:'Could not connect'})).toBeFocused()
  await expect(page.getByLabel('Full name',{exact:true})).toHaveValue('Preserved edit')
  await expect(page.getByRole('button',{name:'Save profile',exact:true})).toBeEnabled()
 })
@@ -87,4 +88,25 @@ test('admin sees acceptance evidence, private payout details and queue health',a
  await expect(page.getByText('+254712345678',{exact:true})).toBeVisible()
  await page.getByRole('button',{name:'Hide private payout details'}).click()
  await expect(page.getByText('+254712345678',{exact:true})).toHaveCount(0)
+})
+
+
+test('existing nanny completes onboarding through the current account with its verified email fixed',async({page})=>{
+ await page.request.get('http://127.0.0.1:4748/__legacy-fixture?enabled=1')
+ try{
+  await page.goto('/login');await enterEmailCode(page,'nanny@example.test');await expect(page).toHaveURL('/nanny')
+  await page.getByRole('link',{name:'Complete my existing nanny onboarding'}).click()
+  await expect(page).toHaveURL('/nanny/onboarding')
+  await expect(page.getByLabel('First Name')).toHaveValue('Test')
+  await expect(page.getByLabel('Email Address')).toHaveValue('nanny@example.test')
+  await expect(page.getByLabel('Email Address')).toHaveAttribute('readonly','')
+  await page.getByLabel('Town / City').fill('Preserved town')
+  await page.reload();await expect(page.getByLabel('Town / City')).toHaveValue('Preserved town')
+ }finally{await page.request.get('http://127.0.0.1:4748/__legacy-fixture?enabled=0')}
+})
+test('private operational health is protected and readiness checks its dependencies',async({request})=>{
+ expect((await request.get('/api/operations/health')).status()).toBe(401)
+ const ready=await request.get('/api/health');expect(ready.status()).toBe(200)
+ expect((await ready.json()).checks.database).toBe(true)
+ expect((await request.get('/api/health/live')).status()).toBe(200)
 })

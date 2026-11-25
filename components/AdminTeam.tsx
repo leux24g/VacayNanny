@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { RegisteredAccount, UserRole } from '@/lib/types'
@@ -62,7 +64,7 @@ export default function AdminTeam({
     setBusy(userId)
     setError('')
     try {
-      const res = await fetch('/api/admin/nannies/approve', {
+      const res = await clientFetch('/api/admin/nannies/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId }),
@@ -73,6 +75,8 @@ export default function AdminTeam({
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }
@@ -82,7 +86,7 @@ export default function AdminTeam({
     setBusy(id)
     setError('')
     try {
-      const res = await fetch('/api/admin/team', {
+      const res = await clientFetch('/api/admin/team', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, role }),
@@ -93,6 +97,8 @@ export default function AdminTeam({
         return
       }
       router.refresh()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not connect. Please retry.')
     } finally {
       setBusy(null)
     }

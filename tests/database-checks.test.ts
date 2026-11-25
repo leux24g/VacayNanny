@@ -32,7 +32,7 @@ test('database readiness uses only read requests and downloads zero records', as
                 'accept_care_quote',
                 'claim_workflow_jobs',
                 'run_workflow_automation',
-                'nanny_signup_application', 'nanny_agreement_is_current', 'accept_nanny_agreement', 'submit_nanny_signed_agreement', 'add_nanny_document', 'update_nanny_photo', 'nanny_qualifies_for_work', 'save_care_completion_report', 'workflow_queue_health', 'retry_workflow_job', 'begin_workflow_email_delivery', 'confirm_workflow_email_delivery',
+                'nanny_signup_application', 'nanny_agreement_is_current', 'accept_nanny_agreement', 'submit_nanny_signed_agreement', 'add_nanny_document', 'update_nanny_photo', 'nanny_qualifies_for_work', 'begin_existing_onboarding', 'complete_existing_application', 'operations_health', 'save_care_completion_report', 'workflow_queue_health', 'retry_workflow_job', 'begin_workflow_email_delivery', 'confirm_workflow_email_delivery',
               ].map((name) => [`/rpc/${name}`, {}]),
             ),
           },

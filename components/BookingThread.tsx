@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { BookingMessage, BookingMessageRole } from '@/lib/types'
 
@@ -37,7 +39,7 @@ export default function BookingThread({
   const scroller = useRef<HTMLDivElement>(null)
 
   const load = useCallback(async () => {
-    const res = await fetch(`/api/booking/${bookingId}/messages`)
+    const res = await clientFetch(`/api/booking/${bookingId}/messages`)
     const json = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(json.error || 'Could not load messages.')
     return (json.messages || []) as BookingMessage[]
@@ -80,7 +82,7 @@ export default function BookingThread({
     setSending(true)
     setError('')
     try {
-      const res = await fetch(`/api/booking/${bookingId}/messages`, {
+      const res = await clientFetch(`/api/booking/${bookingId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ body }),

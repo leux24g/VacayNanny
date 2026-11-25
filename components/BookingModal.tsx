@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { createSupabaseBrowser } from '@/lib/supabase/browser'
@@ -183,7 +185,7 @@ export default function BookingModal({
     setStatus('loading')
     setError('')
     try {
-      const res = await fetch('/api/booking', {
+      const res = await clientFetch('/api/booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

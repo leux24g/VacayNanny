@@ -66,3 +66,27 @@ test('supplemental documents reset vetting, create review work atomically and ca
  assert.ok((await db.rpc('add_nanny_document',{p_application:appId,p_actor:actor,p_document:{...document,storage_path:`nanny-documents/${appId}/supplemental/${randomUUID()}`}})).error)
  assert.equal((await db.from('nanny_documents').select('id').eq('storage_path',document.storage_path)).data!.length,1)
 })
+
+test('existing nanny onboarding links one existing account and profile, requires owner acceptance, and rejects replay changes',async()=>{
+ const c=await localCredentials(),admin=await db.auth.admin.createUser({email:`legacy-admin-${randomUUID()}@example.test`,password:randomUUID(),email_confirm:true}),owner=await db.auth.admin.createUser({email:`legacy-owner-${randomUUID()}@example.test`,password:randomUUID(),email_confirm:true});assert.ifError(admin.error);assert.ifError(owner.error)
+ const operator=admin.data.user!.id,identity=owner.data.user!,nannyId=randomUUID();let application:string|undefined
+ try{
+  await db.from('profiles').update({role:'admin'}).eq('id',operator);await db.from('profiles').update({role:'nanny'}).eq('id',identity.id)
+  assert.ifError((await db.from('nannies').insert({id:nannyId,user_id:identity.id,slug:`legacy-${nannyId}`,display_name:'Existing Test Nanny',tier:'bronze',is_active:false})).error)
+  assert.ok((await db.rpc('begin_existing_onboarding',{p_nanny:nannyId,p_actor:identity.id,p_email:identity.email})).error)
+  const linked=await db.rpc('begin_existing_onboarding',{p_nanny:nannyId,p_actor:operator,p_email:identity.email});assert.ifError(linked.error);application=linked.data
+  assert.equal((await db.rpc('begin_existing_onboarding',{p_nanny:nannyId,p_actor:operator,p_email:identity.email})).data,application)
+  assert.equal((await db.from('nannies').select('application_id').eq('id',nannyId).single()).data!.application_id,application)
+  const body={...completeApplication,fullName:'Existing Test Nanny',agreementSignerName:'Existing Test Nanny',email:identity.email},row={full_name:body.fullName,email:identity.email,national_id_number:body.nationalIdNumber,phone:body.phone,date_of_birth:body.dateOfBirth,consent_background:true,consent_terms:true,consent_accuracy:true,submission_key:randomUUID(),agreement_acceptance:applicationAcceptance(body)},refs=[{full_name:'Reference One',sort_order:1},{full_name:'Reference Two',sort_order:2}],docs=['photo','id_front','id_back','selfie'].map(kind=>({kind,storage_path:`nanny-documents/${application}/synthetic-${kind}.jpg`}))
+  assert.ok((await db.rpc('complete_existing_application',{p_id:application,p_actor:operator,p_row:row,p_references:refs,p_documents:docs})).error,'Administrator cannot accept on the nanny’s behalf.')
+  assert.ok((await db.rpc('complete_existing_application',{p_id:application,p_actor:identity.id,p_row:{...row,agreement_acceptance:null},p_references:refs,p_documents:docs})).error)
+  assert.ifError((await db.rpc('complete_existing_application',{p_id:application,p_actor:identity.id,p_row:row,p_references:refs,p_documents:docs})).error)
+  assert.ifError((await db.rpc('complete_existing_application',{p_id:application,p_actor:identity.id,p_row:row,p_references:refs,p_documents:docs})).error)
+  const changed=await db.rpc('complete_existing_application',{p_id:application,p_actor:identity.id,p_row:{...row,submission_key:randomUUID()},p_references:refs,p_documents:docs});assert.ok(changed.error)
+  assert.equal((await db.from('nannies').select('id').eq('user_id',identity.id)).data!.length,1);assert.ok((await loadAgreementSummary(db,application!))!.current)
+  assert.ok((await createClient(c.url,c.anonKey).rpc('operations_health')).error)
+ }finally{
+  if(application){await db.from('workflow_jobs').delete().eq('dedupe_key',`existing-application-received:${application}`);await db.from('workflow_audit').delete().eq('entity_id',application);await db.from('nanny_documents').delete().eq('application_id',application);await db.from('nanny_references').delete().eq('application_id',application)}
+  await db.from('ops_tasks').delete().eq('dedupe_key',`legacy-onboarding:${nannyId}`);if(application)await db.from('nanny_applications').update({legacy_nanny_id:null}).eq('id',application);await db.from('nannies').delete().eq('id',nannyId);if(application)await db.from('nanny_applications').delete().eq('id',application);await db.auth.admin.deleteUser(identity.id);await db.auth.admin.deleteUser(operator)
+ }
+})

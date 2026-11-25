@@ -165,7 +165,7 @@ test('operational endpoints stay private and local review stays outside search i
 }) => {
   const health = await request.get('/api/health')
   expect(health.status()).toBe(200)
-  expect(await health.json()).toEqual({ service: 'vacaynanny', status: 'ok' })
+  expect(await health.json()).toMatchObject({ service: 'vacaynanny', status: 'ok', checks: {database:true,worker:true,queue:true,emailConfiguration:true} })
   expect(health.headers()['cache-control']).toBe('no-store')
   const cron = await request.get('/api/cron/bookings?secret=fixture-secret')
   expect(cron.status()).toBe(401)

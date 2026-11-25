@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import Link from 'next/link'
 import { SPECIALIST_SERVICES } from '@/lib/care-enquiries'
 import { useState } from 'react'
@@ -23,7 +25,7 @@ export default function ContactPage({
     setStatus('loading')
     setError('')
     try {
-      const res = await fetch('/api/contact', {
+      const res = await clientFetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { CareEnquiry } from '@/lib/care-enquiries'
@@ -43,7 +45,7 @@ export default function SpecialistEnquiryCard({
         : null
     }
     try {
-      const response = await fetch(`/api/admin/care-enquiries/${enquiry.id}`, {
+      const response = await clientFetch(`/api/admin/care-enquiries/${enquiry.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(changes),

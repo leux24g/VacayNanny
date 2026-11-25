@@ -1,5 +1,7 @@
 'use client'
 
+import {clientFetch} from '@/lib/client-request'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import CareCompletion from '@/components/CareCompletion'
@@ -23,7 +25,7 @@ export default function NannyPlacements({ bookings }: { bookings: Booking[] }) {
     setBusy(id)
     setError('')
     try {
-      const res = await fetch(`/api/booking/${id}`, {
+      const res = await clientFetch(`/api/booking/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),

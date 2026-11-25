@@ -1,4 +1,6 @@
 'use client'
+
+import {clientFetch} from '@/lib/client-request'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { FamilyCareEnquiry } from '@/lib/care-enquiries'
@@ -18,7 +20,7 @@ export default function CareEnquiryView({
     setBusy(true)
     setError('')
     try {
-      const response = await fetch(`/api/care-enquiries/${enquiry.id}`, {
+      const response = await clientFetch(`/api/care-enquiries/${enquiry.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

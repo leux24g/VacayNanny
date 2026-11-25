@@ -7,6 +7,7 @@ const LIMITS = {
   apply: { ip: 5, email: 3 },
   apply_upload: { ip: 10, email: 5 },
   agreement: { ip: 20, email: 10 },
+  profile_photo: { ip: 40, email: 12 },
   payment: { ip: 30, email: 15 },
   booking: { ip: 10, email: 6 },
   contact: { ip: 8, email: 4 },
