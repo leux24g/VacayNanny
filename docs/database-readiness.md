@@ -1,6 +1,20 @@
 # Database readiness — 25 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `950aa5c34cfd48ec0777345a0dc76c582b3962ff` was deployed to Vercel production as `dpl_AXWmdpofS8jEyZqJ4RCzN4c4Tdn7`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `58eb87d1233071663052299d1f0762e7e8a2f6fd` was deployed to Vercel production as `dpl_FwBWtMuHYbgeYU9XbadGqSJHka35`.
+
+## Approved logo rollout — 25 November
+
+The approved Sunshine & Care identity is used in shared navigation, the footer, the nanny application and submitted screen, and the administrator workspace. Both family and nanny portals inherit the same header. SVG lettering is outlined and the image has an accessible name. Responsive sizes preserve the menu and booking control at 320px.
+
+Application, booking and verification emails use the matching transparent PNG through a shared HTML helper with an absolute public URL and brand-name alternative text. The local email previews render at phone width; this check sends no customer messages.
+
+Root `app/icon.svg`, `app/favicon.ico` and `app/apple-icon.png` supply Next.js file-based icon metadata. The older explicit SVG-as-Apple metadata was removed. Conventional public favicon and Apple-touch paths serve the matching approved artwork. Browser checks verify that icon bytes match their source assets and that the Apple link advertises a 180px PNG.
+
+Validation passed lint, type checks, the production build, 65 unit tests and 55 browser tests. Targeted checks cover public branding, footer and application screens, favicon metadata/assets, keyboard/home navigation, email previews and widths from 320 to 2560px. No database migration is required. Evidence and screenshots are under ignored `artifacts/logo-rollout/`.
+
+The independent [GitHub verification run](https://github.com/leux24g/VacayNanny/actions/runs/45687067095) also passed both jobs: 65 unit tests, 39 real Supabase integration tests and 55 browser tests.
+
+Twelve live branding/asset checks passed on the public deployment, including six viewport widths, the public header/footer/application form, menu and home navigation and byte-for-byte checks of the active icon files. The public readiness endpoint reports healthy database, worker, queue and email configuration.
 
 ## Metallic pricing cards — 25 November
 
