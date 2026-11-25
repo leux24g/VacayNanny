@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-labelledby="title">
+  <title id="title">VacayNanny — sunshine and care</title>
+  <g stroke="#F27C70" stroke-linecap="round">
+    <path d="M64 10v7M28 22l6 6m66-6-6 6" stroke-width="8"/>
+    <path d="M17 73c7-29 26-42 47-42 23 0 42 16 48 42" stroke-width="11"/>
+  </g>
+  <g fill="#17324D">
+    <circle cx="48" cy="64" r="13"/>
+    <circle cx="79" cy="76" r="9.5"/>
+  </g>
+  <path d="M31 86c14 18 25 26 34 26 11 0 24-11 36-23" stroke="#17324D" stroke-width="19" stroke-linecap="round"/>
+</svg>
