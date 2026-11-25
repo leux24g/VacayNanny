@@ -1,6 +1,18 @@
-# Database readiness — 24 November 2026
+# Database readiness — 25 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `371691bc59f723943bc7bd64cd364a3ac3da9200` was deployed to Vercel production as `dpl_3G7oKS7HEH8JqmB3nMFvfNxtBpE7`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `2b6a960911c92afce3a38a9482493c5797e5164c` was deployed to Vercel production as `dpl_FxQD3q8UAm7RSk2uMkrx28myagVc`.
+
+## Photo updates and tier eligibility — 25 November
+
+Nannies have a direct **Update my profile photo** link and a separate choose/camera/preview/save editor. Administrators can update a nanny's photo under **Nannies → Update profile photo**. JPEG and PNG uploads, large phone-photo resizing, failed-save retention and private write permissions are covered by automated tests. A camera capture request is tested with a JPEG fixture; the automated browser does not operate physical phone hardware.
+
+Work eligibility is Bronze → Bronze, Silver → Bronze/Silver, and Gold → all three with completed safeguarding. Search, matching, primary/additional assignments and database triggers enforce it. Existing booked categories and totals are retained when a higher-qualified nanny takes the work. See [photo and tier operations](photos-and-tier-eligibility.md).
+
+The new migration was applied as `20261125152034_vacaynanny_tier_eligibility_and_nanny_photos`, after a fresh application-data snapshot. Four new functions are server-only, with execution denied to browser roles. The hosted advisor retains seven existing warnings and reports no new warnings or errors. The local security advisor reports no warnings or errors. Existing eight profiles, five nanny profiles, one booking and twelve Auth users were preserved; no customer photo was uploaded or changed as a live test.
+
+Validation passed 61 unit tests, 38 integration tests against real local Supabase services and 53 browser tests, plus lint, type checks and production builds. Release artifacts are under ignored `artifacts/photos-tiers-release/`.
+
+The final deployment passed ten live HTTP checks covering public tier search, health, portal redirects, unauthenticated photo-write denial and the authenticated worker. Live mobile browser checks verified each tier filter, category continuity into the booking form, no JavaScript errors and no horizontal overflow. All five current production nannies are Bronze: Bronze search returns five, and Silver/Gold searches return none. These are preserved qualifications, not test upgrades. The worker returned HTTP 200 with zero failed or expired-lease jobs, and all baseline record and Storage counts remained unchanged.
 
 ## Portal, agreement and queue release
 

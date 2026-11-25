@@ -1,6 +1,6 @@
 # VacayNanny on Vercel
 
-The refreshed application is live at `https://www.vacaynanny.net` on the existing Vercel project `vacaynanny/vacay-nanny`. Production deployment `dpl_3G7oKS7HEH8JqmB3nMFvfNxtBpE7` contains application commit `371691bc59f723943bc7bd64cd364a3ac3da9200`. The client, nanny and admin portals, mandatory agreement acceptance, completion reports and bounded queue recovery are included; see [portal operations](portal-operations.md). Database migrations, production SMTP/Paystack configuration, Auth origins and the minute-level workflow scheduler were applied on 24 November 2026. See [release verification and remaining dependencies](database-readiness.md).
+The refreshed application is live at `https://www.vacaynanny.net` on the existing Vercel project `vacaynanny/vacay-nanny`. Production deployment `dpl_FxQD3q8UAm7RSk2uMkrx28myagVc` contains application commit `2b6a960911c92afce3a38a9482493c5797e5164c`. The latest release includes JPEG/PNG photo uploads, camera capture controls, admin photo editing and hierarchical Bronze/Silver/Gold work eligibility, alongside the client, nanny and admin portals, mandatory agreement acceptance, completion reports and bounded queue recovery; see [portal operations](portal-operations.md). Database migrations, production SMTP/Paystack configuration, Auth origins and the minute-level workflow scheduler were applied on 24 November 2026. See [release verification and remaining dependencies](database-readiness.md).
 
 The release was uploaded directly with authorized project-scoped Vercel access. [PR #15](https://github.com/vacaynanny/VacayNanny/pull/15) contains the source but still needs an upstream maintainer merge; the available GitHub account cannot merge into the upstream repository. A successful manual release does not resolve the Git integration's team authorization check. Avoid redeploying the older `main` branch over this release.
 
@@ -18,6 +18,10 @@ npm run dev:review
 Review the public site at `http://localhost:3101`. Sign in to `/login?next=/admin` with `operator@example.test`, password `local-review`, then its emailed verification code. This fixture server binds to `127.0.0.1`, uses dummy keys and sample data, rejects application-data writes, captures synthetic email in a loopback-only SMTP sink, and disables payments. Read the sample account code at `http://127.0.0.1:4748/__otp?email=operator@example.test`. The sink never forwards mail. It is never used by `npm run build` or a deployed app. `npm run dev` uses the configured database instead; use the review command for sample data, or the isolated database workflow below for real service integration.
 
 Email previews are saved under `artifacts/email-previews/`. They use the supplied wording and a sample name. The revised agreement supplied by the user is the approval attachment; see [portal operations](portal-operations.md) for its version and hash.
+
+## Nanny photos and work categories
+
+See [photo editing and eligibility](photos-and-tier-eligibility.md) for the self-service and admin controls, camera fallback, privacy and queued cleanup, Gold safeguarding requirement, and category/price preservation. The new schema is applied after the portal release as `20261125151144_tier_eligibility_and_nanny_photos.sql`.
 
 ## Environment settings
 
