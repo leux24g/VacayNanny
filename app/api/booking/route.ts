@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
     if (blocked) return blocked
 
     const normalizedTier = normalizeTier(tier)
+    if (tier && !normalizedTier) return NextResponse.json({error:'Choose a valid care tier.'},{status:400})
     const capacity = normalizedTier === 'bronze' ? 2 : normalizedTier === 'silver' ? 3 : 4
     if (Number(childrenCount) > capacity * Number(nanniesNeeded))
       return NextResponse.json(
@@ -142,7 +143,7 @@ export async function POST(request: NextRequest) {
         .maybeSingle()
       if (data?.tier) {
         assignedTier = publicTier(data)
-        dailyRateKes = publicDailyRate(
+        dailyRateKes = normalizedTier && normalizedTier !== assignedTier ? null : publicDailyRate(
           {
             tier: data.tier,
             daily_rate_kes: data.daily_rate_kes,
@@ -212,7 +213,7 @@ export async function POST(request: NextRequest) {
       children_count: childrenCount || null,
       youngest_age: youngestAge || null,
       nannies_needed: nanniesNeeded,
-      tier: assignedTier || normalizedTier || null,
+      tier: normalizedTier || assignedTier || null,
       notes: notes || null,
       status: assigned ? ('matched' as const) : ('pending' as const),
       nanny_response: assigned ? ('pending' as const) : null,

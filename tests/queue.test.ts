@@ -10,7 +10,7 @@ import {uploadPublicPhoto,ProfileImageError} from '../lib/profile-media'
 test('photo cleanup removes abandoned uploads and retains a photo referenced by the site',async()=>{
  const env={...process.env};process.env.EMAIL_DELIVERY_MODE='disabled'
  try{
-  const pending=[{id:'abandoned',kind:'public_photo_cleanup',payload:{path:'profiles/test/abandoned.png'},lease_token:'one'},{id:'referenced',kind:'public_photo_cleanup',payload:{path:'profiles/test/current.png'},lease_token:'two'}],removed:string[]=[],checked:string[]=[]
+  const pending=[{id:'abandoned',kind:'public_photo_cleanup',payload:{path:'profiles/test/abandoned.png'},lease_token:'one'},{id:'referenced',kind:'public_photo_cleanup',payload:{url:'https://test.invalid/profiles/test/current.png'},lease_token:'two'}],removed:string[]=[],checked:string[]=[]
   const db={
    rpc:async(name:string)=>name==='claim_workflow_jobs'?{data:pending.length?[pending.shift()]:[],error:null}:{data:null,error:null},
    from:(table:string)=>({select:()=>({eq:(_column:string,url:string)=>({limit:async()=>{

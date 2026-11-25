@@ -1,4 +1,4 @@
-import { TIER_RATES } from '@/lib/constants'
+import { TIER_RATES, normalizeTier } from '@/lib/constants'
 import type { Nanny, NannyTier } from '@/lib/types'
 
 export const SAFEGUARDING_PASS_MARK = 4
@@ -101,12 +101,25 @@ export function scoreSafeguardingQuiz(answers: unknown): { score: number; passed
 }
 
 export function publicTier(nanny: Pick<Nanny, 'tier' | 'safeguarding_completed_at'>): NannyTier {
-  if (nanny.tier === 'gold' && nanny.safeguarding_completed_at === null) return 'silver'
+  if (nanny.tier === 'gold' && !nanny.safeguarding_completed_at) return 'silver'
   return nanny.tier
 }
 
+/** A higher qualification includes lower work categories; Gold still needs safeguarding. */
+export function qualifiesForTier(nanny: Pick<Nanny, 'tier' | 'safeguarding_completed_at'>, requested?: string | null): boolean {
+  if (!requested?.trim()) return true
+  const tier = normalizeTier(requested)
+  if (!tier) return false
+  const ranks = { bronze: 1, silver: 2, gold: 3 }
+  return ranks[publicTier(nanny)] >= ranks[tier]
+}
+
+export function eligibleWorkTiers(nanny: Pick<Nanny, 'tier' | 'safeguarding_completed_at'>): NannyTier[] {
+  return (['bronze', 'silver', 'gold'] as const).filter(tier => qualifiesForTier(nanny, tier))
+}
+
 export function needsSafeguardingModule(nanny: Pick<Nanny, 'tier' | 'safeguarding_completed_at'>): boolean {
-  return nanny.tier === 'gold' && nanny.safeguarding_completed_at === null
+  return nanny.tier === 'gold' && !nanny.safeguarding_completed_at
 }
 
 export function publicDailyRate(

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import MediaImage from '@/components/MediaImage'
-import { formatKes, tierClass, tierLabel } from '@/lib/constants'
+import { formatKes, tierClass, tierLabel, normalizeTier, TIER_RATES } from '@/lib/constants'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
 import { tierLabels, tierRateMap } from '@/lib/catalog'
 import { publicDailyRate, publicTier } from '@/lib/safeguarding'
@@ -10,20 +10,24 @@ import styles from './NannyCard.module.css'
 export default function NannyCard({
   nanny,
   onBook,
+  workTier,
 }: {
   nanny: Nanny
   onBook?: (nanny: Nanny) => void
+  workTier?: string
 }) {
   const site = useSiteCatalog()
   const shownTier = publicTier(nanny)
-  const rate = publicDailyRate(nanny, tierRateMap(site.tiers))
+  const requested = normalizeTier(workTier), rates = tierRateMap(site.tiers)
+  const rate = requested && requested !== shownTier ? rates[requested] ?? TIER_RATES[requested] : publicDailyRate(nanny, rates)
+  const profilePath = `/nannies/${nanny.slug}${requested ? `?tier=${requested}` : ''}`
   const label = tierLabel(shownTier, tierLabels(site.tiers))
   const initials = nanny.display_name.split(/\s+/).filter(Boolean).slice(0, 2).map(name => name[0]).join('')
   const locations = [...new Set([nanny.town, ...nanny.destinations.slice(0, 2)].filter(Boolean))].join(' · ')
   return (
     <div className="nanny-card">
       <Link
-        href={`/nannies/${nanny.slug}`}
+        href={profilePath}
         className="nc-photo"
         style={{ display: 'block', textDecoration: 'none' }}
       >
@@ -37,7 +41,7 @@ export default function NannyCard({
       </Link>
       <div className="nc-body">
         <Link
-          href={`/nannies/${nanny.slug}`}
+          href={profilePath}
           className="nc-name"
           style={{ color: 'inherit', textDecoration: 'none' }}
         >
@@ -72,6 +76,7 @@ export default function NannyCard({
           <div className="nc-rate">
             {formatKes(rate)}
             <small>/day</small>
+            {requested && <small style={{display:'block'}}>{requested[0].toUpperCase()+requested.slice(1)} care</small>}
           </div>
           {onBook ? (
             <button className="book-btn" onClick={() => onBook(nanny)}>
@@ -79,7 +84,7 @@ export default function NannyCard({
             </button>
           ) : (
             <Link
-              href={`/nannies/${nanny.slug}`}
+              href={profilePath}
               className="book-btn"
               style={{ textDecoration: 'none' }}
             >

@@ -12,10 +12,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 }
 
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+export default async function Page({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{tier?:string}> }) {
   const { slug } = await params
   const [nanny, destRows] = await Promise.all([getNannyBySlug(slug), getDestinations()])
   if (!nanny) notFound()
   const reviews = await getReviewsForNanny(nanny.id)
-  return <NannyProfile nanny={nanny} reviews={reviews} destinations={destinationNames(destRows)} />
+  return <NannyProfile nanny={nanny} reviews={reviews} destinations={destinationNames(destRows)} workTier={(await searchParams).tier} />
 }

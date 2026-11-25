@@ -67,6 +67,7 @@ export default function AccountProfileForm({ profile }: { profile: Profile }) {
       <div className="account-section-head">
         <h2>Your details</h2>
         <p>Name and phone are filled in on the next booking request. Email stays on your login.</p>
+        {profile.role==='nanny'&&<p>This account avatar is separate from the photo families see. <a href="/nanny#nanny-profile">Update your public nanny photo</a>.</p>}
       </div>
       <div className="account-photo">
         <div className="account-avatar">

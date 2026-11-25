@@ -373,6 +373,7 @@ async function main() {
     homepage_steps: [],
   }
   const originalApplication=tables.nanny_applications[0] as Record<string,unknown>
+  const photoObjects=new Map<string,{bytes:Buffer;type:string}>()
   tables.nanny_applications.push({...originalApplication,id:ownApplicationId,user_id:nannyUserId,email:'nanny@example.test',full_name:'Test Nanny',status:'approved',agreement_signed_path:`${ownApplicationId}/agreements/reviewed.pdf`,agreement_reviewed_at:created,agreement_reviewed_by:adminId})
   tables.nanny_agreement_acceptances=[{application_id:applicationId,version:NANNY_AGREEMENT_VERSION,document_sha256:NANNY_AGREEMENT_SHA256,signer_name:'Test Applicant',accepted_at:created,details:sealed({fullName:'Test Applicant',nationalIdNumber:'SYNTHETIC-ID-1234',email:originalApplication.email,phone:'+254700000000',payoutMethod:'mpesa',payoutAccountName:'Test Applicant',payoutAccountNumber:'+254712345678',payoutBankName:''})},{application_id:ownApplicationId,version:NANNY_AGREEMENT_VERSION,document_sha256:NANNY_AGREEMENT_SHA256,signer_name:'Test Nanny',accepted_at:created,details:sealed({fullName:'Test Nanny',nationalIdNumber:'SYNTHETIC-ID-1234',email:'nanny@example.test',phone:'+254700000000',payoutMethod:'mpesa',payoutAccountName:'Test Nanny',payoutAccountNumber:'+254712345678',payoutBankName:''})}]
   tables.nanny_documents=[{id:'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',application_id:ownApplicationId,kind:'id_front',storage_path:`nanny-documents/${ownApplicationId}/synthetic-id.pdf`,file_name:'synthetic-id.pdf',mime_type:'application/pdf'},{id:'ffffffff-ffff-4fff-8fff-ffffffffffff',application_id:applicationId,kind:'cogc',storage_path:`nanny-documents/${applicationId}/synthetic-police.pdf`,file_name:'synthetic-police.pdf',mime_type:'application/pdf'}]
@@ -555,6 +556,25 @@ async function main() {
         res.end('false')
       }
       return
+    }
+    if(url.pathname==='/__tier-fixtures') {
+      const list=tables.nannies as Array<Record<string,unknown>>
+      tables.nannies=list.filter(n=>!String(n.slug).startsWith('qualification-fixture-'))
+      if(url.searchParams.get('enabled')==='1')for(const tier of ['silver','gold'])tables.nannies.push({...nanny,id:tier==='silver'?'12345678-1234-4123-8123-123456789012':'12345678-1234-4123-8123-123456789013',slug:`qualification-fixture-${tier}`,display_name:`Qualified ${tier}`,tier,daily_rate_kes:tier==='silver'?3200:4200,safeguarding_completed_at:tier==='gold'?created:null,user_id:null})
+      res.end('{}');return
+    }
+    if(url.pathname==='/rest/v1/rpc/enqueue_workflow_job'){for await(const chunk of req)void chunk;res.end(JSON.stringify(randomUUID()));return}
+    if(req.method==='POST'&&url.pathname.startsWith('/storage/v1/object/nanny-photos/')){
+      const pieces:Buffer[]=[];for await(const chunk of req)pieces.push(Buffer.from(chunk));const path=url.pathname.slice('/storage/v1/object/nanny-photos/'.length)
+      photoObjects.set(path,{bytes:Buffer.concat(pieces),type:String(req.headers['content-type']||'image/jpeg')});res.end(JSON.stringify({Id:randomUUID(),Key:`nanny-photos/${path}`}));return
+    }
+    if(req.method==='GET'&&url.pathname.startsWith('/storage/v1/object/public/nanny-photos/')){
+      const photo=photoObjects.get(url.pathname.slice('/storage/v1/object/public/nanny-photos/'.length));if(!photo){res.statusCode=404;res.end('{}');return}res.setHeader('Content-Type',photo.type);res.end(photo.bytes);return
+    }
+    if(url.pathname==='/rest/v1/rpc/update_nanny_photo'){
+      let raw='';for await(const chunk of req)raw+=chunk.toString();const body=JSON.parse(raw),row=(tables.nannies as Array<Record<string,unknown>>).find(n=>n.id===body.p_nanny)
+      if(!row||(!users.some(u=>u.id===body.p_actor&&u.id===adminId)&&row.user_id!==body.p_actor)){res.statusCode=403;res.end(JSON.stringify({message:'Forbidden'}));return}
+      row.photo_url=body.p_photo_url;res.end(JSON.stringify(row.photo_url));return
     }
     if (url.pathname === '/rest/v1/rpc/consume_rate_limit') {
       res.end('true')

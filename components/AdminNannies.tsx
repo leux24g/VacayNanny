@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { formatKes, tierLabel } from '@/lib/constants'
 import type { Nanny, RegisteredAccount } from '@/lib/types'
+import NannyPhotoEditor from './NannyPhotoEditor'
+import {eligibleWorkTiers} from '@/lib/safeguarding'
 
 export default function AdminNannies({
   nannies,
@@ -177,6 +179,8 @@ export default function AdminNannies({
               <p className="ops-meta">
                 {nanny.destinations.join(', ') || 'No destinations listed'}
               </p>
+              <p>Eligible work: {eligibleWorkTiers(nanny).join(', ')}.</p>
+              <details><summary>Update profile photo</summary><NannyPhotoEditor initialUrl={nanny.photo_url} name={nanny.display_name} endpoint={`/api/admin/nannies/${nanny.id}/photo`}/></details>
               <div className="ops-card-actions">
                 <Link className="btn-coral" href={`/nannies/${nanny.slug}`}>
                   Public profile

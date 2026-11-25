@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import MediaImage from '@/components/MediaImage'
+import { useMemo, useState } from 'react'
+import NannyPhotoEditor from './NannyPhotoEditor'
+import {eligibleWorkTiers} from '@/lib/safeguarding'
 import { useRouter } from 'next/navigation'
 import { DAYS_OF_WEEK, formatKes, tierLabel } from '@/lib/constants'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
@@ -9,8 +10,6 @@ import { tierLabels } from '@/lib/catalog'
 import { mergeDestinationChoices } from '@/lib/destinations'
 import type { Nanny } from '@/lib/types'
 
-const MAX_PHOTO_SIZE = 4 * 1024 * 1024 // 4 MB
-const ALLOWED_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
 function Chip({
   label,
@@ -51,51 +50,15 @@ export default function NannyProfileEditor({
   const [isActive, setIsActive] = useState(nanny.is_active)
   const [days, setDays] = useState<string[]>(nanny.available_days || [])
   const [destinations, setDestinations] = useState<string[]>(nanny.destinations || [])
-  const [preview, setPreview] = useState(nanny.photo_url || '')
-  const [file, setFile] = useState<File | null>(null)
-  const [removePhoto, setRemovePhoto] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
-  const [fileError, setFileError] = useState('')
-  useEffect(()=>()=>{if(preview.startsWith('blob:'))URL.revokeObjectURL(preview)},[preview])
-
   function toggle(list: string[], value: string, setList: (next: string[]) => void) {
     setList(list.includes(value) ? list.filter(item => item !== value) : [...list, value])
   }
 
-  function validateFile(file: File): string | null {
-    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
-      return 'Please upload a JPG, PNG, or WebP image.'
-    }
-    if (file.size > MAX_PHOTO_SIZE) {
-      return 'File is too large. Maximum size is 4 MB.'
-    }
-    return null
-  }
-
-  function onFile(next: File | null) {
-    setFileError('')
-    if (next) {
-      const err = validateFile(next)
-      if (err) {
-        setFileError(err)
-        setFile(null)
-        return
-      }
-      setFile(next)
-      setRemovePhoto(false)
-      setPreview(URL.createObjectURL(next))
-    } else {
-      setFile(null)
-      setRemovePhoto(false)
-      setPreview(nanny.photo_url || '')
-    }
-  }
-
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if(fileError)return
     setBusy(true)
     setError('')
     setSaved(false)
@@ -105,15 +68,12 @@ export default function NannyProfileEditor({
       body.set('isActive', isActive ? 'true' : 'false')
       body.set('availableDays', JSON.stringify(days))
       body.set('destinations', JSON.stringify(destinations))
-      if (file) body.set('photo', file)
-      if (removePhoto) body.set('removePhoto', 'true')
       const res = await fetch('/api/nanny/profile', { method: 'PATCH', body })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) {
         setError(json.error || 'Could not save your profile.')
         return
       }
-      setFile(null)
       setSaved(true)
       router.refresh()
     } catch {
@@ -124,50 +84,17 @@ export default function NannyProfileEditor({
   }
 
   return (
+    <>
+    <NannyPhotoEditor initialUrl={nanny.photo_url} name={nanny.display_name} endpoint="/api/nanny/photo"/>
     <form className="form-card" onSubmit={submit}>
       <h3>Public profile</h3>
       <div className="review-row"><span className="review-key">Name</span><span className="review-val">{nanny.display_name}</span></div>
       <div className="review-row"><span className="review-key">Tier</span><span className="review-val">{tierLabel(nanny.tier, labels)}</span></div>
       <div className="review-row"><span className="review-key">Daily rate</span><span className="review-val">{formatKes(nanny.daily_rate_kes)}</span></div>
+      <p>Eligible work: {eligibleWorkTiers(nanny).join(', ')}. Higher qualifications include lower categories; Gold work requires completed safeguarding.</p>
       <p className="field-hint" style={{ margin: '12px 0 16px' }}>
         Tier and rate are set by VacayNanny. You can update your photo, bio, days, destinations, and whether families can find you.
       </p>
-
-      <div className="profile-photo-row">
-        <div className="profile-avatar">
-          {preview && !removePhoto
-            ? <MediaImage src={preview} alt="" fill sizes="88px" />
-            : <span>{nanny.display_name.slice(0, 2).toUpperCase()}</span>}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <label className="upload-box" style={{ marginBottom: 8, display: 'block' }}>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={e => onFile(e.target.files?.[0] || null)}
-              disabled={busy}
-            />
-            <p>{file ? file.name : 'Replace photo'}</p>
-            <span>JPG, PNG or WebP · up to 4 MB</span>
-          </label>
-          {fileError && <p className="field-error-msg" style={{ marginTop: 8 }}>{fileError}</p>}
-          {(preview || nanny.photo_url) && !removePhoto && (
-            <button
-              type="button"
-              className="btn-ghost"
-              style={{ padding: '8px 14px', fontSize: '0.8rem', marginTop: 8 }}
-              onClick={() => {
-                setFile(null)
-                setPreview('')
-                setRemovePhoto(true)
-                setFileError('')
-              }}
-            >
-              Remove photo
-            </button>
-          )}
-        </div>
-      </div>
 
       <div className="field" style={{ marginBottom: 16 }}>
         <label htmlFor="nanny-bio">Bio</label>
@@ -219,10 +146,11 @@ export default function NannyProfileEditor({
       </label>
 
       {error && <p className="field-error-msg" role="alert">{error}</p>}
-      {saved && <p className="field-hint" style={{ color: '#5ec9b6' }}>Saved. {isActive ? 'You are live.' : 'You are hidden from search.'}</p>}
-      <button className="btn-coral" type="submit" disabled={busy || Boolean(fileError)} style={{ marginTop: 12 }}>
+      {saved && <p role="status" className="field-hint" style={{ color: '#5ec9b6' }}>Saved. {isActive ? 'You are live.' : 'You are hidden from search.'}</p>}
+      <button className="btn-coral" type="submit" disabled={busy} style={{ marginTop: 12 }}>
         {busy ? 'Saving…' : 'Save profile'}
       </button>
     </form>
+    </>
   )
 }

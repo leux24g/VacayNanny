@@ -5,10 +5,10 @@ import MediaImage from '@/components/MediaImage'
 import Link from 'next/link'
 import PageShell from '@/components/PageShell'
 import BookingModal from '@/components/BookingModal'
-import { tierClass, tierLabel } from '@/lib/constants'
+import { tierClass, tierLabel, normalizeTier, TIER_RATES } from '@/lib/constants'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
 import { tierLabels, tierRateMap } from '@/lib/catalog'
-import { publicDailyRate, publicTier } from '@/lib/safeguarding'
+import { publicDailyRate, publicTier, qualifiesForTier, eligibleWorkTiers } from '@/lib/safeguarding'
 import type { Nanny, Review } from '@/lib/types'
 
 function chips(items: string[]) {
@@ -19,15 +19,19 @@ export default function NannyProfile({
   nanny,
   reviews,
   destinations,
+  workTier,
 }: {
   nanny: Nanny
   reviews: Review[]
   destinations: string[]
+  workTier?:string
 }) {
   const [open, setOpen] = useState(false)
   const site = useSiteCatalog()
   const shownTier = publicTier(nanny)
-  const rate = publicDailyRate(nanny, tierRateMap(site.tiers))
+  const requested = normalizeTier(workTier), selectedTier = requested && qualifiesForTier(nanny,requested) ? requested : shownTier
+  const rates = tierRateMap(site.tiers)
+  const rate = selectedTier !== shownTier ? rates[selectedTier] ?? TIER_RATES[selectedTier] : publicDailyRate(nanny, rates)
   const label = tierLabel(shownTier, tierLabels(site.tiers))
   const firstName = nanny.display_name.split(' ')[0] || nanny.display_name
   const place = [nanny.town, nanny.county].filter(Boolean).join(', ')
@@ -36,6 +40,7 @@ export default function NannyProfile({
   const reviewed = nanny.review_count > 0
   const stars = Math.min(5, Math.max(1, Math.round(nanny.rating_avg || 0)))
   const facts = [
+    { label: 'Eligible work categories', items: eligibleWorkTiers(nanny).map(tier=>tier[0].toUpperCase()+tier.slice(1)) },
     { label: 'Languages', items: chips(nanny.languages) },
     { label: 'Age groups', items: chips(nanny.age_groups) },
     { label: 'Services', items: chips(nanny.services) },
@@ -46,7 +51,7 @@ export default function NannyProfile({
   const tags = chips(nanny.tags)
 
   return (
-    <PageShell bookDefaults={{ nannyId: nanny.id, nannyName: nanny.display_name, destination: nanny.destinations[0], tier: shownTier, dailyRateKes: rate }}>
+    <PageShell bookDefaults={{ nannyId: nanny.id, nannyName: nanny.display_name, destination: nanny.destinations[0], tier: selectedTier, dailyRateKes: rate }}>
       <article className="nanny-page">
         <Link href="/nannies" className="nav-back">← All nannies</Link>
         <div className="nanny-stage">
@@ -67,6 +72,7 @@ export default function NannyProfile({
             </p>
             <div className="nanny-book">
               <p className="nanny-rate"><sup>KES</sup> {rate.toLocaleString('en-KE')} <small>/day</small></p>
+              <p className="nanny-shift">{selectedTier[0].toUpperCase()+selectedTier.slice(1)} care category · {label} nanny qualification</p>
               <p className="nanny-shift">{site.policies.standardShiftHours}-hour shift · {site.policies.replacementSlaHours}-hour replacement guarantee</p>
               {reviewed ? (
                 <p className="nanny-rating"><span>{'★'.repeat(stars)}</span> {nanny.rating_avg.toFixed(1)} · {nanny.review_count} {nanny.review_count === 1 ? 'review' : 'reviews'}</p>
@@ -107,7 +113,7 @@ export default function NannyProfile({
       <BookingModal
         open={open}
         onClose={() => setOpen(false)}
-        defaults={{ nannyId: nanny.id, nannyName: nanny.display_name, destination: nanny.destinations[0], tier: shownTier, dailyRateKes: rate }}
+        defaults={{ nannyId: nanny.id, nannyName: nanny.display_name, destination: nanny.destinations[0], tier: selectedTier, dailyRateKes: rate }}
         destinations={destinations}
       />
     </PageShell>

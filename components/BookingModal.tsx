@@ -504,7 +504,7 @@ export default function BookingModal({
                         careType: parseCareType(form.careType),
                         tier: form.tier,
                         nanniesNeeded: form.nanniesNeeded,
-                        dailyRateKes: defaults?.dailyRateKes,
+                        dailyRateKes: form.tier === defaults?.tier ? defaults?.dailyRateKes : null,
                         rates,
                         addonCodes: form.addonCodes,
                         maxNannies: site.policies.maxNannies,

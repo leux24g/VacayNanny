@@ -1,6 +1,6 @@
 import { bookingBlocksAvailability, datesOverlap, parseCareType } from '@/lib/booking'
 import { DESTINATIONS, normalizeTier } from '@/lib/constants'
-import { publicTier } from '@/lib/safeguarding'
+import { publicTier, qualifiesForTier } from '@/lib/safeguarding'
 import {
   nannyWorksDates,
   childCapacity,
@@ -233,7 +233,7 @@ export function filterNannies(list: Nanny[], filters: NannySearchFilters): Nanny
       coversDestination(n, dest, filters.kenyaDestinations) === 'none'
     )
       return false
-    if (tier && publicTier(n) !== tier) return false
+    if (tier && !qualifiesForTier(n, tier)) return false
     if (filters.infant && !hasInfantCare(n)) return false
     if (cert && !hasCertification(n, cert)) return false
     if (busy?.has(n.id)) return false
@@ -319,9 +319,9 @@ export function scoreNannyMatch(
   const shownTier = publicTier(nanny)
   const wantedTier = normalizeTier(request.tier || '')
   if (wantedTier) {
-    if (shownTier === wantedTier) {
-      score += 10
-      reasons.push(`${wantedTier} tier`)
+    if (qualifiesForTier(nanny, wantedTier)) {
+      score += shownTier === wantedTier ? 10 : 8
+      reasons.push(`Qualified for ${wantedTier} work`)
     } else {
       blockers.push('Does not match the requested care tier')
     }

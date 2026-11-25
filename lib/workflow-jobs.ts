@@ -50,7 +50,12 @@ export async function enqueueJob(
 async function processJob(db: SupabaseClient, job: WorkflowJob) {
   const payload = job.payload
   if(job.kind==='public_photo_cleanup') {
-    const path=String(payload.path || '')
+    let path=String(payload.path || '')
+    if(payload.url) {
+      const prefix=db.storage.from('nanny-photos').getPublicUrl('').data.publicUrl
+      if(!String(payload.url).startsWith(prefix))return
+      path=String(payload.url).slice(prefix.length)
+    }
     if(!/^(profiles|live)\//.test(path)||path.split('/').includes('..'))throw new Error('Invalid photo cleanup path.')
     const url=db.storage.from('nanny-photos').getPublicUrl(path).data.publicUrl
     const pointers=await Promise.all([['profiles','avatar_url'],['nannies','photo_url'],['reviews','avatar_url'],['destinations','image_url'],['homepage_steps','image_url']].map(([table,column])=>db.from(table).select(column).eq(column,url).limit(1)))

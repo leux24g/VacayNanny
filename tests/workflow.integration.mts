@@ -6,6 +6,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { localCredentials } from '../scripts/local-database.mjs'
 import { applyBookingMutation, nannyContact } from '../lib/booking-ops'
 import { createGuestAccess } from '../lib/guest-access'
+import {uploadPublicPhoto} from '../lib/profile-media'
 
 let db: SupabaseClient,
   client: SupabaseClient,
@@ -131,7 +132,7 @@ async function newNanny(userId: string | null = null) {
   nannies.push(saved.data!.id)
   return saved.data!
 }
-async function newBooking(nannyId: string | null, needed = '1', offset = 30) {
+async function newBooking(nannyId: string | null, needed = '1', offset = 30, tier:string|null=null) {
   const guest = createGuestAccess(),
     id = randomUUID()
   books.push(id)
@@ -145,6 +146,7 @@ async function newBooking(nannyId: string | null, needed = '1', offset = 30) {
       check_in: date(offset),
       check_out: date(offset + 2),
       children_count: '2',
+      tier,
       nannies_needed: needed,
       nanny_id: nannyId,
       status: nannyId ? 'matched' : 'pending',
@@ -748,4 +750,44 @@ test('repeated acceptance and unchanged rescheduling do not reset consent or dup
   assert.equal(after.version, before.version)
   assert.equal(after.parent_confirmed_at, before.parent_confirmed_at)
   assert.equal(after.status, 'confirmed')
+})
+
+test('all tier combinations are enforced by real assignment RPCs, preserve agreed price and block direct category bypasses',async()=>{
+ const tiers=['bronze','silver','gold'] as const,carers=[]
+ for(const tier of tiers){const n=await newNanny();assert.ifError((await db.from('nannies').update({tier,safeguarding_completed_at:tier==='gold'?new Date().toISOString():null}).eq('id',n.id)).error);carers.push(n)}
+ let offset=130
+ for(const [rank,carer]of carers.entries())for(const [workRank,work]of tiers.entries()){
+  const currentId=await newBooking(null,'1',offset+=3,work),current=(await db.from('bookings').select('*').eq('id',currentId).single()).data!
+  assert.equal((await db.rpc('nanny_qualifies_for_work',{p_nanny:carer.id,p_tier:work})).data,rank>=workRank)
+  if(rank>=workRank){await applyBookingMutation(db,current.id,{action:'assign',nannyId:carer.id},{id:operator});const saved=await db.from('bookings').select('tier,total_amount_kes').eq('id',current.id).single();assert.equal(saved.data!.tier,work);assert.equal(saved.data!.total_amount_kes,4400)}
+  else {const rejected=await db.rpc('commit_booking_mutation',{p_id:current.id,p_version:current.version,p_action:'assign',p_updates:{tier:tiers[rank]},p_actor:operator,p_verified_email:null,p_guest_hash:null,p_nanny:carer.id});assert.ok(rejected.error);assert.equal((await db.from('booking_assignments').select('slot').eq('booking_id',current.id)).data!.length,0)}
+ }
+ const teamId=await newBooking(carers[2].id,'2',offset+=3,'gold'),team=(await db.from('bookings').select('*').eq('id',teamId).single()).data!
+ const lower=await db.rpc('commit_booking_mutation',{p_id:team.id,p_version:team.version,p_action:'assign',p_updates:{},p_actor:operator,p_verified_email:null,p_guest_hash:null,p_slot:2,p_nanny:carers[0].id});assert.ok(lower.error)
+ assert.ok((await db.from('booking_assignments').insert({booking_id:team.id,slot:2,nanny_id:carers[1].id})).error,'Direct writes cannot add an underqualified secondary nanny.')
+ assert.ok((await db.from('bookings').update({tier:'bronze'}).eq('id',team.id)).error,'Changing category cannot disguise an invalid assignment.')
+ await db.from('nannies').update({safeguarding_completed_at:null}).eq('id',carers[2].id)
+ assert.equal((await db.rpc('nanny_qualifies_for_work',{p_nanny:carers[2].id,p_tier:'gold'})).data,false)
+})
+
+test('JPEG and PNG nanny photos use real Storage, private ownership checks and atomic retired-photo cleanup',async()=>{
+ const created=await db.auth.admin.createUser({email:`photo-${randomUUID()}@example.test`,password:randomUUID(),email_confirm:true});assert.ifError(created.error)
+ const owner=created.data.user!.id;users.push(owner);assert.ifError((await db.from('profiles').update({role:'nanny'}).eq('id',owner)).error)
+ const n=await newNanny(owner),paths:string[]=[]
+ try {
+  const sources=[new File([Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l6kAAAAASUVORK5CYII=','base64')],'synthetic.png',{type:'image/png'}),new File([Buffer.from([255,216,255,224,0,0,255,217])],'synthetic-transport.jpeg',{type:'image/jpeg'})]
+  let previous=''
+  for(const [i,file]of sources.entries()){
+   const url=await uploadPublicPhoto(db,`live/${n.id}`,file),path=url.split('/nanny-photos/')[1];paths.push(path)
+   assert.ok((await db.rpc('update_nanny_photo',{p_nanny:n.id,p_actor:family,p_photo_url:url})).error)
+   assert.ok((await client.rpc('update_nanny_photo',{p_nanny:n.id,p_actor:operator,p_photo_url:url})).error)
+   const saved=await db.rpc('update_nanny_photo',{p_nanny:n.id,p_actor:i===0?owner:operator,p_photo_url:url});assert.ifError(saved.error);assert.equal(saved.data,url)
+   const publicFile=await fetch(url);assert.equal(publicFile.status,200);assert.equal(publicFile.headers.get('content-type'),file.type);assert.deepEqual(Buffer.from(await publicFile.arrayBuffer()),Buffer.from(await file.arrayBuffer()))
+   if(previous){const retirement=await db.from('workflow_jobs').select('payload,available_at').eq('kind','public_photo_cleanup').contains('payload',{url:previous});assert.equal(retirement.data!.length,1);assert.ok(Date.parse(retirement.data![0].available_at)>Date.now()+2*3600000)}
+   previous=url
+  }
+  assert.ifError((await db.rpc('update_nanny_photo',{p_nanny:n.id,p_actor:owner,p_photo_url:null})).error)
+  assert.equal((await db.from('nannies').select('photo_url').eq('id',n.id).single()).data!.photo_url,null)
+  assert.equal((await db.from('workflow_audit').select('id').eq('entity_id',n.id).in('action',['photo_updated','photo_removed'])).data!.length,3)
+ }finally{await db.storage.from('nanny-photos').remove(paths);await db.from('workflow_audit').delete().eq('entity_id',n.id);const jobs=await db.from('workflow_jobs').select('id,payload').eq('kind','public_photo_cleanup');const own=(jobs.data||[]).filter(j=>JSON.stringify(j.payload).includes(n.id));if(own.length)await db.from('workflow_jobs').delete().in('id',own.map(j=>j.id))}
 })

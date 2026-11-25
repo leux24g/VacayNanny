@@ -64,7 +64,7 @@ export default async function NannyDash() {
   return <PageShell>
     <section className="page-hero"><div className="eyebrow">Nanny portal</div><h1>Your work, <em>in one place</em></h1><p>Follow onboarding, manage your profile and availability, respond to placements, communicate with families and track completion and payouts.</p></section>
     <div className="sec-inner dash-page">
-      <div className="dash-toolbar">{nanny?.is_active && <Link href={`/nannies/${nanny.slug}`} className="btn-coral">View public profile</Link>}<Link href="/account" className="btn-ghost">My client portal</Link>{profile.role === 'admin' && <Link href="/admin" className="btn-ghost">Admin workspace</Link>}<SignOutButton /></div>
+      <div className="dash-toolbar">{nanny && <a href="#nanny-profile" className="btn-coral">Update my profile photo</a>}{nanny?.is_active && <Link href={`/nannies/${nanny.slug}`} className="btn-ghost">View public profile</Link>}<Link href="/account" className="btn-ghost">My client portal</Link>{profile.role === 'admin' && <Link href="/admin" className="btn-ghost">Admin workspace</Link>}<SignOutButton /></div>
       <PortalNavigation label="Nanny portal" items={[{id:'nanny-overview',label:'Overview'},{id:'nanny-onboarding',label:'Application & agreement'},{id:'nanny-profile',label:'Profile & availability'},{id:'nanny-placements',label:'Placements & messages'},{id:'nanny-payouts',label:'Payouts'},{id:'nanny-feedback',label:'Feedback'},{id:'nanny-account',label:'Account & support'}]} />
       {dataError ? <PortalLoadError message={dataError} /> : <>
         <section id="nanny-overview" className={portal.section} aria-label="Your nanny overview"><div className={portal.actions}>

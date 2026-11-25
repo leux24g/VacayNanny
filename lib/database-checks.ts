@@ -109,6 +109,8 @@ export async function checkDatabase(
       'accept_nanny_agreement',
       'submit_nanny_signed_agreement',
       'add_nanny_document',
+      'update_nanny_photo',
+      'nanny_qualifies_for_work',
       'save_care_completion_report',
       'workflow_queue_health',
       'retry_workflow_job',

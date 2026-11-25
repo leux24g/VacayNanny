@@ -2,13 +2,30 @@ import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { validateApplication } from '../lib/application-validation'
 import { validateCareDates, nannyWorksDates } from '../lib/booking-validation'
-import { scoreNannyMatch } from '../lib/match'
+import { scoreNannyMatch, filterNannies } from '../lib/match'
+import { qualifiesForTier } from '../lib/safeguarding'
 import { FALLBACK_NANNIES } from '../lib/data'
 import { emailOwnershipProven, profileOwnsBooking } from '../lib/booking-ownership'
 
 import { completeApplication } from './fixtures/application'
 
 const requiredFiles = ['photo', 'id_front', 'id_back', 'selfie']
+test('tier qualification includes lower work categories in search and matching, with Gold safeguarding enforced',()=>{
+  const tiers=['bronze','silver','gold'] as const
+  for(const [rank,tier]of tiers.entries())for(const [workRank,work]of tiers.entries()){
+    const nanny={...FALLBACK_NANNIES[5],tier,safeguarding_completed_at:'2026-11-25T00:00:00Z'}
+    const expected=rank>=workRank
+    assert.equal(qualifiesForTier(nanny,work),expected,`${tier} qualification / ${work} work`)
+    assert.equal(scoreNannyMatch(nanny,{tier:work},[]).eligible,expected)
+    assert.equal(filterNannies([nanny],{tier:work}).length,expected?1:0)
+  }
+  const untrained={...FALLBACK_NANNIES[5],tier:'gold' as const,safeguarding_completed_at:null}
+  assert.equal(qualifiesForTier(untrained,'gold'),false)
+  assert.equal(qualifiesForTier({...untrained,safeguarding_completed_at:undefined} as unknown as typeof untrained,'gold'),false)
+  assert.equal(qualifiesForTier(untrained,'silver'),true)
+  assert.equal(qualifiesForTier(untrained,'bronze'),true)
+  assert.equal(qualifiesForTier(untrained,'unrecognized'),false)
+})
 test('a complete adult application is valid; a name/email-only submission is rejected', () => {
   assert.deepEqual(validateApplication(completeApplication, requiredFiles), [])
   assert.ok(

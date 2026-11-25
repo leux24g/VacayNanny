@@ -12,6 +12,7 @@ import { CERTIFICATION_FILTERS, filterNannies } from '@/lib/match'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
 import { tierOptionLabel, tierRateMap } from '@/lib/catalog'
 import { publicDailyRate, publicTier } from '@/lib/safeguarding'
+import { normalizeTier, TIER_RATES } from '@/lib/constants'
 import type { Nanny } from '@/lib/types'
 import styles from './NanniesBrowser.module.css'
 
@@ -43,6 +44,7 @@ export default function NanniesBrowser({
   const appliedDestination = params.get('destination') || ''
   const appliedCheckIn = params.get('checkIn') || ''
   const appliedCheckOut = params.get('checkOut') || ''
+  const appliedTier = normalizeTier(params.get('tier'))
   const hasFilters = [
     'destination',
     'tier',
@@ -106,6 +108,7 @@ export default function NanniesBrowser({
       checkIn: appliedCheckIn,
       checkOut: appliedCheckOut,
       infantCare: params.get('infant') === '1',
+      tier: appliedTier || undefined,
     })
     setOpen(true)
   }
@@ -156,6 +159,7 @@ export default function NanniesBrowser({
                 ))}
               </select>
             </label>
+            <p className="field-hint">Higher-tier nannies also qualify for lower care categories. Gold work requires completed safeguarding.</p>
             <div className={styles.dates}>
               <label>
                 <span>Check-in</span>
@@ -278,13 +282,14 @@ export default function NanniesBrowser({
                   <NannyCard
                     key={nanny.id}
                     nanny={nanny}
+                    workTier={appliedTier || undefined}
                     onBook={(selected) => {
                       setBook({
                         nannyId: selected.id,
                         nannyName: selected.display_name,
                         destination: appliedDestination || selected.destinations[0],
-                        tier: publicTier(selected),
-                        dailyRateKes: publicDailyRate(selected, rates),
+                        tier: appliedTier || publicTier(selected),
+                        dailyRateKes: appliedTier && appliedTier !== publicTier(selected) ? rates[appliedTier] ?? TIER_RATES[appliedTier] : publicDailyRate(selected, rates),
                         checkIn: appliedCheckIn,
                         checkOut: appliedCheckOut,
                         infantCare: params.get('infant') === '1',

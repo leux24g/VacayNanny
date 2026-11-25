@@ -12,7 +12,7 @@ import {
 import { notifyBookingEvent, type BookingEmailEvent } from '@/lib/email'
 import { validateCareDates } from '@/lib/booking-validation'
 import { profileOwnsBooking } from '@/lib/booking-ownership'
-import { waDigits } from '@/lib/constants'
+import { waDigits, normalizeTier } from '@/lib/constants'
 import { loadQuoteCatalog, type QuoteCatalog } from '@/lib/catalog-data'
 import { quoteRatesFromCatalog } from '@/lib/catalog'
 import { publicDailyRate, publicTier } from '@/lib/safeguarding'
@@ -259,7 +259,7 @@ async function quoteFor(
     if (data) nanny = { ...nanny, ...data } as Booking['nannies']
   }
   const rates = quoteRatesFromCatalog(catalog)
-  const dailyRateKes = nanny?.tier
+  const dailyRateKes = nanny?.tier && (!normalizeTier(booking.tier) || normalizeTier(booking.tier) === publicTier(nanny as Nanny))
     ? publicDailyRate(
         {
           tier: nanny.tier,
@@ -528,7 +528,7 @@ async function applyBookingMutationOnce(
         throw new BookingActionError('Scheduling conflicts cannot be overridden.', 409)
       if (nannyId) {
         const selected = await assertEligibleNanny(supabase, nannyId, booking)
-        if ((resolved.slot || 1) === 1) {
+        if ((resolved.slot || 1) === 1 && !normalizeTier(booking.tier)) {
           updates.tier = publicTier(selected)
           updates.total_amount_kes = (
             await quoteFor(
