@@ -332,10 +332,12 @@ export default function HomePage({
             {site.tiers.map((tier) => (
               <article
                 key={tier.code}
-                className={tier.code === 'silver' ? styles.featuredTier : ''}
+                className={styles.tierCard}
+                data-tier={tier.code}
+                aria-labelledby={`pricing-${tier.code}`}
               >
                 <div className={styles.tierTop}>
-                  <h3>{tier.cardTitle}</h3>
+                  <h3 id={`pricing-${tier.code}`}>{tier.cardTitle}</h3>
                   {tier.code === 'silver' && <span>A little extra care</span>}
                 </div>
                 <p>{tier.description}</p>
@@ -351,7 +353,7 @@ export default function HomePage({
                   ))}
                 </ul>
                 <button
-                  className={tier.code === 'silver' ? 'btn-coral' : 'btn-ghost'}
+                  className={styles.tierButton}
                   onClick={() => book({ tier: tier.code })}
                 >
                   Choose {tier.cardTitle} <span aria-hidden="true">→</span>

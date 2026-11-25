@@ -244,18 +244,99 @@
   gap: 20px;
 }
 .tiers article {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   padding: 32px;
-  border: 1px solid #d9d5cb;
-  border-top: 3px solid var(--deep);
+  border: 1px solid var(--tier-border);
+  border-top: 4px solid var(--tier-accent);
   display: flex;
   flex-direction: column;
-  background: #fffcf6;
+  color: var(--tier-ink);
+  background:
+    repeating-linear-gradient(0deg, #ffffff0d 0 1px, transparent 1px 4px),
+    linear-gradient(135deg, var(--tier-metal) 0%, var(--tier-light) 30%, var(--tier-mid) 54%, var(--tier-light) 76%, var(--tier-metal) 100%);
   border-radius: 3px 3px 18px 18px;
+  box-shadow: 0 12px 30px #17324d0d, inset 0 1px 0 #ffffff99;
+  transition: transform 200ms ease, box-shadow 200ms ease;
 }
-.tiers .featuredTier {
-  background: #e5ece2;
-  border-color: #b7c6b7;
-  border-top-color: var(--teal);
+.tierCard[data-tier='bronze'] {
+  --tier-metal: #cf985f;
+  --tier-light: #f5d9b5;
+  --tier-mid: #e2b58a;
+  --tier-ink: #3b2a20;
+  --tier-muted: #493522;
+  --tier-accent: #704422;
+  --tier-border: #ac7747;
+}
+.tierCard[data-tier='silver'] {
+  --tier-metal: #b8c2cc;
+  --tier-light: #f3f6f8;
+  --tier-mid: #d3dce3;
+  --tier-ink: #293b4d;
+  --tier-muted: #394b5d;
+  --tier-accent: #42576c;
+  --tier-border: #8797a7;
+}
+.tierCard[data-tier='gold'] {
+  --tier-metal: #d5b14e;
+  --tier-light: #fff2c1;
+  --tier-mid: #ead27b;
+  --tier-ink: #473913;
+  --tier-muted: #554318;
+  --tier-accent: #75601d;
+  --tier-border: #b79a43;
+}
+.tierCard > * {
+  position: relative;
+  z-index: 1;
+}
+.tierCard::after {
+  content: '';
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(110deg, transparent 35%, #ffffff80 48%, #ffffff1a 54%, transparent 65%);
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+.tierCard:has(button:focus-visible) {
+  box-shadow: 0 18px 38px #17324d24, inset 0 1px 0 #ffffff99;
+}
+@keyframes tierShiver {
+  0% { transform: translateY(0) rotate(0); }
+  22% { transform: translateY(-4px) rotate(-0.35deg); }
+  44% { transform: translateY(-4px) rotate(0.35deg); }
+  68% { transform: translateY(-4px) rotate(-0.18deg); }
+  100% { transform: translateY(-4px) rotate(0); }
+}
+@keyframes tierShimmer {
+  0% { transform: translateX(-100%); opacity: 0; }
+  15%, 75% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tierCard:has(button:focus-visible) {
+    transform: translateY(-4px);
+    animation: tierShiver 450ms ease-out both;
+  }
+  .tierCard:has(button:focus-visible)::after {
+    animation: tierShimmer 950ms ease-out both;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  .tierCard:hover {
+    box-shadow: 0 18px 38px #17324d24, inset 0 1px 0 #ffffff99;
+  }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .tierCard:hover {
+    transform: translateY(-4px);
+    animation: tierShiver 450ms ease-out both;
+  }
+  .tierCard:hover::after {
+    animation: tierShimmer 950ms ease-out both;
+  }
 }
 .tierTop {
   display: flex;
@@ -268,16 +349,16 @@
   font-size: 1.85rem;
 }
 .tierTop span {
-  font-size: 0.62rem;
-  background: #d5e2d3;
+  font-size: 0.74rem;
+  background: #ffffff99;
   padding: 6px 9px;
   border-radius: 20px;
-  color: #345842;
+  color: var(--tier-ink);
 }
 .tiers p {
   font-size: 0.85rem;
   line-height: 1.7;
-  color: var(--text-muted);
+  color: var(--tier-muted);
 }
 .price {
   font-size: 1.65rem;
@@ -288,7 +369,7 @@
 .price small {
   font-size: 0.8rem;
   font-weight: 400;
-  color: var(--text-muted);
+  color: var(--tier-muted);
 }
 .tiers .period {
   font-size: 0.74rem;
@@ -309,12 +390,28 @@
   content: '✓';
   position: absolute;
   left: 0;
-  color: var(--teal);
+  color: var(--tier-accent);
 }
 .tiers button {
   padding: 13px;
   font-size: 0.85rem;
   width: 100%;
+}
+.tiers .tierButton {
+  border: 1px solid var(--tier-accent);
+  border-radius: 8px;
+  background: var(--tier-accent);
+  color: #fffaf0;
+  font-family: var(--font-dm-sans), 'DM Sans', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tierButton:hover {
+  box-shadow: inset 0 0 0 1px #fffaf0;
+}
+.tierButton:focus-visible {
+  outline: 3px solid var(--tier-accent);
+  outline-offset: 4px;
 }
 .addons {
   margin-top: 45px;
