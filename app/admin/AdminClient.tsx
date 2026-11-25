@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AdminCompletionReports from '@/components/AdminCompletionReports'
 import Link from 'next/link'
+import BrandLogo from '@/components/BrandLogo'
 import {
   bookingHasThread,
   careTypeLabel,
@@ -284,10 +285,7 @@ export default function AdminClient({
     <div className="admin-workspace">
       <aside className="ops-sidebar">
         <Link href="/" className="nav-logo">
-          <span className="brand-sun" aria-hidden="true">
-            ☀
-          </span>
-          VacayNanny<em>.</em>
+          <BrandLogo placement="sidebar" />
         </Link>
         <p className="ops-workspace-label">Operations workspace</p>
         <nav className="ops-nav" aria-label="Operations">

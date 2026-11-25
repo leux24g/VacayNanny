@@ -3,6 +3,7 @@ import { createHmac, randomInt, randomUUID } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { deliverEmail } from './email-delivery'
 import { emailSettings } from './email-settings'
+import { emailLogo } from './application-email-templates'
 export const OTP_SECONDS = 600
 export const OTP_RESEND_SECONDS = 60
 export function otpDigest(scope: string, value: string) {
@@ -53,7 +54,7 @@ export async function sendOtp(
       to: email,
       subject,
       text,
-      html: `<div style="font-family:Arial,sans-serif;color:#17324d;max-width:520px;padding:28px;background:#fff8ef"><h2>${subject}</h2><p style="line-height:1.7">${escaped(introduction).replaceAll('\n', '<br>')}</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>Expires in 10 minutes. This code can be used once.</p><p>If you did not request this, ignore this email.</p><p>The VacayNanny Team</p></div>`,
+      html: `<div style="font-family:Arial,sans-serif;color:#17324d;max-width:520px;padding:28px;background:#fff8ef">${emailLogo()}<h2>${subject}</h2><p style="line-height:1.7">${escaped(introduction).replaceAll('\n', '<br>')}</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${code}</p><p>Expires in 10 minutes. This code can be used once.</p><p>If you did not request this, ignore this email.</p><p>The VacayNanny Team</p></div>`,
     },
     `otp:${id}`,
   )

@@ -54,10 +54,6 @@ export const metadata: Metadata = {
     title: 'VacayNanny — A holiday that feels like a holiday',
     images: ['/images/holiday-coast.jpg'],
   },
-  icons: {
-    icon: [{ url: '/favicon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/favicon.svg' }],
-  },
 }
 
 export default async function RootLayout({

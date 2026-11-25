@@ -23,7 +23,7 @@ Use the full logo when the name needs to be read, and the symbol alone for favic
 
 Colours: navy `#17324D`, coral `#F27C70`, cream `#FFF8EF`. The wordmark follows the platform's existing Playfair Display typography at weight 600. Lettering is converted to vector paths, so the SVG files do not need fonts installed. The original font license is included in `Playfair-Display-OFL.txt`.
 
-These versioned files are a design handoff. The website's current navigation and active favicon have not been replaced by this asset pack.
+These approved assets are used in the website navigation, footer, application forms, administrator workspace and email templates. The favicon uses the compact symbol and the home-screen icons use the standalone mark.
 
 ## Creation
 

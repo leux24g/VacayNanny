@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import BrandLogo from './BrandLogo'
 
 export default function Footer() {
   return (
@@ -6,7 +7,7 @@ export default function Footer() {
       <div className="sec-inner">
         <div className="footer-grid">
           <div>
-            <div className="footer-logo">Vacay<em>Nanny</em></div>
+            <Link href="/" className="footer-logo"><BrandLogo placement="footer" /></Link>
             <p className="footer-about">Kenya&apos;s first dedicated holiday childcare platform. Professional nannies for families who believe great vacations and great parenting go hand in hand.</p>
             <div className="footer-social">
               <a href="https://www.instagram.com/" className="soc-btn" target="_blank" rel="noopener noreferrer">ig</a>

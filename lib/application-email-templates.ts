@@ -1,3 +1,5 @@
+import { siteUrl } from './constants'
+
 export function escapeHtml(value: string) {
   return value.replace(
     /[&<>"']/g,
@@ -6,6 +8,10 @@ export function escapeHtml(value: string) {
         character
       ]!,
   )
+}
+
+export function emailLogo() {
+  return `<img src="${escapeHtml(siteUrl('/brand/v1/vacaynanny-logo.png'))}" alt="VacayNanny" width="200" height="48" style="display:block;width:200px;max-width:100%;height:auto;border:0;outline:none;">`
 }
 
 const agreementIntroduction =
@@ -24,7 +30,7 @@ function paragraphHtml(paragraph: string) {
 function template(paragraphs: string[]) {
   return {
     text: paragraphs.join('\n\n'),
-    html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VacayNanny</title></head><body style="margin:0;padding:30px 16px;background:#FFF8EF;font-family:Arial,sans-serif;color:#17324D"><table role="presentation" style="width:100%;max-width:600px;margin:auto;background:#FFFCF7;border:1px solid #DFE1D6;border-radius:12px"><tr><td style="padding:32px"><div style="font-family:Georgia,serif;font-size:26px;margin-bottom:28px">VacayNanny<span style="color:#F27C70">.</span></div>${paragraphs.map((p) => `<p style="font-size:15px;line-height:1.8;margin:0 0 18px">${paragraphHtml(p)}</p>`).join('')}</td></tr></table></body></html>`,
+    html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>VacayNanny</title></head><body style="margin:0;padding:30px 16px;background:#FFF8EF;font-family:Arial,sans-serif;color:#17324D"><table role="presentation" style="width:100%;max-width:600px;margin:auto;background:#FFFCF7;border:1px solid #DFE1D6;border-radius:12px"><tr><td style="padding:32px"><div style="margin-bottom:28px">${emailLogo()}</div>${paragraphs.map((p) => `<p style="font-size:15px;line-height:1.8;margin:0 0 18px">${paragraphHtml(p)}</p>`).join('')}</td></tr></table></body></html>`,
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
+import BrandLogo from './BrandLogo'
 import { usePathname } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase/browser'
 import { hasSupabaseConfig } from '@/lib/supabase'
@@ -104,10 +105,7 @@ export default function Nav({ onBook }: NavProps) {
   return (
     <nav className={`nav${scrolled ? ' scrolled' : ''}`}>
       <Link href="/" className="nav-logo">
-        <span className="brand-sun" aria-hidden="true">
-          ☀
-        </span>
-        VacayNanny<em>.</em>
+        <BrandLogo />
       </Link>
       <button
         className="nav-burger"

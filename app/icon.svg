@@ -1,15 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <circle cx="32" cy="32" r="32" fill="#E8714A"/>
-  <polygon points="32,4 35,26 32,22 29,26" fill="#FFD166"/>
-  <polygon points="32,60 35,38 32,42 29,38" fill="#FFD166"/>
-  <polygon points="4,32 26,35 22,32 26,29" fill="#FFD166"/>
-  <polygon points="60,32 38,35 42,32 38,29" fill="#FFD166"/>
-  <polygon points="9,9 26,28 22,24 28,22" fill="#FFD166"/>
-  <polygon points="55,55 38,36 42,40 36,42" fill="#FFD166"/>
-  <polygon points="55,9 36,26 40,22 37,28" fill="#FFD166"/>
-  <polygon points="9,55 28,38 24,42 27,36" fill="#FFD166"/>
-  <circle cx="32" cy="32" r="13" fill="#FFD166"/>
-  <circle cx="27" cy="30" r="2" fill="#C8600A"/>
-  <circle cx="37" cy="30" r="2" fill="#C8600A"/>
-  <path d="M26,35 Q32,41 38,35" stroke="#C8600A" stroke-width="2" stroke-linecap="round" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#FFF8EF"/>
+  <g transform="translate(0 -2) scale(.5)">
+    <path d="M17 73c7-29 26-42 47-42 23 0 42 16 48 42" stroke="#F27C70" stroke-width="11" stroke-linecap="round"/>
+    <g fill="#17324D">
+      <circle cx="48" cy="64" r="13"/>
+      <circle cx="79" cy="76" r="9.5"/>
+    </g>
+    <path d="M31 86c14 18 25 26 34 26 11 0 24-11 36-23" stroke="#17324D" stroke-width="19" stroke-linecap="round"/>
+  </g>
 </svg>

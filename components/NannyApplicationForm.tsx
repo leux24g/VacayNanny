@@ -6,6 +6,7 @@ import { createSupabaseBrowser } from '@/lib/supabase/browser'
 import { validateApplication } from '@/lib/application-validation'
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
+import BrandLogo from '@/components/BrandLogo'
 import ImageSlideshow from '@/components/ImageSlideshow'
 import { applicationSlides } from '@/lib/marketing-slides'
 import CareIcon from '@/components/CareIcon'
@@ -614,7 +615,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
       <>
         <nav className="nav">
           <Link href="/" className="nav-logo">
-            Vacay<em>Nanny</em>
+            <BrandLogo />
           </Link>
         </nav>
         <div className="success-screen active" style={{ paddingTop: '8rem' }}>
@@ -661,7 +662,7 @@ export default function NannyApplicationForm({existingApplicationId,initialConta
     <>
       <nav className="nav">
         <Link href="/" className="nav-logo">
-          Vacay<em>Nanny</em>
+          <BrandLogo />
         </Link>
         <Link href="/" className="nav-back">
           ← Back to Home

@@ -4,6 +4,7 @@ import {
   applicationReceivedTemplate,
   applicationApprovedTemplate,
   escapeHtml,
+  emailLogo,
 } from '@/lib/application-email-templates'
 import { loadNannyAgreement } from '@/lib/nanny-agreement'
 
@@ -28,9 +29,7 @@ function htmlWrapper(content: string): string {
       <!-- Header -->
       <tr>
         <td style="background:#edf0e7;padding:32px 40px;border-bottom:1px solid rgba(23,50,77,0.07);">
-          <span style="font-family:Georgia,serif;font-size:26px;font-weight:900;color:#17324D;">
-            Vacay<span style="color:#E8714A;">Nanny</span>
-          </span>
+          ${emailLogo()}
         </td>
       </tr>
 
