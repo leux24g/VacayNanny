@@ -1,6 +1,6 @@
 # Database readiness | 26 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `f77bb932c0d5619faf4dc426524f0b28dc8446d2` was deployed to Vercel production as `dpl_6YD4o1jcxEVk17vVLUtgPgm3f1js`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `8514c7c954ef87ff6631e13760c089f9cd852996` was deployed to Vercel production as `dpl_Amvmd2o35krUmK7EDep93NWNhNHh`.
 
 ## Calendar navigation, form spacing and custom destinations | 26 November
 
@@ -8,9 +8,9 @@ Month and year controls now open padded inline selection grids with bounded twel
 
 Other destination is available in homepage planning, nanny search and booking. One required location name carries through the URL and booking defaults, stays after a failed submission and clears on reset. Server validation rejects raw Other/Any markers, arrays, whitespace-only, overlong and multiline input. Unlisted locations go through normal matching and team coverage confirmation; they do not publish a new service area. Booking writes keep the existing atomic notification queue.
 
-Local validation passed lint, TypeScript, the production build, 70 unit tests and 66 browser tests. New browser coverage checks month/year padding and keyboard navigation, long month labels at 320px, custom destination submission, required-field and reset behaviour, API marker rejection and dropdown/disclosure spacing. Five targeted form-control checks also passed after making Escape dismiss an expanded native select before closing the booking dialog. No schema migration or credential change is required. Evidence is under ignored `artifacts/calendar-controls-release/`.
+Validation passed lint, TypeScript, the production build, 70 unit tests, 39 real database integration tests and 67 browser tests in the [independent verification run](https://github.com/leux24g/VacayNanny/actions/runs/45762253300) on the deployed application commit. Coverage checks month/year padding and keyboard navigation, full month labels at 320px, custom destination submission, required-field/reset behaviour, API marker rejection, dropdown/disclosure spacing and Escape dismissal without losing booking details. The real-route integration test reads back the trimmed custom location and its pending notification job and confirms that no destination is published. No schema migration or credential change is required. Evidence is under ignored `artifacts/calendar-controls-release/`.
 
-Live verification passed at widths of 320, 390, 768, 1024, 1440 and 2560px: month/year panels have padded choices and full header labels, disclosures have inset spacing, and pages have no horizontal overflow. A mobile custom destination carried from homepage to search and booking and remained after an intercepted failed submission. That request was captured locally and created no production booking. Readiness is healthy for database, worker, queue and email configuration, with no browser JavaScript errors.
+Live verification passed at widths of 320, 390, 768, 1024, 1440 and 2560px: month/year panels have padded choices and full header labels, disclosures have inset spacing, and pages have no horizontal overflow. A mobile custom destination carried from homepage to search and booking and remained after an intercepted failed submission. Escape correctly dismisses an expanded native select or calendar before its parent booking dialog. That request was captured locally and created no production booking. Readiness is healthy for database, worker, queue and email configuration, with no browser JavaScript errors.
 
 ## Shared date picker and punctuation cleanup | 26 November
 
