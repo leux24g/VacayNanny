@@ -1,6 +1,16 @@
 # Database readiness | 26 November 2026
 
-The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `f425f508e624e75be2535b47c9f7cf69a7cad61f` was deployed to Vercel production as `dpl_5avfc17ACrfdGNxu2axHXP9Sb9ZF`.
+The refreshed application is live at `https://www.vacaynanny.net`, using the existing VacayNanny Supabase project (`eejvcawtqkpucqgsaqzp`). No second hosted project was created. Application commit `f77bb932c0d5619faf4dc426524f0b28dc8446d2` was deployed to Vercel production as `dpl_6YD4o1jcxEVk17vVLUtgPgm3f1js`.
+
+## Calendar navigation, form spacing and custom destinations | 26 November
+
+Month and year controls now open padded inline selection grids with bounded twelve-year navigation, keyboard support, selected/hover colours and full header labels at 320px. Shared styling adds space inside dropdown controls, enhanced native option menus and all disclosure panels. The calendar remains reusable across all fourteen editable date fields.
+
+Other destination is available in homepage planning, nanny search and booking. One required location name carries through the URL and booking defaults, stays after a failed submission and clears on reset. Server validation rejects raw Other/Any markers, arrays, whitespace-only, overlong and multiline input. Unlisted locations go through normal matching and team coverage confirmation; they do not publish a new service area. Booking writes keep the existing atomic notification queue.
+
+Local validation passed lint, TypeScript, the production build, 70 unit tests and 66 browser tests. New browser coverage checks month/year padding and keyboard navigation, long month labels at 320px, custom destination submission, required-field and reset behaviour, API marker rejection and dropdown/disclosure spacing. Five targeted form-control checks also passed after making Escape dismiss an expanded native select before closing the booking dialog. No schema migration or credential change is required. Evidence is under ignored `artifacts/calendar-controls-release/`.
+
+Live verification passed at widths of 320, 390, 768, 1024, 1440 and 2560px: month/year panels have padded choices and full header labels, disclosures have inset spacing, and pages have no horizontal overflow. A mobile custom destination carried from homepage to search and booking and remained after an intercepted failed submission. That request was captured locally and created no production booking. Readiness is healthy for database, worker, queue and email configuration, with no browser JavaScript errors.
 
 ## Shared date picker and punctuation cleanup | 26 November
 

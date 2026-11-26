@@ -1,5 +1,21 @@
 import { test, expect } from '@playwright/test'
 
+test('Escape dismisses an expanded booking dropdown before closing the booking form', async ({page}) => {
+  await page.goto('/')
+  await page.getByRole('button', {name:'Start a booking',exact:true}).first().click()
+  const booking = page.getByRole('dialog', {name:'Request a nanny',exact:true})
+  await booking.getByLabel('Full Name').fill('Preserved edit')
+  const destination = booking.getByRole('combobox', {name:'Destination',exact:true})
+  await destination.click()
+  expect(await destination.evaluate(el=>el.matches(':open'))).toBe(true)
+  await page.keyboard.press('Escape')
+  await expect(booking).toBeVisible()
+  expect(await destination.evaluate(el=>el.matches(':open'))).toBe(false)
+  await expect(booking.getByLabel('Full Name')).toHaveValue('Preserved edit')
+  await page.keyboard.press('Escape')
+  await expect(booking).toHaveCount(0)
+})
+
 test('month and year panels use padded choices, keyboard navigation and date boundaries', async ({ page }, info) => {
   await page.setViewportSize({width:320,height:740})
   await page.goto('/become-a-nanny')

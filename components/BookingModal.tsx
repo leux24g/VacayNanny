@@ -83,6 +83,8 @@ export default function BookingModal({
     dialog?.querySelector<HTMLElement>('button, input')?.focus()
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        // Let the browser dismiss an expanded select before its parent dialog.
+        if (CSS.supports('selector(select:open)') && dialog?.querySelector('select:open')) return
         event.preventDefault()
         onClose()
       }
