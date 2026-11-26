@@ -5,7 +5,10 @@ import { DayPicker } from '@daypicker/react'
 import { enGB } from '@daypicker/react/locale'
 import { calendarDate, calendarValue, dateValueAllowed } from '@/lib/date-fields'
 import { todayInNairobi } from '@/lib/booking-validation'
+import CalendarNavigation from './CalendarNavigation'
 import styles from './DatePicker.module.css'
+
+const calendarComponents = { MonthCaption: () => <></> }
 
 type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'defaultValue' | 'onChange' | 'min' | 'max'> & {
   type?: 'date' | 'datetime-local'
@@ -156,13 +159,15 @@ export default function DatePicker({
             <h2 id={`${popupId}-title`} className={styles.title}>Choose {calendarLabel}</h2>
             <button type="button" className={styles.close} aria-label="Close calendar" onClick={() => close()}>×</button>
           </div>
+          <CalendarNavigation month={month || today} startMonth={startMonth} endMonth={endMonth} onMonthChange={setMonth} id={popupId}>
           <DayPicker className={styles.calendar} mode="single" month={month} onMonthChange={setMonth}
             selected={type === 'datetime-local' ? draftDate : selected} onSelect={select}
-            today={today} locale={enGB} captionLayout="dropdown" navLayout="after"
+            today={today} locale={enGB} hideNavigation components={calendarComponents}
             startMonth={startMonth} endMonth={endMonth} showOutsideDays fixedWeeks autoFocus
             disabled={[...(lower ? [{before:lower}] : []), ...(upper ? [{after:upper}] : [])]}
             footer={(type === 'datetime-local' ? draftDate : selected) ? formatDate((type === 'datetime-local' ? draftDate : selected)!) : 'Choose a day to select your date.'}
           />
+          </CalendarNavigation>
           {type === 'datetime-local' && <div className={styles.timeRow}>
             <label htmlFor={`${inputId}-time`}>Time (EAT)</label>
             <input ref={timeInput} id={`${inputId}-time`} type="time" step={inputProps.step || 60} value={draftTime}

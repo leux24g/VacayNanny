@@ -45,14 +45,29 @@
 .popover .calendar :global(.rdp-selected) :global(.rdp-day_button):hover { background:#294d65; border-color:#294d65; color:white; }
 .popover .calendar :global(.rdp-disabled) :global(.rdp-day_button) { color:#9baba3; background:transparent; cursor:not-allowed; }
 .popover .calendar :global(.rdp-today):not(:global(.rdp-selected)) :global(.rdp-day_button) { box-shadow:inset 0 0 0 1px #6d8a70; color:#345a42; }
-.popover .calendar :global(.rdp-month_caption) { height:42px; padding:0; font-size:.9rem; }
-.popover .calendar :global(.rdp-dropdowns) { gap:4px; font:600 .9rem/1.4 var(--font-dm-sans),Arial,sans-serif; }
-.popover .calendar :global(.rdp-dropdown_root) { padding:5px 7px; border:1px solid transparent; border-radius:7px; }
-.popover .calendar :global(.rdp-dropdown_root):hover { background:#e5ece2; }
-.popover .calendar :global(.rdp-dropdown) { margin:0; min-height:0; border:0; padding:0; color:#17324d; background:#fffcf7; font:inherit; }
-.popover .calendar :global(.rdp-chevron) { fill:#476b54; width:18px; height:18px; }
-.popover .calendar :global(.rdp-button_previous), .popover .calendar :global(.rdp-button_next) { width:36px; height:38px; min-height:38px; padding:0; background:transparent; border:0; border-radius:8px; }
-.popover .calendar :global(.rdp-button_previous):hover:not(:disabled), .popover .calendar :global(.rdp-button_next):hover:not(:disabled) { background:#e5ece2; }
+.toolbar { display:flex; align-items:center; gap:8px; margin:4px 0 10px; }
+.captionControls { display:flex; gap:6px; flex:1; min-width:0; }
+.popover .captionButton { display:flex; align-items:center; justify-content:space-between; gap:3px; flex:1; min-width:0; min-height:44px; padding:10px 8px; border:1px solid #cbd5c7; border-radius:10px; background:#fffdf8; color:#17324d; font:600 .875rem/1.3 var(--font-dm-sans),Arial,sans-serif; cursor:pointer; }
+.captionButton span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.captionButton svg { flex:none; width:14px; height:14px; color:#476b54; }
+.popover .yearButton { flex:0 0 74px; }
+.popover .captionButton:hover, .popover .captionButton[aria-expanded=true] { border-color:#8fa48d; background:#e5ece2; }
+.captionButton[aria-expanded=true] svg { transform:rotate(180deg); }
+.pageButtons { display:flex; gap:2px; }
+.popover .pageButtons button { display:grid; place-items:center; width:32px; min-height:44px; padding:0; border:0; border-radius:9px; background:transparent; color:#476b54; cursor:pointer; }
+.popover .pageButtons button:hover:not(:disabled) { background:#e5ece2; color:#17324d; }
+.choicePanel { padding:14px 0 2px; }
+.choiceHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; margin-bottom:16px; }
+.popover .choiceHeading h3 { margin:0; color:#17324d; font:600 .875rem/1.5 var(--font-dm-sans),Arial,sans-serif; letter-spacing:0; text-transform:none; }
+.choiceHeading span { color:#596a77; font-size:.78rem; }
+.choiceGrid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.yearGrid { grid-template-columns:repeat(4,minmax(0,1fr)); }
+.popover .choiceGrid button { min-width:0; min-height:50px; padding:12px 4px; border:1px solid #dce3d7; border-radius:10px; background:#fffdf8; color:#17324d; font:500 .875rem/1.3 var(--font-dm-sans),Arial,sans-serif; cursor:pointer; }
+.popover .choiceGrid button:hover:not(:disabled) { background:#e5ece2; border-color:#8fa48d; }
+.popover .choiceGrid button[aria-pressed=true] { background:#17324d; border-color:#17324d; color:#fff8ef; font-weight:650; }
+.popover .choiceGrid button[aria-pressed=true]:hover { background:#294d65; border-color:#294d65; color:white; }
+.popover .backButton { display:block; width:100%; min-height:44px; margin-top:16px; padding:11px 12px; border:0; border-radius:9px; background:#eef2e9; color:#345a42; font:600 .82rem/1.4 var(--font-dm-sans),Arial,sans-serif; cursor:pointer; }
+.popover .backButton:hover { background:#e5ece2; color:#17324d; }
 .popover .calendar :global(.rdp-footer) { margin-top:8px; min-height:23px; color:#596a77; font-size:.78rem; }
 .popover .timeRow { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:14px; margin-top:12px; border-top:1px solid #dce3d7; }
 .popover .timeRow label { margin:0; font-size:.85rem; color:#17324d; }

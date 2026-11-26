@@ -17,7 +17,7 @@ export default function NannyAgreementFields({ value, onChange, legalName }: {
         <Link href="/nanny-agreement" target="_blank" rel="noopener noreferrer" className="btn-ghost">Read the full agreement</Link>
         <a href={NANNY_AGREEMENT_PDF} download className="btn-ghost">Download agreement PDF</a>
       </div>
-      <details className="agreement-commercial">
+      <details className="agreement-commercial padded-disclosure">
         <summary>Commission and payout terms</summary>
         <table><caption>Rates in the supplied agreement</caption><thead><tr><th scope="col">Approved tier</th><th scope="col">Platform commission</th><th scope="col">Nanny share</th></tr></thead><tbody>
           {Object.entries(TIER_COMMISSION).map(([tier, rate]) => <tr key={tier}><th scope="row">{tier[0].toUpperCase() + tier.slice(1)}</th><td>{rate.commission}</td><td>{rate.payout}</td></tr>)}

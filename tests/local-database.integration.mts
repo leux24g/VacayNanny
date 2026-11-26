@@ -363,6 +363,7 @@ test('real application routes save specialist enquiries, waitlist entries and se
     'x-nf-client-connection-ip': `2001:db8:${randomBytes(6).toString('hex').match(/.{4}/g)!.join(':')}::1`,
   }
   let submittedApplication: string | undefined
+  let customBookingId: string | undefined
   let uploadedEntries: Array<{ bucket: string; path: string }> = []
   try {
     const legacy = await admin
@@ -425,6 +426,31 @@ test('real application routes save specialist enquiries, waitlist entries and se
     assert.ifError(stored.error)
     assert.equal(stored.data?.payment_status, 'unpaid')
     assert.ok(stored.data?.guest_access_token_hash)
+    const custom = await fetch(`${base}/api/booking`, {
+      method:'POST', headers,
+      body:JSON.stringify({parentName:'Local custom destination test', email:`custom-${email}`,
+        phone:'+254700000000', childrenCount:'1', destination:'  Tigoni, Kiambu  ',
+        checkIn:date(24), checkOut:date(24), tier:'bronze', careType:'standard'}),
+    })
+    assert.equal(custom.status,200)
+    const customResult = await custom.json()
+    customBookingId = customResult.trackingPath.split('?')[0].split('/').at(-1)
+    const customStored = await admin.from('bookings').select('id,destination,status,nanny_id,payment_status')
+      .eq('id',customBookingId!).single()
+    assert.ifError(customStored.error)
+    assert.equal(customStored.data!.destination,'Tigoni, Kiambu')
+    assert.equal(customStored.data!.status,'pending')
+    assert.equal(customStored.data!.nanny_id,null)
+    assert.equal(customStored.data!.payment_status,'unpaid')
+    const queued = await admin.from('workflow_jobs').select('kind,status,payload')
+      .eq('dedupe_key',`booking-received:${customBookingId}`).single()
+    assert.ifError(queued.error)
+    assert.equal(queued.data!.kind,'booking_received')
+    assert.equal(queued.data!.status,'pending')
+    assert.equal(queued.data!.payload.booking.destination,'Tigoni, Kiambu')
+    const published = await admin.from('destinations').select('id').eq('name','Tigoni, Kiambu')
+    assert.ifError(published.error)
+    assert.equal(published.data!.length,0)
     const messages = await admin
       .from('contact_messages')
       .select('subject')
@@ -477,6 +503,8 @@ test('real application routes save specialist enquiries, waitlist entries and se
       .download(staged.entries[0].path)
     assert.ok(privatePhoto.error)
   } finally {
+    if(customBookingId) await admin.from('workflow_jobs').delete().eq('dedupe_key',`booking-received:${customBookingId}`)
+    await admin.from('bookings').delete().eq('email',`custom-${email}`)
     for (const entry of uploadedEntries)
       await admin.storage.from(entry.bucket).remove([entry.path])
     if (submittedApplication)

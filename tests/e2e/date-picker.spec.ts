@@ -2,8 +2,17 @@ import { test, expect, type Locator } from '@playwright/test'
 import { enterEmailCode } from './auth'
 
 async function chooseMonth(calendar: Locator, year: string, month: string) {
-  await calendar.getByRole('combobox', { name: 'Choose the Year' }).selectOption(year)
-  await calendar.getByRole('combobox', { name: 'Choose the Month' }).selectOption(month)
+  await calendar.getByRole('button', { name: /^Choose year,/ }).click()
+  const target = Number(year)
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const start = Number(await calendar.locator('[data-year-start]').getAttribute('data-year-start'))
+    if (target < start) await calendar.getByRole('button', { name: 'Previous 12 years', exact: true }).click()
+    else if (target > start + 11) await calendar.getByRole('button', { name: 'Next 12 years', exact: true }).click()
+    else break
+  }
+  await calendar.getByRole('group', { name: 'Choose a year', exact: true }).getByRole('button', { name: year, exact: true }).click()
+  const name = new Intl.DateTimeFormat('en-GB', {month:'long'}).format(new Date(2024, Number(month), 1))
+  await calendar.getByRole('group', { name: `Months in ${year}`, exact: true }).getByRole('button', { name, exact: true }).click()
 }
 const day = (calendar: Locator, date: string) => calendar.locator(`[data-day="${date}"] button`)
 
@@ -69,7 +78,9 @@ test('birth date supports jumping years and stays visible outside the scrolling 
   await expect(page.getByLabel(/^Date of Birth/)).toHaveValue('1990-01-15')
   expect(await page.getByLabel(/^Date of Birth/).evaluate((el: HTMLInputElement) => el.validity.valid)).toBe(true)
   await page.getByRole('button', { name: 'Open calendar for date of birth', exact: true }).click()
-  expect(await calendar.getByRole('combobox', { name: 'Choose the Year' }).locator('option').last().getAttribute('value')).toBe('2005')
+  await calendar.getByRole('button', { name: /^Choose year,/ }).click()
+  while (await calendar.getByRole('button', { name: 'Next 12 years', exact: true }).isEnabled()) await calendar.getByRole('button', { name: 'Next 12 years', exact: true }).click()
+  await expect(calendar.getByRole('group', { name: 'Choose a year', exact: true }).getByRole('button').last()).toHaveText('2005')
   await calendar.getByRole('button', { name: 'Close calendar' }).click()
 })
 

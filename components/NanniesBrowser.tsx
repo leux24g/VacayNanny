@@ -9,6 +9,7 @@ import BookingModal, { type BookingDefaults } from '@/components/BookingModal'
 import CareIcon from '@/components/CareIcon'
 import Reveal from '@/components/Reveal'
 import DatePicker from '@/components/DatePicker'
+import DestinationField from '@/components/DestinationField'
 import { todayInNairobi } from '@/lib/booking-validation'
 import { CERTIFICATION_FILTERS, filterNannies } from '@/lib/match'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
@@ -32,6 +33,7 @@ export default function NanniesBrowser({
   const params = useSearchParams()
   const router = useRouter()
   const [destination, setDestination] = useState(params.get('destination') || '')
+  const [destinationReset, setDestinationReset] = useState(0)
   const [tier, setTier] = useState(params.get('tier') || '')
   const [q, setQ] = useState(params.get('q') || '')
   const [infant, setInfant] = useState(params.get('infant') === '1')
@@ -83,7 +85,7 @@ export default function NanniesBrowser({
   function apply(event: React.FormEvent) {
     event.preventDefault()
     const next = new URLSearchParams()
-    if (destination) next.set('destination', destination)
+    if (destination.trim()) next.set('destination', destination.trim())
     if (tier) next.set('tier', tier)
     if (q.trim()) next.set('q', q.trim())
     if (infant) next.set('infant', '1')
@@ -96,6 +98,7 @@ export default function NanniesBrowser({
   }
   function reset() {
     setDestination('')
+    setDestinationReset(current => current + 1)
     setTier('')
     setQ('')
     setInfant(false)
@@ -149,18 +152,17 @@ export default function NanniesBrowser({
                 Reset
               </button>
             </div>
-            <label>
-              <span>Destination</span>
-              <select
+            <div className={styles.destination}>
+              <label htmlFor="filter-destination">Destination</label>
+              <DestinationField
+                key={destinationReset}
+                id="filter-destination"
+                options={destinations}
+                placeholder="Any destination"
                 value={destination}
-                onChange={(event) => setDestination(event.target.value)}
-              >
-                <option value="">Any destination</option>
-                {destinations.map((name) => (
-                  <option key={name}>{name}</option>
-                ))}
-              </select>
-            </label>
+                onValueChange={setDestination}
+              />
+            </div>
             <p className="field-hint">Higher-tier nannies also qualify for lower care categories. Gold work requires completed safeguarding.</p>
             <div className={styles.dates}>
               <div>

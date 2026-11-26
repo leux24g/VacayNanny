@@ -5,13 +5,13 @@ import {clientFetch} from '@/lib/client-request'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import DatePicker from './DatePicker'
+import DestinationField from './DestinationField'
 import { todayInNairobi } from '@/lib/booking-validation'
 import { createSupabaseBrowser } from '@/lib/supabase/browser'
 import { parseCareType, quoteBooking, quoteSummary } from '@/lib/booking'
 import { useSiteCatalog } from '@/components/SiteCatalogProvider'
 import { quoteRatesFromCatalog, tierOptionLabel } from '@/lib/catalog'
 import { formatKes } from '@/lib/constants'
-import { mergeDestinationChoices } from '@/lib/destinations'
 import { useDestinationNames } from '@/lib/useDestinationNames'
 import type { CareType } from '@/lib/types'
 
@@ -194,7 +194,7 @@ export default function BookingModal({
           parentName: form.name,
           email: form.email,
           phone: form.phone,
-          destination: form.destination,
+          destination: form.destination.trim(),
           checkIn: form.checkIn,
           checkOut: form.checkOut,
           childrenCount: form.children,
@@ -204,7 +204,8 @@ export default function BookingModal({
           careType: form.careType,
           infantCare: form.infantCare,
           notes: form.notes,
-          nannyId: defaults?.nannyId,
+          // An unlisted location needs coverage review before a nanny is proposed.
+          nannyId: placeNames.includes(form.destination.trim()) ? defaults?.nannyId : undefined,
           addonCodes: form.addonCodes,
         }),
       })
@@ -322,22 +323,15 @@ export default function BookingModal({
                 </div>
                 <div className="mfield">
                   <label htmlFor="booking-destination">Destination</label>
-                  <select
+                  <DestinationField
                     id="booking-destination"
                     name="destination"
+                    options={placeNames}
+                    placeholder="Select destination"
                     required
                     value={form.destination}
-                    onChange={change}
-                  >
-                    <option value="">Select destination</option>
-                    {mergeDestinationChoices(placeNames, [
-                      form.destination,
-                      defaults?.destination || '',
-                    ]).map((d) => (
-                      <option key={d}>{d}</option>
-                    ))}
-                    <option>Other</option>
-                  </select>
+                    onValueChange={destination => setForm(current => ({...current, destination}))}
+                  />
                 </div>
               </div>
               <div className="mrow">

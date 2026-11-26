@@ -14,6 +14,7 @@ import Reveal from './Reveal'
 import CareIcon from './CareIcon'
 import DestinationExplorer from './DestinationExplorer'
 import DatePicker from './DatePicker'
+import DestinationField from './DestinationField'
 import { todayInNairobi } from '@/lib/booking-validation'
 import { useSiteCatalog } from './SiteCatalogProvider'
 import {
@@ -72,7 +73,7 @@ export default function HomePage({
     event.preventDefault()
     const params = new URLSearchParams()
     Object.entries(search).forEach(([key, value]) => {
-      if (value) params.set(key, value)
+      if (value.trim()) params.set(key, value.trim())
     })
     router.push(`/nannies?${params}`)
   }
@@ -147,20 +148,15 @@ export default function HomePage({
             <h2>Where are you headed?</h2>
           </div>
           <form className={styles.search} onSubmit={find}>
-            <label>
-              Destination
-              <select
+            <div>
+              <label htmlFor="trip-destination">Destination</label>
+              <DestinationField
+                id="trip-destination"
+                options={destinationNames(destinations)}
                 value={search.destination}
-                onChange={(e) =>
-                  setSearch({ ...search, destination: e.target.value })
-                }
-              >
-                <option value="">Choose a destination</option>
-                {destinationNames(destinations).map((d) => (
-                  <option key={d}>{d}</option>
-                ))}
-              </select>
-            </label>
+                onValueChange={destination => setSearch(current => ({...current, destination}))}
+              />
+            </div>
             <div>
               <label htmlFor="trip-arrival">Arrival</label>
               <DatePicker
@@ -464,10 +460,9 @@ export default function HomePage({
           </div>
           <div>
             {site.faqs.map((faq) => (
-              <details key={faq.id}>
+              <details key={faq.id} className="padded-disclosure">
                 <summary>
                   {faq.question}
-                  <span aria-hidden="true">+</span>
                 </summary>
                 <p>{applyPolicyTokens(faq.answer, site.policies)}</p>
               </details>

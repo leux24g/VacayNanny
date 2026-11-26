@@ -135,7 +135,7 @@
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr auto;
   gap: 18px;
-  align-items: end;
+  align-items: start;
 }
 .search label {
   display:block;
@@ -145,6 +145,7 @@
 }
 .search > div { min-width:0; }
 .search > div > label { margin-bottom:8px; }
+.search > button { align-self:start; margin-top:26px; }
 .search input,
 .search select {
   display: block;
@@ -620,10 +621,11 @@
   .search {
     grid-template-columns: 1fr 1fr;
   }
-  .search label:first-child,
-  .search button {
+  .search > div:first-child,
+  .search > button {
     grid-column: 1/-1;
   }
+  .search > button { margin-top:0; }
   .section {
     padding: 60px 6%;
   }

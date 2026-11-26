@@ -7,6 +7,7 @@ import '@daypicker/react/style.css'
 import './globals.css'
 import './auth.css'
 import './responsive.css'
+import './form-controls.css'
 import React from 'react'
 
 const dmSans = localFont({

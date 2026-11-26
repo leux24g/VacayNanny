@@ -2,6 +2,15 @@ import type { Destination } from '@/lib/types'
 
 export const APPLY_EXTRA_DESTINATIONS = ['Anywhere in Kenya'] as const
 
+/** A custom request names one location; it does not publish a service area. */
+export function destinationError(value: unknown): string | null {
+  if (typeof value !== 'string' || !value.trim() || /^(other|any)$/i.test(value.trim()) || value.trim() === '__other_destination__')
+    return 'Enter the name of one destination.'
+  if (value.trim().length > 120 || /[\u0000-\u001f\u007f\u2028\u2029]/.test(value))
+    return 'Enter one destination using up to 120 characters on a single line.'
+  return null
+}
+
 /** Photos for the demo destination list. Live rows use the image URL stored by admin. */
 function unsplash(id: string) {
   return `https://images.unsplash.com/${id}?w=1600&auto=format&fit=crop&q=80`

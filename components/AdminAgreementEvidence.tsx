@@ -17,7 +17,7 @@ export default function AdminAgreementEvidence({acceptance,applicationId}:{accep
   }
   return <div className="form-card"><h3>Agreement acceptance evidence</h3>{acceptance?.current?<>
     <p>Read, understood and accepted by <strong>{acceptance.signer_name}</strong>.</p><p>Version {acceptance.version} · {new Date(acceptance.accepted_at).toLocaleString('en-GB',{timeZone:'Africa/Nairobi'})} EAT</p>
-    <details><summary>Document fingerprint</summary><code className="agreement-fingerprint">SHA-256: {acceptance.document_sha256}</code></details>
+    <details className="padded-disclosure"><summary>Document fingerprint</summary><code className="agreement-fingerprint">SHA-256: {acceptance.document_sha256}</code></details>
     <p>Payout destination: {acceptance.payout.method==='mpesa'?'M-Pesa':acceptance.payout.bankName} · {acceptance.payout.maskedNumber} · {acceptance.payout.accountName}</p>
     <button className="btn-ghost" type="button" onClick={reveal} disabled={busy}>{busy?'Loading…':details?'Hide private payout details':'View private payout details'}</button>
     {details&&<dl className="agreement-private-details"><dt>Account holder</dt><dd>{details.payoutAccountName}</dd><dt>Method / bank</dt><dd>{details.payoutMethod==='mpesa'?'M-Pesa':details.payoutBankName}</dd><dt>Number</dt><dd>{details.payoutAccountNumber}</dd></dl>}

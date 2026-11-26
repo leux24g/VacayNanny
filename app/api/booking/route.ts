@@ -3,6 +3,7 @@ import { hasSupabaseConfig } from '@/lib/supabase'
 import { createServerClient } from '@/lib/supabase/service'
 import { randomUUID } from 'node:crypto'
 import { validateCareDates } from '@/lib/booking-validation'
+import { destinationError } from '@/lib/destinations'
 import { sealWorkflow } from '@/lib/workflow-secrets'
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { parseCareType, quoteBooking } from '@/lib/booking'
@@ -51,6 +52,8 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
+    const locationError = destinationError(body.destination)
+    if (locationError) return NextResponse.json({error:locationError}, {status:400})
     const dateError = validateCareDates(checkIn, checkOut)
     if (dateError) return NextResponse.json({ error: dateError }, { status: 400 })
     if (

@@ -193,7 +193,7 @@ export default function AdminNannies({
                 {nanny.destinations.join(', ') || 'No destinations listed'}
               </p>
               <p>Eligible work: {eligibleWorkTiers(nanny).join(', ')}.</p>
-              <details><summary>Update profile photo</summary><NannyPhotoEditor initialUrl={nanny.photo_url} name={nanny.display_name} endpoint={`/api/admin/nannies/${nanny.id}/photo`}/></details>
+              <details className="padded-disclosure"><summary>Update profile photo</summary><NannyPhotoEditor initialUrl={nanny.photo_url} name={nanny.display_name} endpoint={`/api/admin/nannies/${nanny.id}/photo`}/></details>
               <div className="ops-card-actions">
                 {nanny.application_id&&<Link className="btn-ghost" href={`/admin/applications/${nanny.application_id}`}>Review onboarding record</Link>}
                 {!nanny.application_id&&<button className="btn-ghost" disabled={busy===nanny.id} onClick={()=>void beginOnboarding(nanny.id)}>Start existing nanny onboarding</button>}
